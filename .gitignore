@@ -1,0 +1,17 @@
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Editores
+.vscode/
+*.swp
+
+# Dependencias
+node_modules/
+
+# Logs
+*.log
+
+# Observacao: config.js contem apenas a Publishable key do Supabase,
+# que e publica por design e protegida por RLS. Por isso e versionada.
+# NUNCA adicione aqui a Secret key (service_role) - essa jamais vai ao repo.
