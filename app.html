@@ -1726,6 +1726,7 @@ async function carregarListaUsuarios(){
       '<th style="padding:8px"></th></tr></thead><tbody>'+
       us.map(function(u){
         var vinc='';
+        u.eh_operador=(u.login_ou_email||'').indexOf('@')<0; // operador: login sem @
         if(u.papel==='representante'&&u.codigo_vendedor)vinc=nomeVendedorExibicao(u.codigo_vendedor);
         if(u.papel==='visualizador_maquina'&&u.maquinas_permitidas)vinc=(u.maquinas_permitidas||[]).join(', ');
         return '<tr>'+
@@ -1734,6 +1735,7 @@ async function carregarListaUsuarios(){
           '<td style="padding:8px;border-top:1px solid var(--border2)">'+rotuloPapel(u.papel)+'</td>'+
           '<td style="padding:8px;border-top:1px solid var(--border2)">'+vinc+'</td>'+
           '<td style="padding:8px;border-top:1px solid var(--border2);text-align:right">'+
+            (u.eh_operador?'<button class="btn-sec" onclick="redefinirSenhaOperador(\''+u.id+'\',\''+(u.nome||'').replace(/\'/g,"")+'\')">Redefinir senha</button> ':'')+
             '<button class="btn-sec" onclick="removerUsuario(\''+u.id+'\',\''+(u.nome||'').replace(/\'/g,"")+'\')">Remover</button>'+
           '</td>'+
         '</tr>';
@@ -1743,6 +1745,26 @@ async function carregarListaUsuarios(){
   }
 }
 
+async function redefinirSenhaOperador(id,nome){
+  var nova=prompt('Nova senha para "'+nome+'" (mínimo 6 caracteres):');
+  if(nova===null)return;
+  nova=nova.trim();
+  if(nova.length<6){alert('A senha deve ter ao menos 6 caracteres.');return;}
+  try{
+    var sessao=await supabaseClient.auth.getSession();
+    var token=sessao.data.session.access_token;
+    var resp=await fetch(SUPABASE_URL+'/functions/v1/gerenciar-usuarios',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body:JSON.stringify({acao:'redefinir_senha',id:id,senha:nova})
+    });
+    var r=await resp.json();
+    if(!resp.ok||r.error)throw new Error(r.error||'Falha ao redefinir.');
+    alert('Senha redefinida com sucesso.');
+  }catch(e){
+    alert('Erro ao redefinir: '+(e.message||e));
+  }
+}
 async function removerUsuario(id,nome){
   if(!confirm('Remover o acesso de "'+nome+'"? Esta ação não pode ser desfeita.'))return;
   try{
