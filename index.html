@@ -114,8 +114,8 @@ body{
     </div>
 
     <div class="form-group">
-      <label for="email">E-mail</label>
-      <input type="email" id="email" placeholder="seu@email.com" autocomplete="username">
+      <label for="email">Usuário ou e-mail</label>
+      <input type="text" id="email" placeholder="seu usuário ou e-mail" autocomplete="username">
     </div>
 
     <div class="form-group">
@@ -157,11 +157,14 @@ function mostrarMsg(texto,tipo){
 }
 
 async function entrar(){
-  var email=(document.getElementById('email').value||'').trim();
+  var entrada=(document.getElementById('email').value||'').trim();
   var senha=document.getElementById('senha').value||'';
   var btn=document.getElementById('btn-entrar');
 
-  if(!email||!senha){mostrarMsg('Preencha e-mail e senha.','erro');return;}
+  if(!entrada||!senha){mostrarMsg('Preencha usuário/e-mail e senha.','erro');return;}
+
+  // Operador digita so o usuario (sem @). Completamos o e-mail de fachada.
+  var email = entrada.indexOf('@')>=0 ? entrada : (entrada.toLowerCase().replace(/[^a-z0-9._-]/g,'') + '@operador.daprint.local');
 
   btn.disabled=true;btn.textContent='Entrando...';
   mostrarMsg('','');
@@ -169,7 +172,7 @@ async function entrar(){
   try{
     var r=await supabaseClient.auth.signInWithPassword({email:email,password:senha});
     if(r.error){
-      mostrarMsg('E-mail ou senha incorretos.','erro');
+      mostrarMsg('Usuário ou senha incorretos.','erro');
       btn.disabled=false;btn.textContent='Entrar';
       return;
     }
