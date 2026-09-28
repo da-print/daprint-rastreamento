@@ -9,6 +9,9 @@ Thumbs.db
 # Dependencias
 node_modules/
 
+# Supabase CLI - estado local da maquina (nao versionar)
+supabase/.temp/
+
 # Logs
 *.log
 

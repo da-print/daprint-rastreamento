@@ -1,0 +1,43 @@
+name: Aikido Security
+
+# Roda a cada Pull Request. O Aikido compara o PR com a branch base e
+# detecta problemas NOVOS (SAST no JS, dependencias/CVE, secrets, IaC no SQL).
+# O scan completo do repositorio roda automaticamente na nuvem depois que
+# voce conecta o repo no painel do Aikido (app.aikido.dev) - isso nao depende
+# deste arquivo.
+on:
+  pull_request:
+    branches:
+      - '*'
+
+# Necessario apenas para o Aikido comentar no PR (status e review comments).
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  aikido-scan:
+    name: Aikido Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Aikido Security Scan
+        uses: AikidoSec/github-actions-workflow@v1.0.13
+        with:
+          secret-key: ${{ secrets.AIKIDO_SECRET_KEY }}
+
+          # Severidade minima para o Aikido reprovar o check do PR.
+          minimum-severity: 'HIGH'
+
+          # Bloqueia o PR se surgir nova dependencia vulneravel (CVE).
+          fail-on-dependency-scan: true
+
+          # Comeca em modo "reporta mas nao bloqueia" para SAST e IaC, para
+          # a equipe limpar os achados existentes sem travar os PRs. Depois
+          # de zerar, mude para true e o Aikido passa a barrar codigo novo.
+          fail-on-sast-scan: false
+          fail-on-iac-scan: false
+
+          # Visibilidade no PR: status do scan + comentarios de review do SAST.
+          post-scan-status-comment: 'on'
+          post-sast-review-comments: 'on'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
