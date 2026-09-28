@@ -126,6 +126,10 @@ body{
 
     <button class="btn-login" id="btn-entrar" onclick="entrar()">Entrar</button>
 
+    <div style="text-align:center;margin-top:10px">
+      <a href="#" onclick="esqueciSenha();return false;" style="font-size:12px;color:var(--text3);text-decoration:none">Esqueci minha senha</a>
+    </div>
+
     <div class="msg" id="msg"></div>
 
     <div class="link-rastreio">
@@ -156,6 +160,20 @@ function mostrarMsg(texto,tipo){
   el.className='msg '+tipo;
 }
 
+async function esqueciSenha(){
+  var entrada=(document.getElementById('email').value||'').trim();
+  if(!entrada||entrada.indexOf('@')<0){
+    mostrarMsg('Digite seu e-mail no campo acima e clique novamente em "Esqueci minha senha". Operadores sem e-mail devem pedir a redefinição ao gestor.','erro');
+    return;
+  }
+  try{
+    var r=await supabaseClient.auth.resetPasswordForEmail(entrada);
+    if(r.error)throw r.error;
+    mostrarMsg('Se este e-mail estiver cadastrado, você receberá um link para redefinir a senha.','ok');
+  }catch(e){
+    mostrarMsg('Não foi possível enviar o e-mail agora. Tente novamente.','erro');
+  }
+}
 async function entrar(){
   var entrada=(document.getElementById('email').value||'').trim();
   var senha=document.getElementById('senha').value||'';
