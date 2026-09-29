@@ -31,7 +31,9 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
 .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;width:100%;max-width:960px;box-shadow:0 6px 24px rgba(0,0,0,.05)}
 .card h1{font-size:20px;margin-bottom:6px;text-align:center}
 .card .sub{font-size:13px;color:var(--text3);text-align:center;margin-bottom:24px}
+html,body{overflow-x:hidden;max-width:100%}
 .busca-row{display:flex;gap:10px;max-width:560px;margin:0 auto}
+.busca-row input{min-width:0}
 .busca-row input{flex:1;padding:13px 16px;border:1px solid var(--sel-border);border-radius:10px;font-size:15px}
 .busca-row input:focus{outline:none;border-color:var(--accent)}
 .btn{padding:13px 24px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;white-space:nowrap}
@@ -68,6 +70,19 @@ td{padding:9px 12px;border-bottom:1px solid #EFEFF0;vertical-align:middle}
 .badge.faturado{background:#E5F6ED;color:var(--ok)}
 .resumo-misto{background:#FEF6E7;color:#9A6400;font-size:12px;padding:10px 16px;text-align:center;border-bottom:1px solid var(--border)}
 .vazio{text-align:center;color:var(--text3);padding:24px;font-size:14px}
+
+@media (max-width: 640px){
+  .card{padding:18px 14px}
+  .busca-row{flex-direction:column}
+  .busca-row .btn{width:100%}
+  .ped-topo{padding:14px}
+  .progresso{padding:20px 10px 6px}
+  .etapa .rotulo{font-size:10px;max-width:70px}
+  .etapa .bola{width:36px;height:36px;font-size:16px}
+  .linha-prog{left:9%;right:9%;top:36px}
+  table{font-size:11.5px}
+  th,td{padding:7px 8px}
+}
 .carregando{text-align:center;color:var(--text3);padding:24px}
 .rodape{text-align:center;font-size:12px;color:var(--text3);padding:24px;line-height:1.7}
 </style>
