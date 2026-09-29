@@ -214,6 +214,7 @@ tr.drag-over td{border-top:2px solid var(--accent)}
     <div class="tab-btn" id="tab-usuarios" onclick="mudarAba('usuarios')">Usuários</div>
   </div>
   <div class="header-user">
+    <span id="sync-indicador" style="font-size:11px;color:var(--ok);opacity:0;transition:opacity .4s;white-space:nowrap"><i class="ti ti-refresh"></i> Atualizado agora</span>
     <span id="usuario-info" style="font-size:12px;color:var(--text3)"></span>
     <button class="btn-sec" onclick="sair()"><i class="ti ti-logout"></i> Sair</button>
   </div>
@@ -601,6 +602,10 @@ async function iniciar(){
 
   // 4) carregar dados do banco e montar painel
   await recarregarDoBanco();
+
+  // 5) ligar atualizacao automatica (Realtime): quando qualquer usuario
+  // mudar algo no banco, todo mundo com a tela aberta atualiza sozinho.
+  ativarRealtime();
 }
 
 function rotuloPapel(p){
@@ -609,8 +614,49 @@ function rotuloPapel(p){
 }
 
 async function sair(){
+  desligarRealtime();
   await supabaseClient.auth.signOut();
   window.location.href='index.html';
+}
+
+// ===================== ATUALIZAÇÃO AUTOMÁTICA (REALTIME) =====================
+// Escuta mudancas nas tabelas de dados e recarrega o painel sozinho, sem
+// precisar de F5. Varias mudancas seguidas (ex: um upload inteiro) sao
+// agrupadas numa unica atualizacao, para nao piscar a tela toda hora.
+var REALTIME_CANAL=null;
+var REALTIME_TIMER=null;
+function agendarAtualizacaoAutomatica(){
+  if(REALTIME_TIMER)clearTimeout(REALTIME_TIMER);
+  REALTIME_TIMER=setTimeout(async function(){
+    await recarregarDoBanco(true);
+    mostrarIndicadorSincronizado();
+  },700);
+}
+function mostrarIndicadorSincronizado(){
+  var el=document.getElementById('sync-indicador');
+  if(!el)return;
+  el.style.opacity='1';
+  clearTimeout(el._t);
+  el._t=setTimeout(function(){el.style.opacity='0';},2000);
+}
+function ativarRealtime(){
+  if(REALTIME_CANAL)return; // ja ativo
+  var TABELAS=['pedidos_abertos','pcp','faturamento','overrides','categorias_obs','vendedores','maquinas_grupos','maquinas_sub','clientes'];
+  var canal=supabaseClient.channel('painel-mudancas');
+  TABELAS.forEach(function(t){
+    canal=canal.on('postgres_changes',{event:'*',schema:'public',table:t},function(){
+      agendarAtualizacaoAutomatica();
+    });
+  });
+  canal.subscribe();
+  REALTIME_CANAL=canal;
+}
+function desligarRealtime(){
+  if(REALTIME_TIMER)clearTimeout(REALTIME_TIMER);
+  if(REALTIME_CANAL){
+    supabaseClient.removeChannel(REALTIME_CANAL);
+    REALTIME_CANAL=null;
+  }
 }
 
 // Mostra/esconde recursos conforme o papel do usuario.
@@ -635,9 +681,9 @@ function aplicarPermissoesUI(){
 }
 
 // ===================== CARGA DE DADOS DO BANCO =====================
-async function recarregarDoBanco(){
+async function recarregarDoBanco(silencioso){
   var msg=document.getElementById('upload-msg');
-  if(msg) msg.textContent='Carregando dados do banco...';
+  if(msg&&!silencioso) msg.textContent='Carregando dados do banco...';
   try{
     // paraleliza as leituras
     var res=await Promise.all([
@@ -673,10 +719,10 @@ async function recarregarDoBanco(){
     MAQUINAS_SUB_DB=res[8].data||[];
     reconstruirMaquinas();
 
-    if(msg) msg.textContent='Dados carregados do banco.';
+    if(msg&&!silencioso) msg.textContent='Dados carregados do banco.';
     processarTudo();
   }catch(e){
-    if(msg) msg.textContent='Erro ao carregar do banco: '+(e.message||e);
+    if(msg&&!silencioso) msg.textContent='Erro ao carregar do banco: '+(e.message||e);
     console.error(e);
   }
 }
