@@ -952,6 +952,35 @@ function fmtQtd(v){if(v===null||v===undefined||v==='')return'';var n=parseFloat(
 // ===================== OVERRIDES (persistência no BANCO) =====================
 // Atualiza local (para responsividade) e grava no banco via upsert.
 // Requer papel gestor/editor (RLS bloqueia os demais de qualquer forma).
+// Salva a nova ordem de VARIOS itens de uma vez, em UMA unica chamada ao
+// banco (em vez de uma chamada por item). E o que torna o arrastar rapido.
+async function salvarOrdensEmLote(itensComOrdem){
+  if(!itensComOrdem.length)return;
+  try{
+    var uid=(await supabaseClient.auth.getUser()).data.user.id;
+    var agora=new Date().toISOString();
+    var registros=itensComOrdem.map(function(it){
+      var partes=it.key.split('|');
+      var atual=OVERRIDES[it.key]||{};
+      OVERRIDES[it.key]=Object.assign({},atual,{ordem:it.ordem});
+      return {
+        pedido:parseInt(partes[0]),item:parseInt(partes[1]),entrega_key:partes[2]||'SEM-DATA',
+        grupo:atual.grupo!==undefined?atual.grupo:null,
+        sub:atual.sub!==undefined?atual.sub:null,
+        ordem:it.ordem,
+        obs:atual.obs!==undefined?atual.obs:null,
+        imagens:atual.imagens!==undefined?atual.imagens:null,
+        finalizado_em:atual.finalizado_em!==undefined?atual.finalizado_em:null,
+        atualizado_por:uid,atualizado_em:agora,ausente_desde:null
+      };
+    });
+    var r=await supabaseClient.from('overrides').upsert(registros,{onConflict:'pedido,item,entrega_key'});
+    if(r.error)throw r.error;
+  }catch(e){
+    alert('Não foi possível salvar a nova ordem: '+(e.message||e));
+    console.error(e);
+  }
+}
 async function setOverride(key,campos){
   OVERRIDES[key]=Object.assign({},OVERRIDES[key]||{},campos);
   // chave por parcela: pedido|item|entrega_key
@@ -1552,11 +1581,11 @@ function onDrop(e){
   if(si<0||di<0)return;
   var moved=lista.splice(si,1)[0];
   lista.splice(di,0,moved);
-  // atualiza a ordem de cada item da fila, sequencialmente, no banco
+  // atualiza a ordem de toda a fila numa unica chamada ao banco (rapido,
+  // independente de quantos itens tem a fila)
+  var itensComOrdem=lista.map(function(r,idx){return{key:r.key,ordem:(idx+1)*10};});
   (async function(){
-    for(var idx=0;idx<lista.length;idx++){
-      await setOverride(lista[idx].key,{ordem:(idx+1)*10});
-    }
+    await salvarOrdensEmLote(itensComOrdem);
     processarTudo();
   })();
 }
