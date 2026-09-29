@@ -1891,7 +1891,7 @@ async function carregarListaUsuarios(){
           '<td style="padding:8px;border-top:1px solid var(--border2)">'+rotuloPapel(u.papel)+'</td>'+
           '<td style="padding:8px;border-top:1px solid var(--border2)">'+vinc+'</td>'+
           '<td style="padding:8px;border-top:1px solid var(--border2);text-align:right">'+
-            (u.eh_operador?'<button class="btn-sec" onclick="redefinirSenhaOperador(\''+u.id+'\',\''+(u.nome||'').replace(/\'/g,"")+'\')">Redefinir senha</button> ':'')+
+            '<button class="btn-sec" onclick="redefinirSenhaUsuario(\''+u.id+'\',\''+(u.nome||'').replace(/\'/g,"")+'\')">Redefinir senha</button> '+
             '<button class="btn-sec" onclick="removerUsuario(\''+u.id+'\',\''+(u.nome||'').replace(/\'/g,"")+'\')">Remover</button>'+
           '</td>'+
         '</tr>';
@@ -1901,7 +1901,7 @@ async function carregarListaUsuarios(){
   }
 }
 
-async function redefinirSenhaOperador(id,nome){
+async function redefinirSenhaUsuario(id,nome){
   var nova=prompt('Nova senha para "'+nome+'" (mínimo 6 caracteres):');
   if(nova===null)return;
   nova=nova.trim();
