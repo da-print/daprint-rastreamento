@@ -121,28 +121,46 @@ body{
       <div class="produto">Sistema de <strong>Rastreamento de Pedidos</strong></div>
     </div>
 
-    <div class="form-group">
-      <label for="email">Usuário ou e-mail</label>
-      <input type="text" id="email" placeholder="seu usuário ou e-mail" autocomplete="username">
-    </div>
-
-    <div class="form-group">
-      <label for="senha">Senha</label>
-      <input type="password" id="senha" placeholder="Sua senha" autocomplete="current-password"
-             onkeydown="if(event.key==='Enter')entrar()">
-    </div>
-
-    <button class="btn-login" id="btn-entrar" onclick="entrar()">Entrar</button>
-
-    <div style="text-align:center;margin-top:10px">
-      <a href="#" onclick="esqueciSenha();return false;" style="font-size:12px;color:var(--text3);text-decoration:none">Esqueci minha senha</a>
-    </div>
-
     <div class="msg" id="msg"></div>
 
-    <div class="link-rastreio">
-      <a href="rastreio.html"><i class="ti ti-package"></i> Rastrear meu pedido</a>
-      <div class="sub">Para clientes: consulte o status sem precisar de login</div>
+    <div id="bloco-login">
+      <div class="form-group">
+        <label for="email">Usuário ou e-mail</label>
+        <input type="text" id="email" placeholder="seu usuário ou e-mail" autocomplete="username">
+      </div>
+
+      <div class="form-group">
+        <label for="senha">Senha</label>
+        <input type="password" id="senha" placeholder="Sua senha" autocomplete="current-password"
+               onkeydown="if(event.key==='Enter')entrar()">
+      </div>
+
+      <button class="btn-login" id="btn-entrar" onclick="entrar()">Entrar</button>
+
+      <div style="text-align:center;margin-top:10px">
+        <a href="#" onclick="esqueciSenha();return false;" style="font-size:12px;color:var(--text3);text-decoration:none">Esqueci minha senha</a>
+      </div>
+
+      <div class="link-rastreio">
+        <a href="rastreio.html"><i class="ti ti-package"></i> Rastrear meu pedido</a>
+        <div class="sub">Para clientes: consulte o status sem precisar de login</div>
+      </div>
+    </div>
+
+    <div id="bloco-definir-senha" style="display:none">
+      <p style="font-size:13px;color:var(--text3);text-align:center;margin-bottom:18px">
+        Bem-vindo! Antes de continuar, defina a senha que você vai usar para entrar daqui pra frente.
+      </p>
+      <div class="form-group">
+        <label for="nova-senha">Nova senha</label>
+        <input type="password" id="nova-senha" placeholder="mínimo 6 caracteres">
+      </div>
+      <div class="form-group">
+        <label for="confirmar-senha">Confirme a senha</label>
+        <input type="password" id="confirmar-senha" placeholder="digite de novo"
+               onkeydown="if(event.key==='Enter')salvarNovaSenha()">
+      </div>
+      <button class="btn-login" onclick="salvarNovaSenha()">Salvar senha e entrar</button>
     </div>
   </div>
 </div>
@@ -154,11 +172,30 @@ body{
 
 <script src="config.js"></script>
 <script>
-// Se ja estiver logado, pula direto para o painel.
+// Detecta se chegamos aqui por um link de CONVITE ou de RECUPERAÇÃO DE SENHA
+// (o Supabase manda o tipo no hash da URL: #...&type=invite ou &type=recovery).
+// Le isso ANTES de qualquer redirecionamento, para não pular a etapa de
+// definir senha, que é justamente o bug que estava acontecendo.
+var _hashParams=new URLSearchParams((window.location.hash||'').replace(/^#/,''));
+var _tipoAuth=_hashParams.get('type'); // 'invite' | 'recovery' | null
+
+function mostrarBlocoDefinirSenha(){
+  document.getElementById('bloco-login').style.display='none';
+  document.getElementById('bloco-definir-senha').style.display='block';
+}
+
+// Se ja estiver logado E NAO for um link de convite/recuperacao, pula pro painel.
+// Se FOR convite/recuperacao, mostra a tela de definir senha em vez de pular.
 (async function checarSessao(){
   try{
     var r=await supabaseClient.auth.getSession();
-    if(r.data&&r.data.session){window.location.href='app.html';}
+    if(r.data&&r.data.session){
+      if(_tipoAuth==='invite'||_tipoAuth==='recovery'){
+        mostrarBlocoDefinirSenha();
+      }else{
+        window.location.href='app.html';
+      }
+    }
   }catch(e){/* segue mostrando o login */}
 })();
 
@@ -180,6 +217,20 @@ async function esqueciSenha(){
     mostrarMsg('Se este e-mail estiver cadastrado, você receberá um link para redefinir a senha.','ok');
   }catch(e){
     mostrarMsg('Não foi possível enviar o e-mail agora. Tente novamente.','erro');
+  }
+}
+async function salvarNovaSenha(){
+  var nova=document.getElementById('nova-senha').value||'';
+  var conf=document.getElementById('confirmar-senha').value||'';
+  if(nova.length<6){mostrarMsg('A senha deve ter ao menos 6 caracteres.','erro');return;}
+  if(nova!==conf){mostrarMsg('As senhas não conferem. Digite a mesma senha nos dois campos.','erro');return;}
+  try{
+    var r=await supabaseClient.auth.updateUser({password:nova});
+    if(r.error)throw r.error;
+    mostrarMsg('Senha definida com sucesso! Entrando...','ok');
+    setTimeout(function(){window.location.href='app.html';},800);
+  }catch(e){
+    mostrarMsg('Não foi possível salvar a senha: '+(e.message||e),'erro');
   }
 }
 async function entrar(){
