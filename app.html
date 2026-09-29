@@ -615,7 +615,7 @@ async function recarregarDoBanco(){
     // overrides -> mapa por pedido|item
     OVERRIDES={};
     res[4].data.forEach(function(o){
-      OVERRIDES[o.pedido+'|'+o.item]={grupo:o.grupo,sub:o.sub,ordem:o.ordem,obs:o.obs,imagens:o.imagens,finalizado_em:o.finalizado_em};
+      OVERRIDES[o.pedido+'|'+o.item+'|'+(o.entrega_key||'SEM-DATA')]={grupo:o.grupo,sub:o.sub,ordem:o.ordem,obs:o.obs,imagens:o.imagens,finalizado_em:o.finalizado_em};
     });
 
     CATEGORIAS=res[5].data.map(function(c){return c.nome;});
@@ -757,11 +757,14 @@ function mapearPedidos(rows){
   return rows.map(function(r){
     var pedido=_toInt(r['Pedido']),item=_toInt(r['Item']);
     if(pedido===null||item===null)return null;
-    return {pedido:pedido,item:item,cliente_codigo:normCliCode(r['Cliente']),
+    var entregaISO=_toDateISO(r['Entrega no Cliente']);
+    return {pedido:pedido,item:item,
+      entrega_key:entregaISO||'SEM-DATA',
+      cliente_codigo:normCliCode(r['Cliente']),
       cliente_nome_origem:r['Cliente']||null,produto:r['Produto']||null,
       produto_desc:r['Produto - Descrição']||null,saldo:_toNum(r['Saldo Pedido']),
       um:r['Un.']||null,saldo2:_toNum(r['Saldo Pedido 2a.Un.']),um2:r['2a. Un.']||null,
-      entrega:_toDateISO(r['Entrega no Cliente']),status_producao_origem:r['Status PRODUÇÃO']||null,
+      entrega:entregaISO,status_producao_origem:r['Status PRODUÇÃO']||null,
       ml:_toNum(r['M/L a produzir']),pedido_cliente:limparPedidoCliente(r['Pedido do Cliente (xPed)'])};
   }).filter(Boolean);
 }
@@ -780,7 +783,10 @@ function mapearFaturamento(rows){
   return rows.map(function(r){
     var pedido=_toInt(r['Pedido']),item=_toInt(r['Item do Pedido']);
     if(pedido===null||item===null)return null;
-    return {pedido:pedido,item:item,numero_nf:r['Número da NF']||null,
+    var nf=r['Número da NF']||null;
+    return {pedido:pedido,item:item,
+      nf_key:(nf!=null&&String(nf).trim()!=='')?String(nf).trim():'SEM-NF',
+      numero_nf:nf,
       pedido_cliente:limparPedidoCliente(r['Pedido do Cliente (xPed)']),
       cliente_codigo:normCliCode(r['Cliente/Fornecedor']),
       produto_desc:r['Código do Produto - Descrição']||null};
@@ -836,10 +842,11 @@ function fmtQtd(v){if(v===null||v===undefined||v==='')return'';var n=parseFloat(
 // Requer papel gestor/editor (RLS bloqueia os demais de qualquer forma).
 async function setOverride(key,campos){
   OVERRIDES[key]=Object.assign({},OVERRIDES[key]||{},campos);
+  // chave por parcela: pedido|item|entrega_key
   var partes=key.split('|');
   var pedido=parseInt(partes[0]), item=parseInt(partes[1]);
-  var registro={pedido:pedido,item:item};
-  // envia o estado consolidado do override desta chave
+  var entregaKey=partes[2]||'SEM-DATA';
+  var registro={pedido:pedido,item:item,entrega_key:entregaKey};
   var atual=OVERRIDES[key];
   registro.grupo=atual.grupo!==undefined?atual.grupo:null;
   registro.sub=atual.sub!==undefined?atual.sub:null;
@@ -851,8 +858,8 @@ async function setOverride(key,campos){
     var uid=(await supabaseClient.auth.getUser()).data.user.id;
     registro.atualizado_por=uid;
     registro.atualizado_em=new Date().toISOString();
-    registro.ausente_desde=null; // editar reativa o item
-    var r=await supabaseClient.from('overrides').upsert(registro,{onConflict:'pedido,item'});
+    registro.ausente_desde=null; // editar reativa a parcela
+    var r=await supabaseClient.from('overrides').upsert(registro,{onConflict:'pedido,item,entrega_key'});
     if(r.error) throw r.error;
   }catch(e){
     alert('Não foi possível salvar a alteração no banco: '+(e.message||e));
@@ -883,16 +890,22 @@ function processarTudo(){
     }
   });
 
-  var faturamentoPorPedidoItem=new Map();
+  // Cada NF do faturamento vira uma LINHA (faturamento parcial).
+  // Uma parcela em aberto NAO fica faturada; so as linhas de NF ficam.
+  var linhasFaturamento=[];
   (RAW.faturamento||[]).forEach(function(r){
-    faturamentoPorPedidoItem.set(r.pedido+'|'+r.item,{nf:r.numero_nf,pedidoCliente:r.pedido_cliente});
+    linhasFaturamento.push({
+      pedido:r.pedido,item:r.item,nfKey:r.nf_key,
+      clienteCode:r.cliente_codigo||null,produtoDesc:r.produto_desc||null,
+      nf:r.numero_nf,pedidoCliente:r.pedido_cliente
+    });
   });
 
-  var itensMap=new Map();
+  // Cada PARCELA de pedido em aberto vira uma linha (chave pedido|item|entrega_key)
+  var parcelas=[];
   (RAW.pedidos||[]).forEach(function(r){
-    var key=r.pedido+'|'+r.item;
-    itensMap.set(key,{
-      pedido:r.pedido,item:r.item,
+    parcelas.push({
+      pedido:r.pedido,item:r.item,entregaKey:r.entrega_key||'SEM-DATA',
       clienteCode:r.cliente_codigo,clienteNomeOrigem:r.cliente_nome_origem,
       produto:r.produto,produtoDesc:r.produto_desc,
       entrega:r.entrega?parseISOData(r.entrega):null,saldo:r.saldo,um:r.um,
@@ -900,46 +913,31 @@ function processarTudo(){
       pedidoClienteAberto:r.pedido_cliente,origem:'aberto'
     });
   });
-  (RAW.faturamento||[]).forEach(function(r){
-    var key=r.pedido+'|'+r.item;
-    if(!itensMap.has(key)){
-      itensMap.set(key,{
-        pedido:r.pedido,item:r.item,
-        clienteCode:r.cliente_codigo||null,clienteNomeOrigem:null,
-        produto:null,produtoDesc:r.produto_desc||null,
-        entrega:null,saldo:null,um:null,saldo2:null,um2:null,ml:null,
-        statusProducaoOrigem:null,origem:'faturamento_apenas'
-      });
-    }
-  });
 
-  function calcularStatus(it){
-    var key=it.pedido+'|'+it.item;
+  function calcularStatusParcela(it){
+    var pikey=it.pedido+'|'+it.item;
     var prefix=(it.produto||'').substring(0,2);
     var isProducao=prefix==='PA';
-    if(faturamentoPorPedidoItem.has(key)){
-      var f=faturamentoPorPedidoItem.get(key);
-      return{status:'FATURADO',grupo:null,ordemPCP:null,nf:f.nf,pedidoCliente:f.pedidoCliente};
-    }
     if(isProducao){
-      if(pcpPorPedidoItem.has(key)){
-        var p1=pcpPorPedidoItem.get(key);
-        return{status:'EM_PRODUCAO',grupo:p1.grupo,ordemPCP:p1.ordem,nf:null,pedidoCliente:null};
+      if(pcpPorPedidoItem.has(pikey)){
+        var p1=pcpPorPedidoItem.get(pikey);
+        return{status:'EM_PRODUCAO',grupo:p1.grupo,ordemPCP:p1.ordem,nf:null};
       }
       var pcKey=(it.produto||'')+'|'+(it.clienteCode||'');
       if(pcpPorProdutoCliente.has(pcKey)){
         var p2=pcpPorProdutoCliente.get(pcKey);
-        return{status:'EM_PRODUCAO',grupo:p2.grupo,ordemPCP:p2.ordem,nf:null,pedidoCliente:null};
+        return{status:'EM_PRODUCAO',grupo:p2.grupo,ordemPCP:p2.ordem,nf:null};
       }
-      if(it.statusProducaoOrigem==='FINALIZADA')return{status:'AGUARDANDO_FATURAMENTO',grupo:null,ordemPCP:null,nf:null,pedidoCliente:null};
+      if(it.statusProducaoOrigem==='FINALIZADA')return{status:'AGUARDANDO_FATURAMENTO',grupo:null,ordemPCP:null,nf:null};
     }
-    return{status:'EM_CARTEIRA',grupo:null,ordemPCP:null,nf:null,pedidoCliente:null};
+    return{status:'EM_CARTEIRA',grupo:null,ordemPCP:null,nf:null};
   }
 
   var resultado=[];
-  itensMap.forEach(function(it){
-    var key=it.pedido+'|'+it.item;
-    var calc=calcularStatus(it);
+  // 1) parcelas em aberto (uma linha cada)
+  parcelas.forEach(function(it){
+    var key=it.pedido+'|'+it.item+'|'+it.entregaKey; // chave por PARCELA
+    var calc=calcularStatusParcela(it);
     var cli=clientesPorCodigo.get(it.clienteCode)||{};
     var ov=OVERRIDES[key]||null;
     // FINALIZAR MANUAL (Opcao A): se marcado como finalizado e ainda NAO
@@ -966,6 +964,23 @@ function processarTudo(){
       finalizadoManual:!!(ov&&ov.finalizado_em),
       pedidoCliente:calc.pedidoCliente||it.pedidoClienteAberto||null
     }));
+  });
+  // 2) linhas de faturamento (uma por NF) - status FATURADO
+  linhasFaturamento.forEach(function(f){
+    var cli=clientesPorCodigo.get(f.clienteCode)||{};
+    resultado.push({
+      key:f.pedido+'|'+f.item+'|NF:'+f.nfKey,
+      pedido:f.pedido,item:f.item,
+      clienteCode:f.clienteCode,
+      clienteNome:cli.nomeReduzido||null,
+      clienteCnpj:cli.cnpj||null,
+      vendedor:cli.vendedor||null,
+      produto:null,produtoDesc:f.produtoDesc,
+      entrega:null,saldo:null,um:null,ml:null,
+      status:'FATURADO',grupo:null,grupoOriginal:null,sub:'',
+      ordem:null,imagens:null,hasOverride:false,obs:'',finalizadoManual:false,
+      nf:f.nf,pedidoCliente:f.pedidoCliente||null,origem:'faturamento'
+    });
   });
   ITENS=resultado;
   var sb=document.getElementById('stats-bar'); if(sb)sb.style.display='grid';
