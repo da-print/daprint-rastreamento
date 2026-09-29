@@ -754,7 +754,7 @@ function mapearClientes(rows){
   }).filter(function(x){return x.codigo&&x.codigo!=='null';});
 }
 function mapearPedidos(rows){
-  return rows.map(function(r){
+  var pedidosMapeados=rows.map(function(r){
     var pedido=_toInt(r['Pedido']),item=_toInt(r['Item']);
     if(pedido===null||item===null)return null;
     var entregaISO=_toDateISO(r['Entrega no Cliente']);
@@ -767,6 +767,9 @@ function mapearPedidos(rows){
       entrega:entregaISO,status_producao_origem:r['Status PRODUÇÃO']||null,
       ml:_toNum(r['M/L a produzir']),pedido_cliente:limparPedidoCliente(r['Pedido do Cliente (xPed)'])};
   }).filter(Boolean);
+  // dedup pela chave do banco + produto + saldo (linhas totalmente iguais somem,
+  // mas parcelas legitimas com datas ou saldos diferentes sao preservadas)
+  return dedupPorChave(pedidosMapeados,['pedido','item','entrega_key','produto','saldo']);
 }
 function mapearPCP(rows){
   return rows.map(function(r){
@@ -779,8 +782,18 @@ function mapearPCP(rows){
       grupo_maquinas:r['Grupo de Máquinas']||null,status_ordem:r['Status da Ordem']||null};
   }).filter(Boolean);
 }
+// Remove linhas 100% idênticas na chave informada (dedup por chave composta).
+// Linhas idênticas vindas do ERP não têm valor: são a mesma informação repetida.
+function dedupPorChave(linhas, camposChave){
+  var vistos={},saida=[];
+  linhas.forEach(function(l){
+    var k=camposChave.map(function(c){return String(l[c]===undefined||l[c]===null?'':l[c]);}).join('||');
+    if(!vistos[k]){vistos[k]=true;saida.push(l);}
+  });
+  return saida;
+}
 function mapearFaturamento(rows){
-  return rows.map(function(r){
+  var mapeadas=rows.map(function(r){
     var pedido=_toInt(r['Pedido']),item=_toInt(r['Item do Pedido']);
     if(pedido===null||item===null)return null;
     var nf=r['Número da NF']||null;
@@ -791,6 +804,8 @@ function mapearFaturamento(rows){
       cliente_codigo:normCliCode(r['Cliente/Fornecedor']),
       produto_desc:r['Código do Produto - Descrição']||null};
   }).filter(Boolean);
+  // dedup pela chave do banco + produto (linhas totalmente iguais somem)
+  return dedupPorChave(mapeadas,['pedido','item','nf_key','produto_desc']);
 }
 var ORDEM_FLUXO={'PRE-IMPRESSAO':1,'FLEXO 250':2,'FLEXO 350':2,'DIGITAL':2,
   'BATIDA':3,'TROQUELADORAS':3,'CORTE BROTECH / VOREY':3,'REVISORAS':4,'TERMICA':2};
