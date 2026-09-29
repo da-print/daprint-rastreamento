@@ -797,12 +797,17 @@ function mapearFaturamento(rows){
     var pedido=_toInt(r['Pedido']),item=_toInt(r['Item do Pedido']);
     if(pedido===null||item===null)return null;
     var nf=r['Número da NF']||null;
+    var transp=r['Transportadora']||null;
+    if(transp&&String(transp).toUpperCase().indexOf('SEM TRANSPORTADORA')>=0)transp=null;
     return {pedido:pedido,item:item,
       nf_key:(nf!=null&&String(nf).trim()!=='')?String(nf).trim():'SEM-NF',
       numero_nf:nf,
       pedido_cliente:limparPedidoCliente(r['Pedido do Cliente (xPed)']),
       cliente_codigo:normCliCode(r['Cliente/Fornecedor']),
-      produto_desc:r['Código do Produto - Descrição']||null};
+      produto_desc:r['Código do Produto - Descrição']||null,
+      qtde:_toNum(r['Qtde']),
+      emissao:_toDateISO(r['Emissão']),
+      transportadora:transp?String(transp).replace(/^\d+\s*-\s*/,'').trim():null};
   }).filter(Boolean);
   // dedup pela chave do banco + produto (linhas totalmente iguais somem)
   return dedupPorChave(mapeadas,['pedido','item','nf_key','produto_desc']);
