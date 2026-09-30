@@ -12,6 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180-apple.png">
 <link rel="icon" href="icon-192.png">
 <title>Rastreamento de Pedidos - D&A</title>
+<script>(function(){try{if(localStorage.getItem('tema')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.47.0/iconfont/tabler-icons.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -26,6 +27,16 @@
   --icon-bg:#F0F0F1;--btn-bg:#FFFFFF;--btn-border:#D9D9DB;--btn-color:#3A3A3A;
   --obs-bg:#F4ECFB;--obs-border:#7C3ABE;--obs-color:#7C3ABE;
   --ok:#1F9D66;--warn:#B8760B;--danger:#C0392B;--info:#2563AF;--accent:#C52E35;--brand-gray:#868789;
+}
+:root[data-theme="dark"]{
+  --bg:#15171C;--bg2:#1C1F26;--bg3:#23262E;--border:#33363E;--border2:#2A2D35;
+  --text:#EDEDEF;--text2:#D4D4D8;--text3:#9A9AA2;--text4:#7A7A82;
+  --card:#1C1F26;--hover:#262931;
+  --sel-bg:#1C1F26;--sel-border:#3A3D45;--sel-color:#EDEDEF;
+  --count-bg:#3A2224;--count-color:#E4666D;
+  --icon-bg:#2A2D35;--btn-bg:#1C1F26;--btn-border:#3A3D45;--btn-color:#D4D4D8;
+  --obs-bg:#2C2438;--obs-border:#9B5CDB;--obs-color:#C09CEB;
+  --ok:#2FBD7E;--warn:#D99A2B;--danger:#E05A4A;--info:#5B9BE0;--accent:#D6555C;--brand-gray:#9C9DA0;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{max-width:100%}
@@ -222,6 +233,7 @@ tr.drag-over td{border-top:2px solid var(--accent)}
     <button class="btn-icon" onclick="imprimirFiltro()" title="Imprimir (conforme filtro)">Imprimir</button>
   </div>
   <div class="header-user">
+    <button class="btn-icon" id="btn-tema" onclick="alternarTema()"></button>
     <span id="sync-indicador" style="font-size:11px;color:var(--ok);opacity:0;transition:opacity .4s;white-space:nowrap"><i class="ti ti-refresh"></i> Atualizado agora</span>
     <span id="usuario-info" style="font-size:12px;color:var(--text3)"></span>
     <button class="btn-sec" onclick="sair()"><i class="ti ti-logout"></i> Sair</button>
@@ -575,6 +587,26 @@ var OVERRIDES={};        // carregado do banco (tabela overrides)
 var CATEGORIAS=[];       // carregado do banco (tabela categorias_obs)
 var VENDEDORES_DEPARA={};// carregado do banco (tabela vendedores)
 var PERFIL=null;         // {nome, papel, codigo_vendedor, maquinas_permitidas}
+// ===================== TEMA (claro/escuro) =====================
+function atualizarBotaoTema(){
+  var btn=document.getElementById('btn-tema');
+  if(!btn)return;
+  var escuro=document.documentElement.getAttribute('data-theme')==='dark';
+  btn.textContent=escuro?'Tema claro':'Tema escuro';
+}
+function alternarTema(){
+  var escuro=document.documentElement.getAttribute('data-theme')==='dark';
+  if(escuro){
+    document.documentElement.removeAttribute('data-theme');
+    try{localStorage.setItem('tema','light');}catch(e){}
+  }else{
+    document.documentElement.setAttribute('data-theme','dark');
+    try{localStorage.setItem('tema','dark');}catch(e){}
+  }
+  atualizarBotaoTema();
+}
+atualizarBotaoTema();
+
 var abaAtual='painel';
 var gruposRecolhidos={};
 var dragState=null;
