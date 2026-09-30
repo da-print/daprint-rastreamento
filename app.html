@@ -571,13 +571,14 @@ function tempoHoras(r){
   return(ml/vel)+setupH;
 }
 function backlogDias(horas){return horas<=0?0:horas/8.8;}
-function barraCargaHtml(horas,extraLabel){
+function barraCargaHtml(horas,mlTotal,extraLabel){
   if(!horas||horas<=0)return'';
   var bl=backlogDias(horas);
   var cls=bl<=1?'carga-ok':bl<=2.5?'carga-meio':'carga-alta';
   var pct=Math.min(100,(bl/3)*100);
+  var mlTxt=(mlTotal&&mlTotal>0)?(' &middot; '+Math.round(mlTotal).toLocaleString('pt-BR')+' m/l'):'';
   return '<div class="carga-wrap"><div class="carga-bar '+cls+'"><div class="carga-fill" style="width:'+pct+'%"></div></div>'+
-    '<span class="carga-label">'+formatarTempo(horas)+' na fila &middot; ~'+bl.toFixed(1).replace('.',',')+' dia(s) útil(eis)'+(extraLabel||'')+'</span></div>';
+    '<span class="carga-label">'+formatarTempo(horas)+' na fila &middot; ~'+bl.toFixed(1).replace('.',',')+' dia(s) útil(eis)'+mlTxt+(extraLabel||'')+'</span></div>';
 }
 
 // ===================== ESTADO =====================
@@ -1534,6 +1535,7 @@ function renderPainel(){
     var gInfo=gInfoDe(g);
     var recolhido=gruposRecolhidos[g]?' recolhido':'';
     var horasTotal=itens.reduce(function(a,r){return a+(tempoHoras(r)||0);},0);
+    var mlTotalGrupo=itens.reduce(function(a,r){return a+metrosReais(r);},0);
 
     html+='<div class="grupo-card'+recolhido+'">'+
       '<div class="grupo-header" onclick="toggleGrupo(\''+g+'\')">'+
@@ -1551,17 +1553,18 @@ function renderPainel(){
         if(ia===-1)ia=999;if(ib===-1)ib=999;
         return ia-ib;
       });
-      html+=barraCargaHtml(horasTotal,' · '+gInfo.subs.length+' máquinas no grupo');
+      html+=barraCargaHtml(horasTotal,mlTotalGrupo,' · '+gInfo.subs.length+' máquinas no grupo');
       chavesSub.forEach(function(s){
         var lista=porSub[s].slice().sort(ordCompare);
         var hs=lista.reduce(function(a,r){return a+(tempoHoras(r)||0);},0);
+        var mls=lista.reduce(function(a,r){return a+metrosReais(r);},0);
         html+='<div class="sub-bloco"><div class="sub-header">'+s+' <span style="color:var(--text3);font-weight:400">('+lista.length+' itens)</span></div>'+
-          barraCargaHtml(hs)+
+          barraCargaHtml(hs,mls)+
           '<div class="table-wrap">'+tabelaHtml(lista,true)+'</div></div>';
       });
     }else{
       var lista=itens.slice().sort(ordCompare);
-      html+=barraCargaHtml(horasTotal)+'<div class="table-wrap">'+tabelaHtml(lista,true)+'</div>';
+      html+=barraCargaHtml(horasTotal,mlTotalGrupo)+'<div class="table-wrap">'+tabelaHtml(lista,true)+'</div>';
     }
     html+='</div>';
   });
