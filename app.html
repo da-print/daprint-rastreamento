@@ -93,6 +93,8 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
 .header-acoes{display:flex;gap:6px;align-items:center}
 .btn-icon{background:transparent;border:1px solid var(--border);border-radius:8px;padding:7px 12px;cursor:pointer;color:var(--text);display:flex;align-items:center;font-size:12px;font-weight:600;white-space:nowrap}
 .btn-icon:hover{background:var(--bg2)}
+.campo-leitura{font-size:12.5px;color:var(--text2)}
+.campo-leitura.vazio{color:var(--text3)}
 .grupo-nome{font-size:15px;font-weight:700;display:flex;align-items:center;gap:10px}
 .grupo-icon{width:30px;height:30px;border-radius:8px;background:var(--icon-bg);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
 .grupo-count{background:var(--count-bg);color:var(--count-color);padding:3px 12px;border-radius:20px;font-size:12px;font-weight:600}
@@ -1451,6 +1453,9 @@ function opcoesSubHtml(r,gInfo){
   return '<select class="sel-sub" onchange="mudarSubManual(\''+r.key+'\',this.value)"><option value="">- sub-máquina -</option>'+op+'</select>';
 }
 function opcoesObsHtml(r){
+  if(!window._podeEditar){
+    return r.obs?('<span class="campo-leitura">'+r.obs+'</span>'):'<span class="campo-leitura vazio">—</span>';
+  }
   var op=CATEGORIAS.map(function(o){return'<option value="'+o+'"'+(r.obs===o?' selected':'')+'>'+o+'</option>';}).join('');
   return '<select class="sel-obs '+(r.obs?'ativo':'')+'" onchange="mudarObsManual(\''+r.key+'\',this.value)"><option value="">- sem observação -</option>'+op+'</select>';
 }
@@ -1462,12 +1467,17 @@ function linhaHtml(r,draggable){
   var gInfo=gInfoDe(r.grupo);
   var maquinaCell='';
   if(r.status==='EM_PRODUCAO'||r.status==='EM_CARTEIRA'){
-    maquinaCell='<div class="maquina-cell"><select class="sel-maquina" onchange="mudarGrupoManual(\''+r.key+'\',this.value)">'+opcoesGrupoHtml(r)+'</select>'+opcoesSubHtml(r,gInfo)+'</div>';
-    if(r.grupo==='BATIDA'){
-      maquinaCell+='<div class="imgs-wrap">Imgs faca:<input type="number" min="1" step="1" class="imgs-input" value="'+(r.imagens||'')+'" placeholder="1" onchange="mudarImagensManual(\''+r.key+'\',this.value)"></div>';
-    }
     if(window._podeEditar){
+      maquinaCell='<div class="maquina-cell"><select class="sel-maquina" onchange="mudarGrupoManual(\''+r.key+'\',this.value)">'+opcoesGrupoHtml(r)+'</select>'+opcoesSubHtml(r,gInfo)+'</div>';
+      if(r.grupo==='BATIDA'){
+        maquinaCell+='<div class="imgs-wrap">Imgs faca:<input type="number" min="1" step="1" class="imgs-input" value="'+(r.imagens||'')+'" placeholder="1" onchange="mudarImagensManual(\''+r.key+'\',this.value)"></div>';
+      }
       maquinaCell+='<button class="btn-finalizar" onclick="finalizarItem(\''+r.key+'\')"><i class="ti ti-check"></i> Finalizar</button>';
+    }else{
+      var nomeMaq=r.grupo?dispNome(r.grupo):null;
+      var subTxt=r.sub?(' / '+r.sub):'';
+      var imgsTxt=(r.grupo==='BATIDA'&&r.imagens)?(' &middot; Imgs faca: '+r.imagens):'';
+      maquinaCell=nomeMaq?('<span class="campo-leitura">'+nomeMaq+subTxt+imgsTxt+'</span>'):'<span class="campo-leitura vazio">—</span>';
     }
   }
   if(r.status==='AGUARDANDO_FATURAMENTO'&&r.finalizadoManual&&window._podeEditar){
