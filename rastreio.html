@@ -69,6 +69,9 @@ td{padding:9px 12px;border-bottom:1px solid #EFEFF0;vertical-align:middle}
 .badge.aguardando{background:#FAF0DA;color:#9A6400}
 .badge.faturado{background:#E5F6ED;color:var(--ok)}
 .resumo-misto{background:#FEF6E7;color:#9A6400;font-size:12px;padding:10px 16px;text-align:center;border-bottom:1px solid var(--border)}
+.filtro-resultado{margin-bottom:16px}
+.filtro-resultado input{width:100%;padding:11px 14px;border:1px solid var(--sel-border);border-radius:10px;font-size:14px}
+.filtro-resultado input:focus{outline:none;border-color:var(--accent)}
 .vazio{text-align:center;color:var(--text3);padding:24px;font-size:14px}
 
 @media (max-width: 640px){
@@ -158,6 +161,16 @@ function barraProgresso(niveis){
   return resumo+'<div class="progresso"><div class="linha-prog"><div class="preench" style="width:'+pct+'%"></div></div>'+etapasHtml+'</div>';
 }
 
+function filtrarResultadosPedido(){
+  var campo=document.getElementById('filtro-pedido');
+  var termo=(campo?campo.value:'').trim().toLowerCase();
+  document.querySelectorAll('.ped-bloco').forEach(function(bloco){
+    var ped=(bloco.getAttribute('data-pedido')||'').toLowerCase();
+    var pedCli=bloco.getAttribute('data-pedcliente')||'';
+    var mostra=!termo||ped.indexOf(termo)>=0||pedCli.indexOf(termo)>=0;
+    bloco.style.display=mostra?'':'none';
+  });
+}
 async function consultar(){
   var termo=(document.getElementById('busca').value||'').trim();
   var el=document.getElementById('resultados');
@@ -176,14 +189,18 @@ async function consultar(){
     // agrupar por pedido
     var porPedido={};
     itens.forEach(function(it){(porPedido[it.pedido]=porPedido[it.pedido]||[]).push(it);});
+    var chavesPedido=Object.keys(porPedido);
     var html='';
-    Object.keys(porPedido).sort(function(a,b){return a-b;}).forEach(function(ped){
+    if(chavesPedido.length>1){
+      html+='<div class="filtro-resultado"><input type="text" id="filtro-pedido" placeholder="Filtrar pelo número do pedido..." oninput="filtrarResultadosPedido()"></div>';
+    }
+    chavesPedido.sort(function(a,b){return a-b;}).forEach(function(ped){
       var linhas=porPedido[ped];
       var cliente=linhas[0].cliente_nome||'';
       var pedCliente=linhas[0].pedido_cliente;
       // nivel de progresso = o mais avancado entre as linhas do pedido
       var niveis=linhas.map(function(l){return nivelProgresso(l.status);});
-      html+='<div class="ped-bloco">'+
+      html+='<div class="ped-bloco" data-pedido="'+ped+'" data-pedcliente="'+(pedCliente||'').toLowerCase()+'">'+
         '<div class="ped-topo">'+
           '<div class="cliente">'+cliente+'</div>'+
           '<div class="num">Pedido '+ped+(pedCliente?' &middot; Seu pedido: '+pedCliente:'')+'</div>'+
