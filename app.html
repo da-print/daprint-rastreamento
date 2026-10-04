@@ -711,17 +711,35 @@ function aplicarPermissoesUI(){
 }
 
 // ===================== CARGA DE DADOS DO BANCO =====================
+// Le uma tabela inteira em paginas de 1.000 linhas (ordenadas pela chave, para
+// que as paginas nao se repitam nem pulem linhas).
+async function lerTabelaCompleta(tabela,colunas,ordenarPor){
+  var TAM=1000,inicio=0,todos=[];
+  while(true){
+    var q=supabaseClient.from(tabela).select(colunas||'*');
+    (ordenarPor||[]).forEach(function(c){q=q.order(c);});
+    var r=await q.range(inicio,inicio+TAM-1);
+    if(r.error)return r;
+    var lote=r.data||[];
+    todos=todos.concat(lote);
+    if(lote.length<TAM)break;
+    inicio+=TAM;
+  }
+  return {data:todos,error:null};
+}
 async function recarregarDoBanco(silencioso){
   var msg=document.getElementById('upload-msg');
   if(msg&&!silencioso) msg.textContent='Carregando dados do banco...';
   try{
     // paraleliza as leituras
+    // As 5 tabelas grandes sao lidas com paginacao: o Supabase devolve no maximo
+    // 1.000 linhas por consulta e cortaria o resto SEM avisar.
     var res=await Promise.all([
-      supabaseClient.from('clientes').select('codigo,razao_social,nome_reduzido,cnpj,cnpj_digitos,vendedor,codigo_vendedor'),
-      supabaseClient.from('pedidos_abertos').select('*'),
-      supabaseClient.from('pcp').select('*'),
-      supabaseClient.from('faturamento').select('*'),
-      supabaseClient.from('overrides').select('*'),
+      lerTabelaCompleta('clientes','codigo,razao_social,nome_reduzido,cnpj,cnpj_digitos,vendedor,codigo_vendedor',['codigo']),
+      lerTabelaCompleta('pedidos_abertos','*',['pedido','item','entrega_key']),
+      lerTabelaCompleta('pcp','*',['numero_ordem']),
+      lerTabelaCompleta('faturamento','*',['pedido','item','nf_key']),
+      lerTabelaCompleta('overrides','*',['pedido','item','entrega_key']),
       supabaseClient.from('categorias_obs').select('*').order('ordem'),
       supabaseClient.from('vendedores').select('*'),
       supabaseClient.from('maquinas_grupos').select('*'),
@@ -823,10 +841,24 @@ async function enviarParaBanco(){
       var r4=await supabaseClient.rpc('upload_faturamento',{linhas:mapearFaturamento(window._upload_faturamento)});
       if(r4.error) throw r4.error;
     }
-    // limpeza de overrides (carencia 45 dias) apos atualizar as bases
+    // 1) reata as edicoes de itens cuja DATA DE ENTREGA mudou no ERP (so quando nao
+    //    ha duvida de qual parcela ela pertence). Nao e fatal se a rotina ainda nao
+    //    existir no banco.
+    var reatadas=0;
+    try{
+      msg.textContent='Conferindo edicoes de itens com data alterada...';
+      var rr=await supabaseClient.rpc('reassociar_overrides');
+      if(!rr.error&&typeof rr.data==='number')reatadas=rr.data;
+      else if(rr.error)console.warn('reassociar_overrides indisponivel:',rr.error.message);
+    }catch(e){console.warn('reassociar_overrides falhou:',e);}
+
+    // 2) limpeza de overrides (carencia 45 dias) apos atualizar as bases
     msg.textContent='Aplicando limpeza de overrides...';
     var rl=await supabaseClient.rpc('limpar_overrides');
     if(rl.error) throw rl.error;
+
+    // 3) poda do historico de edicoes (mantem 90 dias). Nao e fatal.
+    try{await supabaseClient.rpc('podar_historico_overrides');}catch(e){}
 
     // limpa buffers e recarrega
     window._upload_clientes=window._upload_pedidos=window._upload_pcp=window._upload_faturamento=null;
@@ -836,6 +868,9 @@ async function enviarParaBanco(){
     document.getElementById('ok-faturamento').textContent='';
     msg.textContent='Upload concluido. Recarregando...';
     await recarregarDoBanco();
+    if(reatadas>0){
+      msg.textContent='Upload concluido. '+reatadas+' edicao(oes) foram mantidas apos mudanca na data de entrega.';
+    }
   }catch(e){
     msg.textContent='Erro no envio: '+(e.message||e);
     console.error(e);
@@ -989,18 +1024,15 @@ async function salvarOrdensEmLote(itensComOrdem){
   try{
     var uid=(await supabaseClient.auth.getUser()).data.user.id;
     var agora=new Date().toISOString();
+    // IMPORTANTE: grava SO a posicao (ordem). Nunca reenvia maquina/obs/etc. da
+    // memoria local, porque ela pode estar desatualizada e apagaria o que outra
+    // pessoa acabou de salvar.
     var registros=itensComOrdem.map(function(it){
       var partes=it.key.split('|');
-      var atual=OVERRIDES[it.key]||{};
-      OVERRIDES[it.key]=Object.assign({},atual,{ordem:it.ordem});
+      OVERRIDES[it.key]=Object.assign({},OVERRIDES[it.key]||{},{ordem:it.ordem});
       return {
         pedido:parseInt(partes[0]),item:parseInt(partes[1]),entrega_key:partes[2]||'SEM-DATA',
-        grupo:atual.grupo!==undefined?atual.grupo:null,
-        sub:atual.sub!==undefined?atual.sub:null,
         ordem:it.ordem,
-        obs:atual.obs!==undefined?atual.obs:null,
-        imagens:atual.imagens!==undefined?atual.imagens:null,
-        finalizado_em:atual.finalizado_em!==undefined?atual.finalizado_em:null,
         atualizado_por:uid,atualizado_em:agora,ausente_desde:null
       };
     });
@@ -1018,13 +1050,12 @@ async function setOverride(key,campos){
   var pedido=parseInt(partes[0]), item=parseInt(partes[1]);
   var entregaKey=partes[2]||'SEM-DATA';
   var registro={pedido:pedido,item:item,entrega_key:entregaKey};
-  var atual=OVERRIDES[key];
-  registro.grupo=atual.grupo!==undefined?atual.grupo:null;
-  registro.sub=atual.sub!==undefined?atual.sub:null;
-  registro.ordem=atual.ordem!==undefined?atual.ordem:null;
-  registro.obs=atual.obs!==undefined?atual.obs:null;
-  registro.imagens=atual.imagens!==undefined?atual.imagens:null;
-  registro.finalizado_em=atual.finalizado_em!==undefined?atual.finalizado_em:null;
+  // IMPORTANTE: grava SO os campos que foram alterados agora. Antes o app reenviava
+  // a linha inteira a partir da memoria local; se essa memoria estivesse desatualizada
+  // (outra aba/celular/pessoa), uma unica edicao apagava o que os outros tinham salvo.
+  ['grupo','sub','ordem','obs','imagens','finalizado_em'].forEach(function(c){
+    if(campos[c]!==undefined)registro[c]=campos[c];
+  });
   try{
     var uid=(await supabaseClient.auth.getUser()).data.user.id;
     registro.atualizado_por=uid;
