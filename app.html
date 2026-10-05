@@ -94,7 +94,14 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
 .btn-icon{background:transparent;border:1px solid var(--border);border-radius:8px;padding:7px 12px;cursor:pointer;color:var(--text);display:flex;align-items:center;font-size:12px;font-weight:600;white-space:nowrap}
 .btn-icon:hover{background:var(--bg2)}
 .campo-leitura{font-size:12.5px;color:var(--text2)}
-.campo-leitura.vazio{color:var(--text3)}
+.aviso-orfas{display:none;margin:12px 24px 0;padding:10px 14px;border-radius:10px;background:rgba(184,118,11,.12);border:1px solid var(--warn);color:var(--text);font-size:13px}
+.aviso-orfas a{color:var(--accent);font-weight:600}
+.tab-hist{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:6px}
+.tab-hist th{text-align:left;padding:8px;color:var(--text3);font-size:11px;text-transform:uppercase;letter-spacing:.03em;border-bottom:2px solid var(--border);white-space:nowrap}
+.tab-hist td{padding:7px 8px;border-bottom:1px solid var(--border2);vertical-align:top}
+.hist-titulo{font-size:14px;font-weight:700;margin:22px 0 6px}
+.hist-sub{font-size:12px;color:var(--text3);margin-bottom:10px}
+.campo-leitura.sem-valor{color:var(--text3)}
 .grupo-nome{font-size:15px;font-weight:700;display:flex;align-items:center;gap:10px}
 .grupo-icon{width:30px;height:30px;border-radius:8px;background:var(--icon-bg);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
 .grupo-count{background:var(--count-bg);color:var(--count-color);padding:3px 12px;border-radius:20px;font-size:12px;font-weight:600}
@@ -179,6 +186,7 @@ tr.drag-over td{border-top:2px solid var(--accent)}
 }
 /* ===================== CELULAR (telas ate 768px) ===================== */
 @media (max-width: 768px){
+  .aviso-orfas{margin:10px 12px 0}
   .header{flex-direction:column;align-items:stretch;padding:10px 12px;gap:8px}
   .header>div:first-child{justify-content:center}
   .header-user{margin-left:0;width:100%;justify-content:space-between;padding-top:6px;border-top:1px solid var(--border)}
@@ -227,6 +235,7 @@ tr.drag-over td{border-top:2px solid var(--accent)}
     <div class="tab-btn" id="tab-vendedores" onclick="mudarAba('vendedores')">Vendedores</div>
     <div class="tab-btn" id="tab-maquinas" onclick="mudarAba('maquinas')">Máquinas</div>
     <div class="tab-btn" id="tab-usuarios" onclick="mudarAba('usuarios')">Usuários</div>
+    <div class="tab-btn" id="tab-historico" onclick="mudarAba('historico')" style="display:none">Histórico</div>
   </div>
   <div class="header-acoes" id="header-acoes" style="display:flex">
     <button class="btn-icon" onclick="toggleTodosGrupos()" title="Recolher/Expandir tudo">Expandir/Recolher</button>
@@ -272,6 +281,7 @@ tr.drag-over td{border-top:2px solid var(--accent)}
 </div>
 
 <div id="painel-view">
+  <div class="aviso-orfas" id="aviso-orfas"></div>
   <div class="stats-bar" id="stats-bar" style="display:none"></div>
   <div class="filter-bar" id="filter-bar" style="display:none">
     <input type="text" id="busca" placeholder="Buscar cliente, produto, pedido (interno ou do cliente)..." oninput="renderPainel()">
@@ -347,6 +357,18 @@ tr.drag-over td{border-top:2px solid var(--accent)}
       <button class="btn-primary" onclick="adicionarGrupoMaquina()">Adicionar grupo</button>
     </div>
     <div id="lista-maquinas"></div>
+  </div>
+</div>
+
+<div id="historico-view" style="display:none">
+  <div class="cat-box" style="max-width:1150px">
+    <h2>Histórico e auditoria</h2>
+    <p>Quem mexeu em quê e quando: cada alteração de máquina, sub-máquina, posição na fila, observação, imagens e finalização fica registrada, com o valor de antes e o de depois. Também aparecem os uploads de planilhas e as edições que ficaram sem parcela e precisam de conferência.</p>
+    <div class="cat-add" style="margin-bottom:18px">
+      <input type="text" id="hist-pedido" class="obs-input" style="flex:0 0 260px" placeholder="Filtrar por número do pedido (opcional)" onkeydown="if(event.key==='Enter')renderHistorico()">
+      <button class="btn-primary" onclick="renderHistorico()">Buscar</button>
+    </div>
+    <div id="historico-conteudo"></div>
   </div>
 </div>
 
@@ -578,6 +600,118 @@ var OVERRIDES={};        // carregado do banco (tabela overrides)
 var CATEGORIAS=[];       // carregado do banco (tabela categorias_obs)
 var VENDEDORES_DEPARA={};// carregado do banco (tabela vendedores)
 var PERFIL=null;         // {nome, papel, codigo_vendedor, maquinas_permitidas}
+// ===================== HISTÓRICO / AUDITORIA (só gestor) =====================
+function escHtml(v){
+  return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmtQuando(iso){
+  if(!iso)return '';
+  var d=new Date(iso);
+  if(isNaN(d.getTime()))return escHtml(iso);
+  return d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});
+}
+function fmtISOData(v){
+  var m=String(v==null?'':v).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return m?(m[3]+'/'+m[2]+'/'+m[1]):escHtml(v);
+}
+function fmtValorHist(campo,v){
+  if(v===null||v===undefined||v==='')return '<span class="campo-leitura sem-valor">(vazio)</span>';
+  if(campo==='finalizado_em'||campo==='entrega_key')return fmtISOData(v);
+  return escHtml(v);
+}
+var NOMES_CAMPO={grupo:'Máquina',sub:'Sub-máquina',ordem:'Posição na fila',obs:'Observação',imagens:'Imgs faca',finalizado_em:'Finalizado em',entrega_key:'Data da parcela','registro anterior':'(registro de formato antigo)'};
+var NOMES_BASE={pedidos_abertos:'Pedidos em aberto',clientes:'Clientes',pcp:'PCP',faturamento:'Faturamento'};
+
+// Aviso no painel: edicoes recentes que ficaram sem parcela. Devolve false se o
+// banco ainda nao tem a atualizacao (arquivo 17).
+async function atualizarAvisoOrfas(){
+  var el=document.getElementById('aviso-orfas');
+  if(!el)return true;
+  if(!PERFIL||PERFIL.papel!=='gestor'){el.style.display='none';return true;}
+  try{
+    var r=await supabaseClient.rpc('listar_orfas_atencao');
+    if(r.error){el.style.display='none';return false;}
+    var n=(r.data||[]).length;
+    if(!n){el.style.display='none';return true;}
+    el.innerHTML='<b>Atenção:</b> '+n+' edição(ões) recente(s) ficaram sem parcela e precisam de conferência. <a href="#" onclick="mudarAba(\'historico\');return false;">Ver detalhes</a>';
+    el.style.display='block';
+    return true;
+  }catch(e){el.style.display='none';return false;}
+}
+
+async function renderHistorico(){
+  var el=document.getElementById('historico-conteudo');
+  if(!el)return;
+  el.innerHTML='<div class="vazio">Carregando...</div>';
+  var ped=parseInt(document.getElementById('hist-pedido').value,10);
+  var args={p_limite:300};
+  if(!isNaN(ped))args.p_pedido=ped;
+  var res;
+  try{
+    res=await Promise.all([
+      supabaseClient.rpc('listar_orfas_atencao'),
+      supabaseClient.rpc('listar_historico',args),
+      supabaseClient.rpc('listar_uploads',{p_limite:15})
+    ]);
+  }catch(e){
+    el.innerHTML='<div class="vazio">Não foi possível carregar o histórico: '+escHtml(e.message||e)+'</div>';
+    return;
+  }
+  var erro=res[1].error||res[2].error;
+  if(erro){
+    el.innerHTML='<div class="vazio">O histórico ainda não está disponível no banco. Rode os arquivos 16 e 17 no SQL Editor do Supabase. Detalhe: '+escHtml(erro.message||erro)+'</div>';
+    return;
+  }
+  var html='';
+
+  // 1) edicoes sem parcela
+  var orfas=res[0].error?[]:(res[0].data||[]);
+  html+='<div class="hist-titulo">Edições que precisam de conferência</div>';
+  if(!orfas.length){
+    html+='<div class="hist-sub">Nenhuma. Todas as edições recentes estão ligadas a uma parcela.</div>';
+  }else{
+    html+='<div class="hist-sub">Estas edições perderam a ligação com a parcela e o sistema não teve certeza de qual é a certa (por exemplo, item com várias parcelas reagendadas). Confira no painel e refaça se preciso.</div>';
+    html+='<div class="table-wrap"><table class="tab-hist"><thead><tr><th>Pedido-item</th><th>Data da edição</th><th>Máquina</th><th>Sub-máquina</th><th>Observação</th><th>Finalizado</th><th>Parcelas hoje</th><th>Situação</th></tr></thead><tbody>'+
+      orfas.map(function(o){
+        return '<tr><td>'+escHtml(o.pedido)+'-'+escHtml(o.item)+'</td><td>'+fmtISOData(o.entrega_key)+'</td>'+
+          '<td>'+fmtValorHist('grupo',o.grupo)+'</td><td>'+fmtValorHist('sub',o.sub)+'</td><td>'+fmtValorHist('obs',o.obs)+'</td>'+
+          '<td>'+fmtValorHist('finalizado_em',o.finalizado_em)+'</td><td>'+escHtml(o.parcelas_atuais||'')+'</td><td>'+escHtml(o.motivo||'')+'</td></tr>';
+      }).join('')+'</tbody></table></div>';
+  }
+
+  // 2) historico de alteracoes
+  var hist=res[1].data||[];
+  html+='<div class="hist-titulo">Histórico de alterações'+(isNaN(ped)?' (as mais recentes)':' do pedido '+ped)+'</div>';
+  if(!hist.length){
+    html+='<div class="hist-sub">Nenhuma alteração registrada'+(isNaN(ped)?' ainda.':' para este pedido.')+'</div>';
+  }else{
+    html+='<div class="table-wrap"><table class="tab-hist"><thead><tr><th>Quando</th><th>Quem</th><th>Origem</th><th>Pedido-item</th><th>Campo</th><th>De</th><th>Para</th></tr></thead><tbody>'+
+      hist.map(function(h){
+        return '<tr><td>'+fmtQuando(h.quando)+'</td><td>'+escHtml(h.quem)+'</td><td>'+escHtml(h.origem)+'</td>'+
+          '<td>'+escHtml(h.pedido)+'-'+escHtml(h.item)+'</td><td>'+escHtml(NOMES_CAMPO[h.campo]||h.campo)+'</td>'+
+          '<td>'+fmtValorHist(h.campo,h.de)+'</td><td>'+fmtValorHist(h.campo,h.para)+'</td></tr>';
+      }).join('')+'</tbody></table></div>';
+  }
+
+  // 3) uploads
+  var ups=res[2].data||[];
+  html+='<div class="hist-titulo">Uploads de planilhas</div>';
+  if(!ups.length){
+    html+='<div class="hist-sub">Nenhum upload registrado ainda.</div>';
+  }else{
+    html+='<div class="table-wrap"><table class="tab-hist"><thead><tr><th>Quando</th><th>Quem</th><th>Base</th><th>Linhas</th><th>Edições que acompanharam mudança de data</th></tr></thead><tbody>'+
+      ups.map(function(u){
+        return '<tr><td>'+fmtQuando(u.quando)+'</td><td>'+escHtml(u.quem)+'</td><td>'+escHtml(NOMES_BASE[u.base]||u.base)+'</td>'+
+          '<td>'+escHtml(u.linhas==null?'':u.linhas)+'</td><td>'+escHtml(u.reatadas==null?'':u.reatadas)+'</td></tr>';
+      }).join('')+'</tbody></table></div>';
+  }
+  el.innerHTML=html;
+}
+
+async function registrarUploadLog(base,linhas){
+  try{await supabaseClient.rpc('registrar_upload',{p_base:base,p_linhas:linhas});}catch(e){}
+}
+
 // ===================== TEMA (claro/escuro) =====================
 function atualizarBotaoTema(){
   var btn=document.getElementById('btn-tema');
@@ -636,6 +770,9 @@ async function iniciar(){
   // 5) ligar atualizacao automatica (Realtime): quando qualquer usuario
   // mudar algo no banco, todo mundo com a tela aberta atualiza sozinho.
   ativarRealtime();
+
+  // 6) aviso de edicoes recentes sem parcela (so gestor)
+  atualizarAvisoOrfas();
 }
 
 function rotuloPapel(p){
@@ -701,6 +838,8 @@ function aplicarPermissoesUI(){
   if(tabCat) tabCat.style.display = ehGestor ? '' : 'none';
   var tabUsr=document.getElementById('tab-usuarios');
   if(tabUsr) tabUsr.style.display = ehGestor ? '' : 'none';
+  var tabHist=document.getElementById('tab-historico');
+  if(tabHist) tabHist.style.display = ehGestor ? '' : 'none';
   var tabVend=document.getElementById('tab-vendedores');
   if(tabVend) tabVend.style.display = ehGestor ? '' : 'none';
   var tabMaq=document.getElementById('tab-maquinas');
@@ -820,45 +959,53 @@ async function enviarParaBanco(){
   var btn=document.getElementById('btn-processar');
   var msg=document.getElementById('upload-msg');
   btn.disabled=true;
+  var subiuPedidos=!!window._upload_pedidos;
   try{
     if(window._upload_clientes){
       msg.textContent='Enviando clientes...';
-      var r=await supabaseClient.rpc('upload_clientes',{linhas:mapearClientes(window._upload_clientes)});
+      var linhasCli=mapearClientes(window._upload_clientes);
+      var r=await supabaseClient.rpc('upload_clientes',{linhas:linhasCli});
       if(r.error) throw r.error;
+      await registrarUploadLog('clientes',linhasCli.length);
     }
     if(window._upload_pedidos){
+      // O banco guarda como as parcelas estavam ANTES, troca pelas novas e faz as
+      // edicoes acompanharem as parcelas reagendadas, tudo na mesma operacao.
       msg.textContent='Enviando pedidos...';
       var r2=await supabaseClient.rpc('upload_pedidos_abertos',{linhas:mapearPedidos(window._upload_pedidos)});
       if(r2.error) throw r2.error;
     }
     if(window._upload_pcp){
       msg.textContent='Enviando PCP...';
-      var r3=await supabaseClient.rpc('upload_pcp',{linhas:colapsarPCPporEtapaAtual(mapearPCP(window._upload_pcp))});
+      var linhasPcp=colapsarPCPporEtapaAtual(mapearPCP(window._upload_pcp));
+      var r3=await supabaseClient.rpc('upload_pcp',{linhas:linhasPcp});
       if(r3.error) throw r3.error;
+      await registrarUploadLog('pcp',linhasPcp.length);
     }
     if(window._upload_faturamento){
       msg.textContent='Enviando faturamento...';
-      var r4=await supabaseClient.rpc('upload_faturamento',{linhas:mapearFaturamento(window._upload_faturamento)});
+      var linhasFat=mapearFaturamento(window._upload_faturamento);
+      var r4=await supabaseClient.rpc('upload_faturamento',{linhas:linhasFat});
       if(r4.error) throw r4.error;
+      await registrarUploadLog('faturamento',linhasFat.length);
     }
-    // 1) reata as edicoes de itens cuja DATA DE ENTREGA mudou no ERP (so quando nao
-    //    ha duvida de qual parcela ela pertence). Nao e fatal se a rotina ainda nao
-    //    existir no banco.
-    var reatadas=0;
-    try{
-      msg.textContent='Conferindo edicoes de itens com data alterada...';
-      var rr=await supabaseClient.rpc('reassociar_overrides');
-      if(!rr.error&&typeof rr.data==='number')reatadas=rr.data;
-      else if(rr.error)console.warn('reassociar_overrides indisponivel:',rr.error.message);
-    }catch(e){console.warn('reassociar_overrides falhou:',e);}
 
-    // 2) limpeza de overrides (carencia 45 dias) apos atualizar as bases
+    // limpeza de overrides (carencia 45 dias) apos atualizar as bases
     msg.textContent='Aplicando limpeza de overrides...';
     var rl=await supabaseClient.rpc('limpar_overrides');
     if(rl.error) throw rl.error;
 
-    // 3) poda do historico de edicoes (mantem 90 dias). Nao e fatal.
+    // poda do historico de edicoes (mantem 90 dias). Nao e fatal.
     try{await supabaseClient.rpc('podar_historico_overrides');}catch(e){}
+
+    // quantas edicoes acompanharam mudanca de data neste upload (so se pedidos foi enviado)
+    var reatadas=0;
+    if(subiuPedidos){
+      try{
+        var rt=await supabaseClient.rpc('reatadas_ultimo_upload');
+        if(!rt.error&&typeof rt.data==='number')reatadas=rt.data;
+      }catch(e){}
+    }
 
     // limpa buffers e recarrega
     window._upload_clientes=window._upload_pedidos=window._upload_pcp=window._upload_faturamento=null;
@@ -868,9 +1015,13 @@ async function enviarParaBanco(){
     document.getElementById('ok-faturamento').textContent='';
     msg.textContent='Upload concluido. Recarregando...';
     await recarregarDoBanco();
-    if(reatadas>0){
-      msg.textContent='Upload concluido. '+reatadas+' edicao(oes) foram mantidas apos mudanca na data de entrega.';
-    }
+
+    // resultado: o que o gestor precisa saber (nada some em silencio)
+    var partes=['Upload concluido.'];
+    if(reatadas>0)partes.push(reatadas+' edicao(oes) acompanharam a mudanca de data de entrega.');
+    var bancoAtualizado=await atualizarAvisoOrfas();
+    if(!bancoAtualizado&&subiuPedidos)partes.push('ATENCAO: o banco ainda nao tem a atualizacao de continuidade das edicoes (arquivos SQL 16 e 17). Rode-os no Supabase.');
+    msg.textContent=partes.join(' ');
   }catch(e){
     msg.textContent='Erro no envio: '+(e.message||e);
     console.error(e);
@@ -1219,6 +1370,11 @@ function mudarAba(aba){
   if(tmq)tmq.classList.toggle('active',aba==='maquinas');
   var uv=document.getElementById('usuarios-view');
   if(uv)uv.style.display=aba==='usuarios'?'block':'none';
+  var hv=document.getElementById('historico-view');
+  if(hv)hv.style.display=aba==='historico'?'block':'none';
+  var th=document.getElementById('tab-historico');
+  if(th)th.classList.toggle('active',aba==='historico');
+  if(aba==='historico')renderHistorico();
   if(aba==='categorias')renderCategorias();
   if(aba==='vendedores')renderVendedores();
   if(aba==='maquinas')renderMaquinas();
@@ -1485,7 +1641,7 @@ function opcoesSubHtml(r,gInfo){
 }
 function opcoesObsHtml(r){
   if(!window._podeEditar){
-    return r.obs?('<span class="campo-leitura">'+r.obs+'</span>'):'<span class="campo-leitura vazio">—</span>';
+    return r.obs?('<span class="campo-leitura">'+r.obs+'</span>'):'<span class="campo-leitura sem-valor">—</span>';
   }
   var op=CATEGORIAS.map(function(o){return'<option value="'+o+'"'+(r.obs===o?' selected':'')+'>'+o+'</option>';}).join('');
   return '<select class="sel-obs '+(r.obs?'ativo':'')+'" onchange="mudarObsManual(\''+r.key+'\',this.value)"><option value="">- sem observação -</option>'+op+'</select>';
@@ -1508,7 +1664,7 @@ function linhaHtml(r,draggable){
       var nomeMaq=r.grupo?dispNome(r.grupo):null;
       var subTxt=r.sub?(' / '+r.sub):'';
       var imgsTxt=(r.grupo==='BATIDA'&&r.imagens)?(' &middot; Imgs faca: '+r.imagens):'';
-      maquinaCell=nomeMaq?('<span class="campo-leitura">'+nomeMaq+subTxt+imgsTxt+'</span>'):'<span class="campo-leitura vazio">—</span>';
+      maquinaCell=nomeMaq?('<span class="campo-leitura">'+nomeMaq+subTxt+imgsTxt+'</span>'):'<span class="campo-leitura sem-valor">—</span>';
     }
   }
   if(r.status==='AGUARDANDO_FATURAMENTO'&&r.finalizadoManual&&window._podeEditar){
