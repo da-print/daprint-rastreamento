@@ -194,6 +194,31 @@ table{font-size:13px}th{font-size:10px;letter-spacing:.07em;padding:14px 12px;ba
 .filtro-resultado input{width:100%;padding:15px 18px;background:#fff;border:1px solid #dfe4eb;border-radius:11px}
 @media(max-width:640px){.ped-topo{padding:17px 16px;align-items:flex-start}.ped-topo .cliente{font-size:16px}.ped-status{font-size:10px;padding:7px 9px}.progresso{padding:24px 5px 22px}.etapa .bola{width:36px;height:36px;font-size:16px}.etapa .rotulo{font-size:10px;max-width:75px}.linha-prog{top:42px;left:13%;right:13%}.tabela-wrap{padding:6px 12px 16px}.resumo-misto{margin:0 12px}}
 </style>
+<style>
+/* V5: componentes de resultados reconstruídos a partir da referência aprovada. */
+.resultados{width:100%;max-width:1100px;margin:28px auto 0}
+.ped-bloco{display:block!important;position:relative;overflow:hidden!important;background:#fff!important;border:1px solid #e4e8ed!important;border-radius:17px!important;box-shadow:0 12px 35px rgba(24,32,45,.055)!important;margin:0 0 22px!important;padding:0!important}
+.ped-topo{display:flex!important;justify-content:space-between;align-items:center;gap:20px;background:#fff!important;padding:23px 30px 19px!important;border-bottom:1px solid #e9edf2!important}
+.ped-identidade{min-width:0}.ped-eyebrow{font-size:10px;letter-spacing:.13em;font-weight:800;color:#c52e35;margin-bottom:7px}
+.ped-title-row{display:flex;align-items:center;gap:13px;flex-wrap:wrap}.ped-title-row h2{font-size:21px!important;line-height:1.25!important;color:#20252d!important;font-weight:800!important;margin:0!important}
+.ped-meta{margin-top:8px;color:#667080;font-size:12px}.ped-meta strong{color:#2b3340}.ped-meta-sep{padding:0 7px;color:#b0b7c0}
+.ped-topo-icon{width:44px;height:44px;border-radius:12px;background:#fff1f1;color:#c52e35;display:grid;place-items:center;flex-shrink:0;font-size:23px}
+.ped-status{position:static!important;display:inline-flex!important;align-items:center!important;border-radius:30px!important;padding:6px 12px!important;font-size:11px!important;font-weight:750!important;white-space:nowrap;background:#e5f6ed;color:#14824d}
+.ped-status.em-producao{background:#e7efff!important;color:#245eae!important}.ped-status.aguardando,.ped-status.misto{background:#fff3dc!important;color:#966006!important}.ped-status.faturado{background:#e5f6ed!important;color:#14824d!important}
+.progresso{display:flex!important;align-items:flex-start!important;justify-content:space-between!important;position:relative!important;max-width:760px!important;margin:0 auto!important;padding:32px 24px 24px!important;background:#fff!important}
+.etapa{position:relative!important;z-index:2!important;display:flex!important;align-items:center!important;flex-direction:column!important;flex:1!important;min-width:0!important}
+.etapa .bola{width:46px!important;height:46px!important;border-radius:50%!important;background:#f0f2f5!important;color:#aeb5c0!important;border:2px solid #e4e7ec!important;display:grid!important;place-items:center!important;font-size:21px!important;box-shadow:0 0 0 5px #fff!important}
+.etapa.done .bola{background:#159a69!important;border-color:#159a69!important;color:#fff!important}.etapa.atual .bola{background:#c52e35!important;border-color:#c52e35!important;color:#fff!important;box-shadow:0 0 0 5px #fbeaec!important}
+.etapa .rotulo{font-size:11px!important;font-weight:600!important;line-height:1.35!important;color:#8b95a3!important;text-align:center!important;max-width:125px!important;margin-top:11px!important}.etapa.done .rotulo,.etapa.atual .rotulo{color:#303946!important}
+.linha-prog{position:absolute!important;z-index:1!important;left:12.5%!important;right:12.5%!important;top:54px!important;height:3px!important;background:#e6e9ee!important}.linha-prog .preench{height:100%!important;background:#159a69!important}
+.pedido-itens-head{display:flex;align-items:center;justify-content:space-between;padding:8px 30px 12px}.pedido-itens-head h3{margin:0;font-size:15px;color:#20252d;font-weight:800}.pedido-itens-head span{font-size:12px;color:#8b95a3}
+.tabela-wrap{padding:0 30px 26px!important;overflow-x:auto!important}.tabela-wrap table{min-width:690px;width:100%;border-collapse:collapse;font-size:12px!important}
+.tabela-wrap thead{background:#f6f8fa}.tabela-wrap th{border-bottom:1px solid #e5e9ee!important;font-size:10px!important;color:#6b7687!important;font-weight:800!important;letter-spacing:.04em!important;padding:13px 12px!important}.tabela-wrap td{padding:15px 12px!important;border-bottom:1px solid #edf0f4!important;color:#374252!important;vertical-align:middle!important;line-height:1.45}.tabela-wrap tbody tr:last-child td{border-bottom:0!important}.tabela-wrap .item-num{font-weight:800;color:#c52e35!important}.tabela-wrap .item-desc{min-width:210px;font-weight:550}
+.badge{display:inline-flex!important;align-items:center!important;border-radius:20px!important;padding:5px 10px!important;font-size:10px!important;font-weight:700!important}.badge.producao{background:#e6efff!important;color:#2861a9!important}.badge.aguardando{background:#fff1d9!important;color:#986000!important}.badge.faturado{background:#e3f5e9!important;color:#188250!important}
+.resumo-misto{display:flex!important;align-items:center!important;gap:12px!important;margin:0 30px 22px!important;padding:13px 16px!important;background:#fff8e8!important;border:1px solid #ffe8b1!important;border-radius:10px!important;color:#815915!important;text-align:left!important;font-size:12px!important}.resumo-misto i{font-size:21px;color:#d59a21}
+.filtro-resultado{margin-bottom:17px!important}.filtro-resultado input{background:#fff!important;border:1px solid #e0e5ec!important;border-radius:10px!important;padding:14px 16px!important}
+@media(max-width:700px){.ped-topo{padding:19px 17px 15px!important}.ped-topo-icon{display:none}.ped-title-row h2{font-size:18px!important}.progresso{padding:27px 6px 23px!important}.etapa .bola{width:36px!important;height:36px!important;font-size:16px!important}.etapa .rotulo{font-size:9px!important;max-width:78px!important}.linha-prog{top:44px!important}.pedido-itens-head{padding:8px 17px 12px}.tabela-wrap{padding:0 17px 18px!important}.resumo-misto{margin:0 17px 18px!important}.ped-eyebrow{font-size:9px}}
+</style>
 </head>
 <body>
 <div class="top-strip"></div>
@@ -261,19 +286,17 @@ var ETAPAS=[
   {rotulo:'Aguardando faturamento',icon:'ti-package'},
   {rotulo:'Faturado',icon:'ti-truck-delivery'}
 ];
+function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function barraProgresso(niveis){
-  // niveis = lista com o nivel (1..3) de cada linha/parcela do pedido
-  var nivelMin=Math.min.apply(null,niveis);
-  var nivelMax=Math.max.apply(null,niveis);
-  var misto=nivelMin!==nivelMax;
-  var pct=(nivelMax/(ETAPAS.length-1))*100;
+  var minimo=Math.min.apply(null,niveis),maximo=Math.max.apply(null,niveis);
+  var misto=minimo!==maximo;
   var etapasHtml=ETAPAS.map(function(e,i){
-    var cls=i<nivelMin?'done':(i<=nivelMax?'atual':'');
-    var icone=i<nivelMin?'<i class="ti ti-check"></i>':'<i class="ti '+e.icon+'"></i>';
-    return '<div class="etapa '+cls+'"><div class="bola">'+icone+'</div><div class="rotulo">'+e.rotulo+'</div></div>';
+    var cls=i<minimo?'done':i<=maximo?'atual':'';
+    var icone=i<minimo?'ti-check':e.icon;
+    return '<div class="etapa '+cls+'"><div class="bola"><i class="ti '+icone+'"></i></div><div class="rotulo">'+e.rotulo+'</div></div>';
   }).join('');
-  var resumo=misto?'<div class="resumo-misto">Este pedido está em mais de uma etapa: parte já '+ETAPAS[nivelMax].rotulo.toLowerCase()+', parte ainda em '+ETAPAS[nivelMin].rotulo.toLowerCase()+'. Veja o detalhe de cada item na tabela abaixo.</div>':'';
-  return resumo+'<div class="progresso"><div class="linha-prog"><div class="preench" style="width:'+pct+'%"></div></div>'+etapasHtml+'</div>';
+  var resumo=misto?'<div class="resumo-misto"><i class="ti ti-info-circle"></i><span><strong>Pedido com itens em diferentes etapas.</strong> Consulte a situação individual de cada item na tabela abaixo.</span></div>':'';
+  return '<div class="progresso" aria-label="Etapas do pedido"><div class="linha-prog"><div class="preench" style="width:'+(maximo/3*100)+'%"></div></div>'+etapasHtml+'</div>'+resumo;
 }
 
 function filtrarResultadosPedido(){
@@ -315,29 +338,17 @@ async function consultar(){
       var pedCliente=linhas[0].pedido_cliente;
       // nivel de progresso = o mais avancado entre as linhas do pedido
       var niveis=linhas.map(function(l){return nivelProgresso(l.status);});
-      html+='<div class="ped-bloco" data-pedido="'+ped+'" data-pedcliente="'+(pedCliente||'').toLowerCase()+'">'+
-        '<div class="ped-topo">'+
-          '<div class="cliente">'+cliente+'</div>'+
-          '<div class="num">Pedido '+ped+(pedCliente?' &middot; Seu pedido: '+pedCliente:'')+'</div></div>'+
-          '<span class="ped-status '+(Math.min.apply(null,niveis)!==Math.max.apply(null,niveis)?'misto':(Math.max.apply(null,niveis)===3?'':Math.max.apply(null,niveis)===2?'aguardando':'em-producao'))+'">'+(Math.min.apply(null,niveis)!==Math.max.apply(null,niveis)?'Etapas diferentes':(Math.max.apply(null,niveis)===3?'Faturado':Math.max.apply(null,niveis)===2?'Aguardando faturamento':'Em produção'))+'</span>'+
-        '</div>'+
+      var minNivel=Math.min.apply(null,niveis), maxNivel=Math.max.apply(null,niveis);
+      var misto=minNivel!==maxNivel;
+      var statusRotulo=misto?'Etapas diferentes':(maxNivel===3?'Faturado':maxNivel===2?'Aguardando faturamento':'Em produção');
+      var statusClasse=misto?'misto':maxNivel===3?'faturado':maxNivel===2?'aguardando':'em-producao';
+      html+='<article class="ped-bloco" data-pedido="'+esc(ped)+'" data-pedcliente="'+esc((pedCliente||'').toLowerCase())+'">'+
+        '<div class="ped-topo"><div class="ped-identidade"><div class="ped-eyebrow">ACOMPANHAMENTO DO PEDIDO</div><div class="ped-title-row"><h2>Pedido #'+esc(ped)+'</h2><span class="ped-status '+statusClasse+'">'+statusRotulo+'</span></div><div class="ped-meta"><strong>'+esc(cliente)+'</strong>'+(pedCliente?' <span class="ped-meta-sep">•</span> Seu pedido: '+esc(pedCliente):'')+'</div></div><div class="ped-topo-icon"><i class="ti ti-package"></i></div></div>'+
         barraProgresso(niveis)+
-        '<div class="tabela-wrap"><table><thead><tr>'+
-          '<th>Item</th><th>Descrição</th><th>Qtd</th><th>Status</th><th>Data</th><th>NF</th><th>Transportadora</th>'+
-        '</tr></thead><tbody>'+
-        linhas.map(function(l){
-          return '<tr>'+
-            '<td>'+l.item+'</td>'+
-            '<td>'+descProduto(l.produto_desc)+'</td>'+
-            '<td>'+fmtQtd(l.qtde)+(l.unidade?' '+l.unidade:'')+'</td>'+
-            '<td><span class="badge '+classeBadge(l.status)+'">'+l.status+'</span></td>'+
-            '<td>'+fmtDataBR(l.data_evento)+'</td>'+
-            '<td>'+(l.numero_nf||'-')+'</td>'+
-            '<td>'+(l.transportadora||'-')+'</td>'+
-          '</tr>';
-        }).join('')+
-        '</tbody></table></div>'+
-      '</div>';
+        '<div class="pedido-itens-head"><h3>Itens do pedido</h3><span>'+linhas.length+' '+(linhas.length===1?'item':'itens')+'</span></div>'+
+        '<div class="tabela-wrap"><table><thead><tr><th>Item</th><th>Descrição</th><th>Qtd</th><th>Status</th><th>Data</th><th>NF</th><th>Transportadora</th></tr></thead><tbody>'+
+        linhas.map(function(l){return '<tr><td class="item-num">'+esc(l.item)+'</td><td class="item-desc">'+esc(descProduto(l.produto_desc))+'</td><td>'+esc(fmtQtd(l.qtde)+(l.unidade?' '+l.unidade:''))+'</td><td><span class="badge '+classeBadge(l.status)+'">'+esc(l.status)+'</span></td><td>'+esc(fmtDataBR(l.data_evento))+'</td><td>'+esc(l.numero_nf||'-')+'</td><td>'+esc(l.transportadora||'-')+'</td></tr>';}).join('')+
+        '</tbody></table></div></article>';
     });
     el.innerHTML=html;
   }catch(e){
