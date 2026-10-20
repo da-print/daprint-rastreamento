@@ -89,12 +89,65 @@ td{padding:9px 12px;border-bottom:1px solid #EFEFF0;vertical-align:middle}
 .carregando{text-align:center;color:var(--text3);padding:24px}
 .rodape{text-align:center;font-size:12px;color:var(--text3);padding:24px;line-height:1.7}
 </style>
-<link rel="stylesheet" href="rastreio-modern.css">
+<style>
+/* D&A Print Solutions — atualização exclusivamente visual do rastreamento */
+:root{--bg:#f3f5f7;--card:#fff;--border:#e5e8ed;--text:#20252d;--text2:#3c4654;--text3:#707987;--accent:#c52e35;--accent-hover:#a9222b;--brand-gray:#85898e;--sel-border:#d9dfe6}
+body{font-family:Inter,system-ui,-apple-system,'Segoe UI',sans-serif;background:#f4f5f7;display:block;color:var(--text)}
+.top-strip{height:4px;background:#c52e35}
+.site-header{height:80px;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(20px,5vw,88px);border-bottom:1px solid #e8e9ec;gap:20px}
+.site-header .brand img{height:48px;max-width:180px;object-fit:contain}
+.site-nav{display:flex;align-items:center;gap:32px;font-size:13px;font-weight:600}
+.site-nav a{color:#525967;text-decoration:none;padding:29px 0 25px;border-bottom:3px solid transparent}
+.site-nav a.active{color:#bf242e;border-color:#c52e35}
+.site-nav a:hover{color:#c52e35}
+.wrap{display:block;padding:0 24px 60px;max-width:1260px;margin:0 auto}
+.header-logo{display:none}
+.card{width:100%;max-width:none;padding:0;border:0;background:transparent;box-shadow:none;border-radius:0}
+.tracking-hero{position:relative;isolation:isolate;overflow:hidden;margin:32px auto 0;min-height:300px;padding:48px clamp(24px,5vw,70px) 100px;border-radius:24px;background:linear-gradient(112deg,#fff 0%,#f5f6f8 57%,#dfe2e6 100%);border:1px solid #e7e9ec}
+.tracking-hero:before{content:"";position:absolute;right:-100px;top:-190px;width:600px;height:600px;border-radius:50%;border:85px solid rgba(179,30,40,.09);z-index:-1}
+.tracking-hero:after{content:"";position:absolute;right:65px;top:30px;width:270px;height:270px;border:42px solid rgba(85,92,103,.13);border-radius:50%;box-shadow:inset 0 0 0 23px rgba(255,255,255,.7),0 18px 50px #5b606519;z-index:-1;transform:rotate(-23deg) scaleX(1.4)}
+.eyebrow{display:inline-flex;align-items:center;background:#fff1f2;color:#b92530;border:1px solid #f4d5d8;border-radius:50px;font-size:11px;font-weight:800;letter-spacing:.08em;padding:9px 13px;margin-bottom:18px}
+.tracking-hero h1{font-size:clamp(34px,4.2vw,56px);line-height:1.07;text-align:left;letter-spacing:-.05em;margin-bottom:14px;font-weight:800;max-width:560px}
+.tracking-hero .sub{text-align:left;font-size:16px;line-height:1.6;color:#626c78;max-width:440px;margin:0}
+.search-panel{position:relative;z-index:2;max-width:1070px;margin:-60px auto 0;padding:27px 30px 23px;background:#fff;border:1px solid #e9eaed;border-radius:18px;box-shadow:0 18px 48px rgba(30,38,50,.09)}
+.search-panel .search-title{font-size:14px;font-weight:750;margin-bottom:12px;color:#313944}
+.busca-row{max-width:none;gap:12px}
+.busca-row input{padding:17px 20px;font-size:15px;background:#fafbfc;border-color:#dfe3e8;border-radius:11px}
+.busca-row input:focus,.filtro-resultado input:focus{outline:3px solid #c52e3520;border-color:#c52e35}
+.btn{border-radius:11px;padding:16px 34px;box-shadow:0 5px 12px #c52e3520}
+.ajuda{text-align:left;font-size:12px;margin-top:12px;color:#7b8490}
+.resultados{margin:28px auto 0;max-width:1070px}
+.filtro-resultado input{background:#fff;padding:14px 18px;border-radius:11px}
+.ped-bloco{border-radius:17px;border:1px solid #e5e8ec;background:#fff;box-shadow:0 8px 26px #2834440a;margin-bottom:22px}
+.ped-topo{padding:20px 25px;background:#fafbfc}
+.ped-topo .cliente{font-size:17px;letter-spacing:-.02em}
+.ped-topo .num{margin-top:5px;font-size:12px}
+.progresso{max-width:740px;padding:31px 20px 24px}
+.linha-prog{top:53px;height:3px;background:#e6e8ec}
+.etapa .bola{width:46px;height:46px;font-size:19px;background:#e9ebef;border-color:#e9ebef;color:#9ca3af}
+.etapa.done .bola{background:#1d9c6b;border-color:#1d9c6b;color:white}
+.etapa.atual .bola{background:#c52e35;border-color:#c52e35;box-shadow:0 0 0 5px #c52e3519}
+.etapa .rotulo{font-size:12px;margin-top:10px}
+.tabela-wrap{padding:10px 20px 20px}
+table{font-size:13px}th{font-size:10px;letter-spacing:.07em;padding:14px 12px;background:#fafbfc;border-bottom:1px solid #e5e8ec}td{padding:14px 12px;border-bottom:1px solid #eff1f4}
+.badge{font-size:11px;padding:6px 11px}
+.resumo-misto{text-align:left;background:#fff8e9;color:#916316;padding:13px 24px}
+.vazio,.carregando{padding:34px;border:1px solid #e6e9ee;border-radius:15px;background:#fff}
+.rodape{background:#fff;border-top:1px solid #e9ebef;padding:25px 20px;color:#87909a;font-size:12px}
+@media(max-width:700px){.site-header{height:66px;padding:0 18px}.site-header .brand img{height:39px}.site-nav{gap:15px;font-size:11px}.site-nav a{padding:23px 0 20px}.site-nav .optional{display:none}.wrap{padding:0 12px 35px}.tracking-hero{margin-top:14px;min-height:275px;padding:36px 23px 96px;border-radius:17px}.tracking-hero:after{right:-130px;opacity:.5}.tracking-hero:before{right:-350px}.tracking-hero h1{font-size:37px}.tracking-hero .sub{font-size:14px;max-width:300px}.search-panel{margin:-56px 10px 0;padding:20px 17px}.busca-row{flex-direction:column}.busca-row .btn{width:100%}.resultados{margin-top:18px}.ped-topo{padding:17px}.progresso{padding:24px 5px 14px}.etapa .bola{width:35px;height:35px;font-size:15px}.linha-prog{top:40px}.etapa .rotulo{font-size:10px;max-width:66px}.tabela-wrap{padding:8px 10px 15px}table{min-width:670px}}
+
+</style>
+<style>
+/* Regras de contenção para evitar imagens ou cabeçalhos gigantes */
+.site-header img,.brand img,.header-logo img{max-width:100%;height:auto;object-fit:contain}
+.site-header .brand img{width:64px;max-height:64px}
+@media(max-width:700px){.site-header .brand img{width:44px;max-height:44px}}
+</style>
 </head>
 <body>
 <div class="top-strip"></div>
 <header class="site-header">
-  <a class="brand" href="index.html" aria-label="D&A Print Solutions - início"><img src="icon-512.png" alt="D&A Print Solutions"></a>
+  <a class="brand" href="index.html" aria-label="D&A Print Solutions - início"><img src="icon-512.png" alt="D&A Print Solutions" style="width:64px;height:64px;object-fit:contain;display:block"></a>
   <nav class="site-nav" aria-label="Navegação principal">
     <a class="optional" href="index.html">Início</a>
     <a class="active" href="rastreio.html" aria-current="page">Rastrear pedido</a>
