@@ -1,58 +1,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 :root{font-family:Inter,Arial,sans-serif;color:#202630;background:#f5f7fa;font-synthesis:none}*{box-sizing:border-box}body{margin:0}button,input{font:inherit}button{cursor:pointer}.container{width:min(1188px,calc(100% - 48px));margin-inline:auto}.site-header{background:#fff;box-shadow:0 2px 12px #26324813;position:relative;z-index:2}.nav{height:72px;display:flex;align-items:center;gap:22px}.brand img{display:block;width:162px;height:auto;max-height:60px;object-fit:contain}.brand-divider{width:1px;height:44px;background:#c6ccd6}.brand-title{display:flex;flex-direction:column;gap:2px}.brand-title strong{font-size:26px;letter-spacing:-.8px}.brand-title span{font-size:14px;color:#738095}.nav nav{margin-left:auto;display:flex;align-self:stretch;align-items:center;gap:34px}.nav nav a{height:100%;display:flex;align-items:center;color:#687487;font-weight:600;text-decoration:none;font-size:13px;white-space:nowrap;border-bottom:3px solid transparent}.nav nav a.selected{color:#d11e2d;border-bottom-color:#d11e2d}.hero{min-height:344px;background:linear-gradient(90deg,#f8f9fb 0%,#f8f9fbee 30%,#f8f9fb40 54%,#ffffff00 72%),url('../images/banner-industrial.jpg') right center/cover no-repeat}.hero-content{padding-top:42px}.eyebrow{display:inline-block;border:1px solid #ffccd1;border-radius:30px;background:#fff0f2;color:#ce1426;padding:8px 13px;font-size:11px;font-weight:800;letter-spacing:.7px}.hero h1{font-size:clamp(36px,4.1vw,57px);letter-spacing:-2.7px;line-height:1.05;margin:17px 0 13px;font-weight:800;max-width:470px}.hero p{font-size:17px;line-height:1.55;color:#647185;max-width:390px;margin:0}.main-content{position:relative;margin-top:-64px}.search-panel{position:relative;z-index:1;background:#fff;border-radius:13px;padding:19px 28px 18px;box-shadow:0 16px 36px #25354c12;margin-bottom:24px}.search-row{display:flex;gap:12px}.search-input{display:flex;align-items:center;gap:16px;border:1px solid #d7dfe9;border-radius:9px;min-width:0;flex:1;padding:0 18px}.search-input img{width:22px;height:22px}.search-input input{width:100%;border:0;outline:0;background:transparent;height:54px;font-size:15px;min-width:0}.search-row button{background:#cf202f;border:0;border-radius:9px;color:#fff;font-weight:700;min-width:195px;display:flex;align-items:center;justify-content:center;gap:24px;box-shadow:0 6px 12px #d1283030}.search-row button:disabled{opacity:.6}.search-row button span{font-size:23px;font-weight:400}.search-panel p{color:#8a96a8;font-size:12px;margin:11px 0 0}.filter{height:44px;display:flex;align-items:center;gap:12px;border:1px solid #d8e0ea;border-radius:9px;background:#fff;padding:0 18px;margin-bottom:16px}.filter img{width:17px;height:17px}.filter input{border:0;outline:0;flex:1;min-width:0;background:transparent;font-size:13px}.ped-bloco{background:#fff;border:1px solid #e0e5ed;border-radius:13px;box-shadow:0 8px 20px #26354b08;padding:24px 28px 14px;margin-bottom:20px}.ped-bloco[hidden]{display:none}.order-head{display:flex;justify-content:space-between;gap:20px;align-items:start}.order-title{display:flex;align-items:center;flex-wrap:wrap;gap:16px}.order-title h2{font-size:25px;letter-spacing:-.7px;margin:0}.order-meta{color:#657184;font-size:13px;margin-top:5px}.sep{padding:0 12px;color:#a1a9b6}.order-count{color:#8592a4;font-size:13px;white-space:nowrap}.status-pill{display:inline-block;background:#e3efff;color:#1161b6;border-radius:50px;padding:6px 11px;font-weight:700;font-size:11px;white-space:nowrap}.status-pill.success{background:#e4f7ec;color:#158b58}.status-pill.waiting{background:#fff2d9;color:#946114}.timeline{max-width:850px;margin:20px auto 26px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));position:relative}.timeline:before{content:'';height:3px;background:#dce2e9;position:absolute;top:27px;left:12.5%;right:12.5%}.milestone{text-align:center;position:relative;z-index:1;color:#6d798b;font-size:12px}.milestone-icon{width:56px;height:56px;border:1px solid #d1d9e4;background:#f5f7fa;border-radius:50%;margin:0 auto 9px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 5px #fff}.milestone-icon img{width:24px;height:24px;opacity:.5}.milestone.done .milestone-icon{background:#16a16c;border-color:#16a16c}.milestone.active .milestone-icon{background:#d22333;border-color:#d22333}.milestone.done img,.milestone.active img{filter:brightness(0) invert(1);opacity:1}.milestone.done,.milestone.active{color:#202630;font-weight:700}.milestone-name{max-width:130px;margin:auto;line-height:1.45}.items-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.items-title h3{font-size:16px;margin:0}.items-title span{color:#8996a7;font-size:12px}.table-scroll{overflow-x:auto;border:1px solid #e1e6ed;border-radius:9px}table{border-collapse:collapse;width:100%;min-width:780px;font-size:12px;text-align:left}th{background:#f4f6f9;color:#677487;font-size:10px;letter-spacing:.45px;font-weight:800}th,td{padding:13px 14px;border-bottom:1px solid #e5eaf0}tbody tr:last-child td{border-bottom:0}td{color:#344052}.notice{display:flex;gap:14px;background:#fff6e2;border:1px solid #ffdc95;border-radius:9px;padding:13px 16px;margin-top:14px;font-size:12px}.notice img{width:25px;height:25px;align-self:flex-start}.notice p{margin:5px 0 0;color:#756246}.message{padding:25px;text-align:center;color:#657184;background:#fff;border-radius:12px}footer{text-align:center;padding:36px;color:#96a0af;font-size:12px}@media(max-width:700px){.container{width:calc(100% - 28px)}.nav{height:64px;gap:10px}.brand img{width:108px}.brand-divider{height:30px}.brand-title strong{font-size:18px}.brand-title span{font-size:10px}.nav nav{gap:12px}.nav nav a{font-size:10px}.hero{min-height:340px;background-position:62% center;background-image:linear-gradient(90deg,#f8f9fb 0%,#f8f9fbee 42%,#f8f9fb77 72%),url('../images/banner-industrial.jpg')}.hero-content{padding-top:28px}.hero h1{font-size:38px;letter-spacing:-1.6px}.hero p{font-size:14px;max-width:270px}.main-content{margin-top:-50px}.search-panel{padding:14px}.search-row{flex-direction:column}.search-row button{height:48px}.ped-bloco{padding:18px 14px}.order-title h2{font-size:21px}.order-count{display:none}.timeline{margin:22px -5px}.milestone-icon{width:44px;height:44px}.milestone-icon img{width:20px;height:20px}.timeline:before{top:21px}.milestone{font-size:10px}.order-meta{line-height:1.7}.brand-title span{display:none}}@media(max-width:390px){.nav nav a:first-child{display:none}.brand img{width:95px}.brand-title strong{font-size:16px}}
-/* =========================================
-   D&A — CORREÇÃO DO BANNER INDUSTRIAL
-   ========================================= */
-
-@media (min-width: 701px) {
-  .hero {
-    min-height: 344px;
-
-    background-image:
-      linear-gradient(
-        90deg,
-        #f8f9fb 0%,
-        rgba(248,249,251,0.98) 24%,
-        rgba(248,249,251,0.85) 42%,
-        rgba(248,249,251,0.20) 70%,
-        transparent 100%
-      ),
-      url('../images/banner-industrial.jpg');
-
-    background-size:
-      100% 100%,
-      auto 100%;
-
-    background-position:
-      center,
-      right center;
-
-    background-repeat: no-repeat;
-    background-color: #f8f9fb;
-  }
+.hero {
+  background-image: url('../images/banner-industrial.jpg');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-color: #f8f9fb;
 }
 
-/* Ajuste para celulares */
 @media (max-width: 700px) {
   .hero {
-    background-image:
-      linear-gradient(
-        90deg,
-        rgba(248,249,251,0.98) 0%,
-        rgba(248,249,251,0.90) 48%,
-        rgba(248,249,251,0.50) 100%
-      ),
-      url('../images/banner-industrial.jpg');
-
-    background-size:
-      100% 100%,
-      auto 100%;
-
-    background-position:
-      center,
-      right center;
-
-    background-repeat: no-repeat;
-    background-color: #f8f9fb;
+    background-position: 65% center;
   }
 }
