@@ -1,0 +1,67 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>D&A Print Solutions | Rastreio</title><link rel="stylesheet" href="assets/css/rastreio.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script></head><body>
+<header class="site-header"><div class="container nav"><a href="index.html" class="brand" aria-label="D&A Print Solutions, início"><img src="assets/images/logo-da.png" alt="D&A Print Solutions"></a><div class="brand-divider"></div><div class="brand-title"><strong>Rastreio</strong><span>Acompanhe seu pedido</span></div><nav><a href="index.html">Início</a><a href="rastreio-teste.html" class="selected">Rastrear pedido</a></nav></div></header>
+<main><section class="hero"><div class="container hero-content"><span class="eyebrow">RASTREAMENTO DE PEDIDOS</span><h1>Acompanhe<br>o seu pedido</h1><p>Consulte o andamento da produção pelo seu CNPJ ou número do pedido.</p></div></section>
+<div class="container main-content"><section class="search-panel" aria-label="Consultar pedido"><div class="search-row"><div class="search-input"><img src="assets/icons/busca.svg" alt=""><input id="busca" type="text" placeholder="CNPJ ou número do pedido" aria-label="CNPJ ou número do pedido" autocomplete="off"></div><button id="btn" onclick="consultar()">Consultar <span aria-hidden="true">→</span></button></div><p>Digite apenas os números do CNPJ, ou o número do pedido. Ele está em sua confirmação de pedido ou nota fiscal.</p></section><section id="resultados" aria-live="polite"></section></div></main>
+<footer>D&A Print Solutions · Rastreamento de pedidos</footer>
+<script>
+function fmtDataBR(iso){
+  if(!iso)return'-';
+  var m=String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m?(m[3]+'/'+m[2]+'/'+m[1]):String(iso);
+}
+function fmtQtd(v){
+  if(v==null||v==='')return'-';
+  var n=parseFloat(v); if(isNaN(n))return String(v);
+  return n.toLocaleString('pt-BR',{maximumFractionDigits:2});
+}
+function classeBadge(status){
+  if(status==='Faturado')return'faturado';
+  if(status.indexOf('aguardando')>=0||status.indexOf('Aguard')>=0)return'aguardando';
+  return'producao';
+}
+function descProduto(pd){
+  if(!pd)return'-';
+  var partes=String(pd).split(' - ');
+  return partes.length>1?partes.slice(1).join(' - '):pd;
+}
+// nivel de progresso (0..3) a partir do status
+function nivelProgresso(status){
+  if(status==='Faturado')return 3;               // faturado = enviado/concluido
+  if(status.indexOf('aguardando')>=0)return 2;   // finalizado, aguardando faturamento
+  return 1;                                       // em producao
+}
+var ETAPAS=[
+  {rotulo:'Pedido recebido',icon:'ti-clipboard-check'},
+  {rotulo:'Em produção',icon:'ti-settings'},
+  {rotulo:'Aguardando faturamento',icon:'ti-package'},
+  {rotulo:'Faturado',icon:'ti-truck-delivery'}
+];
+function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function barraProgresso(niveis){
+  var nivelMin=Math.min.apply(null,niveis), nivelMax=Math.max.apply(null,niveis);
+  var nomes=['Pedido recebido','Em produção','Aguardando faturamento','Faturado'];
+  var icones=['pedido.svg','producao.svg','faturamento.svg','transporte.svg'];
+  return '<div class="timeline">'+nomes.map(function(nome,i){var cls=i<nivelMin?'done':i<=nivelMax?'active':'future';return '<div class="milestone '+cls+'"><div class="milestone-icon"><img src="assets/icons/'+icones[i]+'" alt=""></div><div class="milestone-name">'+nome+'</div></div>'}).join('')+'</div>';
+}
+function filtrarResultadosPedido(){var campo=document.getElementById('filtro-pedido');var termo=(campo?campo.value:'').trim().toLowerCase();document.querySelectorAll('.ped-bloco').forEach(function(bloco){var ped=(bloco.dataset.pedido||'').toLowerCase(),cli=(bloco.dataset.pedcliente||'').toLowerCase();bloco.hidden=!!termo&&!ped.includes(termo)&&!cli.includes(termo)})}
+async function consultar(){
+ var termo=(document.getElementById('busca').value||'').trim(), el=document.getElementById('resultados'),btn=document.getElementById('btn');
+ if(!termo){el.innerHTML='<div class="message">Digite um CNPJ ou número de pedido para consultar.</div>';return}
+ btn.disabled=true;el.innerHTML='<div class="message">Consultando pedidos...</div>';
+ try{
+ var r=await supabaseClient.rpc('rastrear_pedido',{termo:termo});if(r.error)throw r.error;
+ var itens=r.data||[];if(!itens.length){el.innerHTML='<div class="message">Nenhum pedido encontrado. Confira os dados informados.</div>';return}
+ var porPedido={};itens.forEach(function(it){(porPedido[it.pedido]=porPedido[it.pedido]||[]).push(it)});
+ var chaves=Object.keys(porPedido).sort(function(a,b){return Number(a)-Number(b)});
+ var html=chaves.length>1?'<div class="filter"><img src="assets/icons/filtro.svg" alt=""><input id="filtro-pedido" placeholder="Filtrar pelo número do pedido..." oninput="filtrarResultadosPedido()" aria-label="Filtrar pedidos"></div>':'';
+ chaves.forEach(function(ped){var linhas=porPedido[ped],cliente=linhas[0].cliente_nome||'',pedCliente=linhas[0].pedido_cliente||'',niveis=linhas.map(function(l){return nivelProgresso(l.status||'')});var maior=Math.max.apply(null,niveis),menor=Math.min.apply(null,niveis);var rotulos=['Pedido recebido','Em produção','Aguardando faturamento','Faturado'];
+ html+='<article class="ped-bloco" data-pedido="'+esc(ped)+'" data-pedcliente="'+esc(pedCliente)+'"><div class="order-head"><div><div class="order-title"><h2>Pedido #'+esc(ped)+'</h2><span class="status-pill '+(maior===3?'success':maior===2?'waiting':'production')+'">'+rotulos[maior]+'</span></div><div class="order-meta"><strong>Cliente:</strong> '+esc(cliente)+(pedCliente?' <span class="sep">|</span> <strong>Seu pedido:</strong> '+esc(pedCliente):'')+'</div></div><div class="order-count">'+linhas.length+' '+(linhas.length===1?'item':'itens')+'</div></div>';
+ html+=barraProgresso(niveis)+'<div class="items-title"><h3>Itens do pedido</h3><span>'+linhas.length+' '+(linhas.length===1?'item':'itens')+'</span></div><div class="table-scroll"><table><thead><tr><th>ITEM</th><th>DESCRIÇÃO</th><th>QTD</th><th>STATUS</th><th>DATA</th><th>NF</th><th>TRANSPORTADORA</th></tr></thead><tbody>';
+ linhas.forEach(function(l){html+='<tr><td>'+esc(l.item)+'</td><td>'+esc(descProduto(l.produto_desc))+'</td><td>'+esc(fmtQtd(l.qtde)+(l.unidade?' '+l.unidade:''))+'</td><td><span class="status-pill '+(l.status==='Faturado'?'success':(l.status||'').toLowerCase().includes('aguard')?'waiting':'production')+'">'+esc(l.status||'-')+'</span></td><td>'+esc(fmtDataBR(l.data_evento))+'</td><td>'+esc(l.numero_nf||'-')+'</td><td>'+esc(l.transportadora||'-')+'</td></tr>'});
+ html+='</tbody></table></div>';
+ if(maior!==menor){html+='<div class="notice"><img src="assets/icons/alerta.svg" alt=""><div><strong>Pedido com itens em diferentes etapas de produção.</strong><p>Confira os status individuais na tabela. As datas podem sofrer alterações.</p></div></div>'}
+ html+='</article>'});el.innerHTML=html;
+ }catch(e){console.error('Falha na consulta',e);el.innerHTML='<div class="message">Não foi possível consultar agora. Tente novamente em instantes.</div>'}finally{btn.disabled=false}
+}
+document.getElementById('busca').addEventListener('keydown',function(e){if(e.key==='Enter')consultar()});
+</script></body></html>
