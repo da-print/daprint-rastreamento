@@ -13,3 +13,14 @@
     background-position: 65% center;
   }
 }
+/* Ajuste fino do posicionamento */
+
+@media (min-width: 701px) {
+  .main-content {
+    margin-top: -52px;
+  }
+
+  .search-panel {
+    margin-bottom: 20px;
+  }
+}
