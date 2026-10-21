@@ -1,18 +1,261 @@
-/* Camada visual de teste: mantém HTML e autenticação originais. */
-.top{height:94px;background:linear-gradient(125deg,#fff 42%,#edf0f3);position:relative;z-index:3}
-.stage{min-height:740px;background:linear-gradient(100deg,rgba(12,21,31,.84) 0%,rgba(17,26,36,.66) 46%,rgba(18,27,37,.46) 100%),url('../images/producao-da.jpg') center 47%/cover no-repeat,#29323a}
-.stage:before{left:-215px;top:85px;width:580px;height:580px;border:75px solid rgba(199,20,40,.72);transform:rotate(-14deg);pointer-events:none}
-.stage:after{bottom:-155px;height:225px;transform:rotate(-7deg);pointer-events:none}
-.stage-inner{min-height:740px;grid-template-columns:minmax(0,1fr) 450px;gap:80px;align-items:start;padding:95px 28px 165px}
-.intro{max-width:365px;padding-top:95px;position:relative;z-index:1}
-.intro h1{font-size:clamp(38px,3.2vw,48px);line-height:1.07;text-shadow:0 2px 15px #0005}
-.intro p{font-size:17px;text-shadow:0 2px 10px #0006}
-.login-card{position:relative;z-index:2;background:rgba(255,255,255,.975);border-radius:12px;padding:32px 34px 27px;box-shadow:0 22px 65px #0005}
-.btn-login{background:linear-gradient(90deg,#c9142a,#d32036);box-shadow:0 7px 14px #b719292b}
-.link-rastreio a:hover{background:#fff3f5}
-.phone{left:7%;bottom:25px;width:177px;height:322px;z-index:2;transform:rotate(-3deg);border-radius:27px;border:8px solid #111820;box-shadow:0 12px 26px #0008;background:linear-gradient(#f7f8fa,#fff)}
-.phone img{width:118px;position:absolute;top:42px}
-.phone-label{bottom:55px;color:#1e2732;font-size:12px;padding:0 12px}
-@media(max-width:1000px){.stage-inner{gap:36px;grid-template-columns:minmax(0,1fr) 420px}.phone{left:3%}}
-@media(max-width:850px){.top{height:80px}.stage{min-height:0;background-position:54% center}.stage-inner{grid-template-columns:1fr;gap:26px;padding:35px 20px 110px;max-width:540px;min-height:0}.intro{padding-top:0;max-width:420px}.intro h1{font-size:35px}.login-card{padding:26px 22px}.phone{display:none}.stage:before{left:-310px;top:20px}.stage:after{bottom:-160px}}
-@media(max-width:480px){.top{gap:12px;padding:10px 16px}.top img{width:110px}.top .separator{height:36px}.top strong{font-size:21px}.top small{font-size:11px}.stage-inner{padding:30px 15px 90px}.intro h1{font-size:32px}.intro p{font-size:14px}.login-card{padding:24px 18px}}
+
+/* ==========================================
+   D&A PRINT SOLUTIONS
+   PCP — LOGIN | VERSÃO ATUALIZADA
+   ========================================== */
+
+/* CABEÇALHO */
+.top {
+  height: 94px;
+  background: linear-gradient(125deg, #fff 42%, #edf0f3);
+  position: relative;
+  z-index: 3;
+}
+
+/* FUNDO INDUSTRIAL */
+.stage {
+  min-height: 740px;
+
+  background-image:
+    linear-gradient(
+      100deg,
+      rgba(12, 21, 31, 0.76) 0%,
+      rgba(17, 26, 36, 0.48) 46%,
+      rgba(18, 27, 37, 0.28) 100%
+    ),
+    url('../images/pcp-producao-bg.jpg');
+
+  background-color: #29323a;
+  background-position: center 47%;
+  background-size: cover;
+  background-repeat: no-repeat;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ELEMENTO CIRCULAR VERMELHO */
+.stage:before {
+  content: '';
+  position: absolute;
+  left: -215px;
+  top: 85px;
+  width: 580px;
+  height: 580px;
+  border: 75px solid rgba(199, 20, 40, 0.72);
+  border-radius: 50%;
+  transform: rotate(-14deg);
+  pointer-events: none;
+}
+
+/* TRANSIÇÃO DIAGONAL INFERIOR */
+.stage:after {
+  content: '';
+  position: absolute;
+  left: -10%;
+  bottom: -155px;
+  width: 120%;
+  height: 225px;
+  background: #f5f6f8;
+  transform: rotate(-7deg);
+  pointer-events: none;
+}
+
+/* ESTRUTURA PRINCIPAL */
+.stage-inner {
+  max-width: 1250px;
+  margin: auto;
+  min-height: 740px;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 450px;
+  gap: 80px;
+  align-items: start;
+
+  padding: 95px 28px 165px;
+  position: relative;
+  z-index: 1;
+}
+
+/* TEXTO INSTITUCIONAL */
+.intro {
+  max-width: 365px;
+  padding-top: 95px;
+  position: relative;
+  z-index: 1;
+  color: #fff;
+}
+
+.intro h1 {
+  font-size: clamp(38px, 3.2vw, 48px);
+  line-height: 1.07;
+  letter-spacing: -1.5px;
+  margin: 0 0 18px;
+  text-shadow: 0 2px 15px rgba(0, 0, 0, 0.35);
+}
+
+.intro p {
+  font-size: 17px;
+  line-height: 1.5;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+}
+
+/* CARD DE LOGIN */
+.login-card {
+  position: relative;
+  z-index: 2;
+  background: rgba(255, 255, 255, 0.975);
+  border-radius: 12px;
+  padding: 32px 34px 27px;
+  box-shadow: 0 22px 65px rgba(0, 0, 0, 0.3);
+}
+
+/* BOTÃO PRINCIPAL */
+.btn-login {
+  background: linear-gradient(90deg, #c9142a, #d32036);
+  box-shadow: 0 7px 14px rgba(183, 25, 41, 0.17);
+  transition: filter 0.2s ease, transform 0.2s ease;
+}
+
+.btn-login:hover:not(:disabled) {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+/* LINK PARA RASTREAMENTO */
+.link-rastreio a:hover {
+  background: #fff3f5;
+}
+
+/* ELEMENTO DECORATIVO — CELULAR */
+.phone {
+  position: absolute;
+  left: 7%;
+  bottom: 25px;
+
+  width: 177px;
+  height: 322px;
+
+  z-index: 2;
+  transform: rotate(-3deg);
+
+  border-radius: 27px;
+  border: 8px solid #111820;
+
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.5);
+  background: linear-gradient(#f7f8fa, #fff);
+}
+
+.phone img {
+  width: 118px;
+  position: absolute;
+  top: 42px;
+}
+
+.phone-label {
+  bottom: 55px;
+  color: #1e2732;
+  font-size: 12px;
+  padding: 0 12px;
+}
+
+/* ==========================================
+   RESPONSIVIDADE
+   ========================================== */
+
+/* TABLETS E NOTEBOOKS */
+@media (max-width: 1000px) {
+  .stage-inner {
+    gap: 36px;
+    grid-template-columns: minmax(0, 1fr) 420px;
+  }
+
+  .phone {
+    left: 3%;
+  }
+}
+
+/* TABLETS E CELULARES */
+@media (max-width: 850px) {
+  .top {
+    height: 80px;
+  }
+
+  .stage {
+    min-height: 0;
+    background-position: 58% center;
+  }
+
+  .stage-inner {
+    grid-template-columns: 1fr;
+    gap: 26px;
+    padding: 35px 20px 110px;
+    max-width: 540px;
+    min-height: 0;
+  }
+
+  .intro {
+    padding-top: 0;
+    max-width: 420px;
+  }
+
+  .intro h1 {
+    font-size: 35px;
+  }
+
+  .login-card {
+    padding: 26px 22px;
+  }
+
+  .phone {
+    display: none;
+  }
+
+  .stage:before {
+    left: -310px;
+    top: 20px;
+  }
+
+  .stage:after {
+    bottom: -160px;
+  }
+}
+
+/* CELULARES PEQUENOS */
+@media (max-width: 480px) {
+  .top {
+    gap: 12px;
+    padding: 10px 16px;
+  }
+
+  .top img {
+    width: 110px;
+  }
+
+  .top .separator {
+    height: 36px;
+  }
+
+  .top strong {
+    font-size: 21px;
+  }
+
+  .top small {
+    font-size: 11px;
+  }
+
+  .stage-inner {
+    padding: 30px 15px 90px;
+  }
+
+  .intro h1 {
+    font-size: 32px;
+  }
+
+  .intro p {
+    font-size: 14px;
+  }
+
+  .login-card {
+    padding: 24px 18px;
+  }
+}
