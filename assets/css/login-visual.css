@@ -1,7 +1,8 @@
 
 /* ==========================================
    D&A PRINT SOLUTIONS
-   PCP — LOGIN | VERSÃO ATUALIZADA
+   PCP — LOGIN
+   REFINAMENTO VISUAL FINAL
    ========================================== */
 
 /* CABEÇALHO */
@@ -15,13 +16,15 @@
 /* FUNDO INDUSTRIAL */
 .stage {
   min-height: 740px;
+  position: relative;
+  overflow: hidden;
 
   background-image:
     linear-gradient(
       100deg,
-      rgba(12, 21, 31, 0.76) 0%,
-      rgba(17, 26, 36, 0.48) 46%,
-      rgba(18, 27, 37, 0.28) 100%
+      rgba(12, 21, 31, 0.74) 0%,
+      rgba(17, 26, 36, 0.39) 46%,
+      rgba(18, 27, 37, 0.25) 100%
     ),
     url('../images/pcp-producao-bg.jpg');
 
@@ -29,32 +32,37 @@
   background-position: center 47%;
   background-size: cover;
   background-repeat: no-repeat;
-  overflow: hidden;
-  position: relative;
 }
 
-/* ELEMENTO CIRCULAR VERMELHO */
-.stage:before {
+/* CÍRCULO VERMELHO — MAIS DISCRETO */
+.stage::before {
   content: '';
   position: absolute;
+
   left: -215px;
   top: 85px;
+
   width: 580px;
   height: 580px;
-  border: 75px solid rgba(199, 20, 40, 0.72);
+
+  border: 75px solid rgba(199, 20, 40, 0.54);
   border-radius: 50%;
+
   transform: rotate(-14deg);
   pointer-events: none;
 }
 
 /* TRANSIÇÃO DIAGONAL INFERIOR */
-.stage:after {
+.stage::after {
   content: '';
   position: absolute;
+
   left: -10%;
   bottom: -155px;
+
   width: 120%;
   height: 225px;
+
   background: #f5f6f8;
   transform: rotate(-7deg);
   pointer-events: none;
@@ -64,56 +72,73 @@
 .stage-inner {
   max-width: 1250px;
   margin: auto;
+
   min-height: 740px;
 
   display: grid;
   grid-template-columns: minmax(0, 1fr) 450px;
+
   gap: 80px;
   align-items: start;
 
   padding: 95px 28px 165px;
+
   position: relative;
   z-index: 1;
 }
 
 /* TEXTO INSTITUCIONAL */
 .intro {
-  max-width: 365px;
+  max-width: 430px;
   padding-top: 95px;
+
   position: relative;
   z-index: 1;
+
   color: #fff;
 }
 
 .intro h1 {
   font-size: clamp(38px, 3.2vw, 48px);
-  line-height: 1.07;
+  line-height: 1.09;
   letter-spacing: -1.5px;
+
   margin: 0 0 18px;
-  text-shadow: 0 2px 15px rgba(0, 0, 0, 0.35);
+
+  text-shadow: 0 2px 15px rgba(0, 0, 0, 0.42);
 }
 
 .intro p {
   font-size: 17px;
-  line-height: 1.5;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+  line-height: 1.55;
+
+  max-width: 370px;
+
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
 }
 
-/* CARD DE LOGIN */
+/* CARD DE LOGIN — PRESERVADO */
 .login-card {
   position: relative;
   z-index: 2;
+
   background: rgba(255, 255, 255, 0.975);
   border-radius: 12px;
+
   padding: 32px 34px 27px;
+
   box-shadow: 0 22px 65px rgba(0, 0, 0, 0.3);
 }
 
 /* BOTÃO PRINCIPAL */
 .btn-login {
   background: linear-gradient(90deg, #c9142a, #d32036);
+
   box-shadow: 0 7px 14px rgba(183, 25, 41, 0.17);
-  transition: filter 0.2s ease, transform 0.2s ease;
+
+  transition:
+    filter 0.2s ease,
+    transform 0.2s ease;
 }
 
 .btn-login:hover:not(:disabled) {
@@ -121,7 +146,7 @@
   transform: translateY(-1px);
 }
 
-/* LINK PARA RASTREAMENTO */
+/* LINK DE RASTREAMENTO */
 .link-rastreio a:hover {
   background: #fff3f5;
 }
@@ -129,6 +154,7 @@
 /* ELEMENTO DECORATIVO — CELULAR */
 .phone {
   position: absolute;
+
   left: 7%;
   bottom: 25px;
 
@@ -136,25 +162,30 @@
   height: 322px;
 
   z-index: 2;
+
   transform: rotate(-3deg);
 
   border-radius: 27px;
   border: 8px solid #111820;
 
   box-shadow: 0 12px 26px rgba(0, 0, 0, 0.5);
+
   background: linear-gradient(#f7f8fa, #fff);
 }
 
 .phone img {
   width: 118px;
+
   position: absolute;
   top: 42px;
 }
 
 .phone-label {
   bottom: 55px;
+
   color: #1e2732;
   font-size: 12px;
+
   padding: 0 12px;
 }
 
@@ -162,7 +193,7 @@
    RESPONSIVIDADE
    ========================================== */
 
-/* TABLETS E NOTEBOOKS */
+/* NOTEBOOKS E TABLETS */
 @media (max-width: 1000px) {
   .stage-inner {
     gap: 36px;
@@ -187,8 +218,11 @@
 
   .stage-inner {
     grid-template-columns: 1fr;
+
     gap: 26px;
+
     padding: 35px 20px 110px;
+
     max-width: 540px;
     min-height: 0;
   }
@@ -210,12 +244,12 @@
     display: none;
   }
 
-  .stage:before {
+  .stage::before {
     left: -310px;
     top: 20px;
   }
 
-  .stage:after {
+  .stage::after {
     bottom: -160px;
   }
 }
