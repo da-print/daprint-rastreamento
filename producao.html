@@ -1,0 +1,1094 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PCP · Produção (protótipo)</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.47.0/iconfont/tabler-icons.min.css">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" crossorigin="anonymous"></script>
+<style>
+:root{
+  --accent:#C52E35; --accent2:#D6555C;
+  --bg:#F7F7F8; --bg2:#FFFFFF; --bg3:#F1F1F2;
+  --card:#FFFFFF; --line:#E6E6EA;
+  --text:#262626; --text2:#3A3A3A; --text3:#6B6B6E; --text4:#7A7A82;
+  --ok:#1F9D66; --warn:#B8760B;
+  --shadow:0 8px 26px rgba(29,41,57,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15171C; --bg2:#1C1F26; --bg3:#23262E;
+    --card:#1C1F26; --line:#2A2E37;
+    --text:#EDEDEF; --text2:#D4D4D8; --text3:#9A9AA2; --text4:#8A8A8D;
+    --accent:#D6555C; --ok:#2FBD7E; --warn:#D99A2B;
+    --shadow:0 8px 26px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15171C; --bg2:#1C1F26; --bg3:#23262E;
+  --card:#1C1F26; --line:#2A2E37;
+  --text:#EDEDEF; --text2:#D4D4D8; --text3:#9A9AA2; --text4:#8A8A8D;
+  --accent:#D6555C; --ok:#2FBD7E; --warn:#D99A2B;
+  --shadow:0 8px 26px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+  font-family:Inter,system-ui,-apple-system,'Segoe UI',sans-serif;font-size:14px;min-height:100vh}
+.topbar{display:flex;align-items:center;gap:12px;padding:14px 20px;background:var(--bg2);
+  border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px}
+.brand .dot{width:26px;height:26px;border-radius:7px;background:var(--accent);color:#fff;
+  display:grid;place-items:center;font-size:13px;font-weight:800}
+.proto-badge{font-size:11px;color:var(--text3);border:1px solid var(--line);padding:2px 8px;border-radius:999px}
+.wrap{max-width:1080px;margin:0 auto;padding:18px 16px 60px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 18px}
+.tab-btn{padding:8px 14px;border-radius:9px;cursor:pointer;font-weight:600;color:var(--text3);
+  background:transparent;border:1px solid transparent;user-select:none}
+.tab-btn:hover{background:var(--bg3)}
+.tab-btn.active{background:var(--card);color:var(--text);border-color:var(--line);box-shadow:var(--shadow)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+.sec{padding:16px 18px}
+.sec+.sec{border-top:1px solid var(--line)}
+h2{font-size:16px;margin:0 0 2px}
+.muted{color:var(--text3);font-size:12px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.grid{display:grid;gap:12px}
+label.fld{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text3);font-weight:600}
+input,select{font:inherit;color:var(--text);background:var(--bg2);border:1px solid var(--line);
+  border-radius:9px;padding:8px 10px;outline:none;width:100%}
+input:focus,select:focus{border-color:var(--accent)}
+.chk{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text2);font-weight:600;cursor:pointer}
+.chk input{width:16px;height:16px;accent-color:var(--accent)}
+.btn{font:inherit;font-weight:600;border-radius:9px;padding:8px 14px;cursor:pointer;border:1px solid var(--accent);
+  background:var(--accent);color:#fff}
+.btn:hover{background:var(--accent2);border-color:var(--accent2)}
+.btn-sec{font:inherit;font-weight:600;border-radius:9px;padding:7px 12px;cursor:pointer;
+  border:1px solid var(--line);background:var(--bg2);color:var(--text2)}
+.btn-sec:hover{background:var(--bg3)}
+.btn-ghost{border:none;background:transparent;color:var(--text3);cursor:pointer;padding:6px 8px;border-radius:7px;font:inherit}
+.btn-ghost:hover{background:var(--bg3);color:var(--text)}
+.btn-danger{color:var(--accent)}
+.grupo-card{border:1px solid var(--line);border-radius:12px;margin-bottom:12px;overflow:hidden;background:var(--bg2)}
+.grupo-header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;background:var(--bg3)}
+.grupo-nome{display:flex;align-items:center;gap:10px;font-weight:700;flex-wrap:wrap}
+.grupo-icon{width:30px;height:30px;border-radius:8px;background:var(--accent);color:#fff;
+  display:grid;place-items:center;font-size:12px;font-weight:800;flex:0 0 auto}
+.param-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;padding:14px 16px}
+.sub-line{display:flex;align-items:center;gap:10px;padding:8px 16px;border-top:1px dashed var(--line)}
+.modo-bar{display:flex;gap:8px;flex-wrap:wrap;padding:12px 16px 0}
+.modo-opt{font-size:12px;font-weight:600;padding:6px 12px;border-radius:999px;border:1px solid var(--line);
+  background:var(--bg2);color:var(--text3);cursor:pointer}
+.modo-opt.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:10px 10px;border-bottom:1px solid var(--line);font-size:13px}
+th{color:var(--text3);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.3px}
+tr.clik{cursor:pointer}
+tr.clik:hover td{background:var(--bg3)}
+.tag{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:2px 8px;border-radius:999px;
+  background:var(--bg3);color:var(--text3);border:1px solid var(--line)}
+.tag.warn{color:var(--warn);border-color:var(--warn)}
+.vazio{color:var(--text3);text-align:center;padding:30px;font-size:13px}
+.etapa{border:1px solid var(--line);border-radius:11px;padding:10px 12px;margin-bottom:10px;background:var(--bg2)}
+.etapa-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.step-num{width:22px;height:22px;border-radius:6px;background:var(--text);color:var(--bg2);
+  display:grid;place-items:center;font-size:12px;font-weight:700;flex:0 0 auto}
+.carr{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3)}
+.carr input{width:62px;text-align:center}
+.est{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--text3)}
+.est b{color:var(--text);font-weight:700}
+.ov-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-top:10px;
+  padding-top:10px;border-top:1px dashed var(--line)}
+.ov-grid.off{display:none}
+.hint{font-size:11px;color:var(--text3)}
+.pill-metric{background:var(--bg3);border:1px solid var(--line);border-radius:10px;padding:8px 12px;min-width:120px}
+.pill-metric .v{font-size:18px;font-weight:800}
+.pill-metric .l{font-size:11px;color:var(--text3)}
+.search{max-width:320px}
+.right{margin-left:auto}
+dialog::backdrop{background:rgba(0,0,0,.35)}
+.modal{border:none;border-radius:16px;padding:0;background:var(--card);color:var(--text);
+  width:min(820px,94vw);box-shadow:var(--shadow)}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--line)}
+.modal-body{padding:16px 18px;max-height:72vh;overflow:auto}
+.modal-foot{display:flex;gap:10px;justify-content:flex-end;padding:14px 18px;border-top:1px solid var(--line)}
+.sub-title{font-size:13px;font-weight:700;margin:18px 0 8px;display:flex;align-items:center;gap:8px}
+.os-card{border:1px solid var(--line);border-radius:14px;margin-bottom:14px;background:var(--card);box-shadow:var(--shadow);overflow:hidden}
+.os-head{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:14px 16px;background:var(--bg3)}
+.os-head .num{font-weight:800;font-size:15px}
+.os-head .desc{color:var(--text2)}
+.badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
+.b-aguard{background:var(--bg3);color:var(--text3)}
+.b-setup{background:rgba(184,118,11,.14);color:var(--warn);border-color:var(--warn)}
+.b-setupok{background:rgba(58,110,165,.14);color:#3a6ea5;border-color:#3a6ea5}
+.b-prod{background:rgba(31,157,102,.14);color:var(--ok);border-color:var(--ok)}
+.b-parado{background:rgba(197,46,53,.14);color:var(--accent);border-color:var(--accent)}
+.b-fim{background:rgba(31,157,102,.10);color:var(--ok);border-color:var(--ok)}
+.op-item{padding:12px 16px;border-top:1px solid var(--line)}
+.op-top{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.op-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.btn-lg{font-size:14px;padding:11px 16px;border-radius:11px}
+.timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:16px;color:var(--text)}
+.est-real{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:10px}
+.er-box{background:var(--bg3);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.er-box .er-l{font-size:11px;color:var(--text3)}
+.er-box .er-v{font-weight:700}
+.er-box .er-d{font-size:11px;font-weight:700}
+.er-up{color:var(--accent)} .er-dn{color:var(--ok)}
+.qtd-wrap{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
+.qtd-wrap input{max-width:140px}
+@media(max-width:560px){.wrap{padding:14px 12px 50px}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand"><span class="dot">PC</span> Produção</div>
+  <span class="proto-badge">protótipo · dados locais (localStorage)</span>
+  <div class="right row">
+    <button class="btn-ghost" onclick="toggleTema()" title="Alternar tema"><i class="ti ti-contrast"></i></button>
+    <button class="btn-ghost" onclick="resetSeed()" title="Restaurar dados de exemplo"><i class="ti ti-refresh"></i></button>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="tabs">
+    <div class="tab-btn active" id="tab-produtos" onclick="mudarAba('produtos')">Produtos / Ficha técnica</div>
+    <div class="tab-btn" id="tab-maquinas" onclick="mudarAba('maquinas')">Máquinas</div>
+    <div class="tab-btn" id="tab-apont" onclick="mudarAba('apont')">Apontamento</div>
+  </div>
+
+  <!-- ===================== PRODUTOS ===================== -->
+  <div id="produtos-view">
+    <div class="card">
+      <div class="sec row">
+        <div>
+          <h2>Produtos</h2>
+          <div class="muted">Clique numa linha para editar a ficha técnica.</div>
+        </div>
+        <div class="right row">
+          <input class="search" id="busca-prod" placeholder="Buscar por código ou descrição" oninput="renderProdutos()">
+          <button class="btn" onclick="novoProduto()"><i class="ti ti-plus"></i> Novo produto</button>
+        </div>
+      </div>
+      <div class="sec" id="lista-produtos"></div>
+    </div>
+  </div>
+
+  <!-- ===================== MAQUINAS ===================== -->
+  <div id="maquinas-view" style="display:none">
+    <div class="card">
+      <div class="sec row">
+        <div>
+          <h2>Máquinas e parâmetros</h2>
+          <div class="muted">Cada grupo tem um <b>modo de cálculo</b>. A ficha do produto herda estes valores.</div>
+        </div>
+      </div>
+      <div class="sec" id="lista-maquinas"></div>
+      <div class="sec">
+        <div class="row">
+          <input id="mg-nome" placeholder="Novo grupo (ex: FLEXO 400)" style="max-width:220px">
+          <input id="mg-icon" placeholder="Ícone (ex: F3)" style="max-width:110px">
+          <select id="mg-modo" style="max-width:200px">
+            <option value="por_cor">Por cor (impressão)</option>
+            <option value="fixo">Fixo</option>
+            <option value="unidade">Por unidade (batida)</option>
+            <option value="validacao">Validação (sem tempo)</option>
+          </select>
+          <button class="btn-sec" onclick="adicionarGrupo()"><i class="ti ti-plus"></i> Adicionar grupo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <!-- ===================== APONTAMENTO ===================== -->
+  <div id="apont-view" style="display:none">
+    <div class="card">
+      <div class="sec row">
+        <div>
+          <h2>Apontamento — ordens de produção</h2>
+          <div class="muted">Cada operador vê a fila da sua máquina. Setup e produção são cronometrados pelos start/stop.</div>
+        </div>
+        <div class="right row">
+          <span class="hint">Posto de trabalho</span>
+          <select id="posto" onchange="setPosto(this.value)" style="max-width:230px"></select>
+        </div>
+      </div>
+      <div class="sec row" style="gap:10px">
+        <div class="row" style="gap:8px">
+          <input type="file" id="file-pedidos" accept=".xlsx,.xls" style="max-width:240px">
+          <button class="btn-sec" onclick="subirPedidos()"><i class="ti ti-upload"></i> Subir pedidos em aberto</button>
+        </div>
+        <span class="right hint">Colunas: Pedido · Item · Produto · Produto - Descrição · Saldo Pedido · Un. · Entrega no Cliente · Pedido do Cliente (xPed)</span>
+      </div>
+      <div class="sec" id="lista-ordens"></div>
+    </div>
+  </div>
+
+<!-- ===================== MODAL PRODUTO ===================== -->
+<dialog class="modal" id="modal-prod">
+  <form method="dialog" onsubmit="return false">
+    <div class="modal-head">
+      <h2 id="modal-prod-titulo">Produto</h2>
+      <button class="btn-ghost" onclick="fecharModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="sub-title"><i class="ti ti-id"></i> Identificação</div>
+      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
+        <label class="fld">Código (PA)<input id="p-codigo" placeholder="PA000000000000"></label>
+        <label class="fld" style="grid-column:1/-1">Descrição<input id="p-descricao" placeholder="Descrição do produto"></label>
+        <label class="fld">Substrato / MP padrão<input id="p-substrato" placeholder="Ex: COUCHÊ, FILME..."></label>
+        <label class="fld">Largura do substrato (mm)<input id="p-larg-subs" type="number" min="0" step="1"></label>
+        <label class="fld">Largura da etiqueta (mm)<input id="p-larg-etiq" type="number" min="0" step="0.1"></label>
+        <label class="fld">Altura da etiqueta (mm)<input id="p-alt-etiq" type="number" min="0" step="0.1" oninput="atualizaPasso()"></label>
+        <label class="fld">Gap entre etiquetas (mm)<input id="p-gap-etiq" type="number" min="0" step="0.1" value="0" oninput="atualizaPasso()"></label>
+        <label class="fld">Nº de cores<input id="p-cores" type="number" min="0" step="1" value="0" oninput="recalcEtapas()"></label>
+      </div>
+      <div class="hint" style="margin-top:6px">O acabamento (verniz/laminação) é marcado por etapa do roteiro, só nas máquinas que o aplicam.</div>
+
+      <div class="sub-title"><i class="ti ti-arrows-exchange"></i> Unidades de medida (conversão)
+        <span class="hint" style="font-weight:400">quantas etiquetas cada unidade da base de pedidos representa</span>
+      </div>
+      <div id="conversoes-lista"></div>
+      <div class="row" style="margin-top:4px">
+        <input id="nova-conv-um" placeholder="Unidade (ex: ROLO, CAIXA)" style="max-width:220px">
+        <input id="nova-conv-fator" type="number" min="0" step="1" placeholder="Etiquetas" style="max-width:140px">
+        <button class="btn-sec" onclick="adicionarConversao()"><i class="ti ti-plus"></i> Adicionar</button>
+      </div>
+      <div class="hint" id="passo-hint" style="margin-top:6px"></div>
+
+      <div class="sub-title"><i class="ti ti-route"></i> Roteiro de produção
+        <span class="hint" style="font-weight:400">sequência de grupos de máquina · a máquina física é escolhida na operação</span>
+      </div>
+      <div id="roteiro-lista"></div>
+      <div class="row" style="margin-top:4px">
+        <select id="nova-etapa-grupo" style="max-width:260px"></select>
+        <button class="btn-sec" onclick="adicionarEtapa()"><i class="ti ti-plus"></i> Adicionar etapa</button>
+      </div>
+
+      <div class="row" style="margin-top:16px;gap:10px">
+        <div class="pill-metric"><div class="v" id="tot-setup">0</div><div class="l">setup total estimado (min)</div></div>
+        <div class="pill-metric"><div class="v" id="tot-etapas">0</div><div class="l">etapas no roteiro</div></div>
+      </div>
+      <div class="hint" style="margin-top:8px">O tempo de produção (quantidade ÷ velocidade, ajustado por carreiras e % de desperdício) é calculado no apontamento — Tela 2. Aqui mostramos o que já dá para estimar pela ficha.</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-sec" onclick="fecharModal()">Cancelar</button>
+      <button class="btn" onclick="salvarProduto()"><i class="ti ti-check"></i> Salvar produto</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+// =====================================================================
+// Camada de dados FAKE (localStorage). Depois será trocada por Supabase.
+// =====================================================================
+var LS_MAQ='pcp_proto_maquinas_v4', LS_PROD='pcp_proto_produtos_v4';
+
+// Modos de cálculo:
+//  por_cor  -> setup e desperdício de setup POR COR (impressão). Produção em metros.
+//  fixo     -> setup e desperdício de setup fixos (digital, troquel, corte, revisora). Metros.
+//  unidade  -> setup em min + desperdício em unidades/batidas (batida). Produção em unidades.
+function seedMaquinas(){
+  // aplica_verniz / aplica_laminacao: o grupo é capaz de aplicar esse acabamento.
+  // acab_min / acab_desp: custo por acabamento aplicado (min e desperdício, m ou un conforme modo).
+  return [
+    {nome:'PRE-IMPRESSAO',display:'PRÉ-IMPRESSÃO',icon:'PI',ordem_fluxo:1,ordem:10,modo:'validacao',
+      velocidade:0,desp_prod_pct:0,setup_min:0,desp_m:0,aplica_verniz:false,aplica_laminacao:false,acab_min:0,acab_desp:0,subs:[]},
+    {nome:'FLEXO 250',display:'FLEXO 250',icon:'F1',ordem_fluxo:2,ordem:20,modo:'por_cor',
+      velocidade:1800,desp_prod_pct:10,setup_min_cor:30,desp_m_cor:30,
+      aplica_verniz:true,aplica_laminacao:true,acab_min:30,acab_desp:30,
+      subs:[{nome:'FLEXO 1',velocidade:1800},{nome:'FLEXO 2',velocidade:1800},{nome:'FLEXO 3',velocidade:1800}]},
+    {nome:'FLEXO 350',display:'FLEXO 350',icon:'F2',ordem_fluxo:2,ordem:30,modo:'por_cor',
+      velocidade:2400,desp_prod_pct:10,setup_min_cor:30,desp_m_cor:30,
+      aplica_verniz:true,aplica_laminacao:true,acab_min:30,acab_desp:30,
+      subs:[{nome:'ETIRAMA',velocidade:2400},{nome:'KROMIA',velocidade:2400},{nome:'NACBRAS',velocidade:2400}]},
+    {nome:'DIGITAL',display:'DIGITAL',icon:'DG',ordem_fluxo:2,ordem:40,modo:'fixo',
+      velocidade:1200,desp_prod_pct:10,setup_min:10,desp_m:10,aplica_verniz:false,aplica_laminacao:false,acab_min:0,acab_desp:0,subs:[]},
+    {nome:'TROQUELADORAS',display:'TROQUELADORAS',icon:'TR',ordem_fluxo:3,ordem:50,modo:'fixo',
+      velocidade:2000,desp_prod_pct:10,setup_min:20,desp_m:10,aplica_verniz:false,aplica_laminacao:false,acab_min:0,acab_desp:0,
+      subs:[{nome:'TROQUELADORA 1',velocidade:2000},{nome:'TROQUELADORA 2',velocidade:2000},{nome:'PULMÃO',velocidade:2000}]},
+    {nome:'BATIDA',display:'BATIDA',icon:'BA',ordem_fluxo:3,ordem:60,modo:'unidade',
+      velocidade:3000,desp_prod_pct:10,setup_min:30,desp_un:1000,aplica_verniz:false,aplica_laminacao:false,acab_min:0,acab_desp:0,
+      subs:[{nome:'CHINESA',velocidade:3000},{nome:'TURO',velocidade:3000}]},
+    {nome:'CORTE BROTECH / VOREY',display:'CORTE BROTECH / VOREY',icon:'CB',ordem_fluxo:3,ordem:70,modo:'fixo',
+      velocidade:2000,desp_prod_pct:10,setup_min:20,desp_m:10,aplica_verniz:false,aplica_laminacao:true,acab_min:20,acab_desp:20,
+      subs:[{nome:'BROTECH',velocidade:2000},{nome:'VOREY',velocidade:600}]},
+    {nome:'REVISORAS',display:'REVISORAS',icon:'RE',ordem_fluxo:4,ordem:80,modo:'fixo',
+      velocidade:2400,desp_prod_pct:10,setup_min:10,desp_m:10,aplica_verniz:false,aplica_laminacao:false,acab_min:0,acab_desp:0,
+      subs:[{nome:'REVISORA 1',velocidade:2400},{nome:'REVISORA 2',velocidade:2400}]},
+    {nome:'TERMICA',display:'TÉRMICA',icon:'TH',ordem_fluxo:2,ordem:90,modo:'fixo',
+      velocidade:1500,desp_prod_pct:10,setup_min:10,desp_m:5,aplica_verniz:false,aplica_laminacao:false,acab_min:0,acab_desp:0,subs:[]}
+  ];
+}
+function seedProdutos(){
+  return [
+    {codigo:'PA000000000442',descricao:'RÓTULO CMYK 90x60',substrato:'COUCHÊ',
+      larg_substrato:165,larg_etiqueta:90,alt_etiqueta:60,gap_etiqueta:3,cores:4,
+      conversoes:[{um:'ROLO',fator:1000},{um:'CAIXA',fator:1000},{um:'MILHEIRO',fator:1000}],
+      roteiro:[{grupo:'FLEXO 350',carreiras:3,acab:{verniz:true,laminacao:false},ov:null},{grupo:'TROQUELADORAS',carreiras:1,acab:{verniz:false,laminacao:false},ov:null},{grupo:'REVISORAS',carreiras:1,acab:{verniz:false,laminacao:false},ov:null}]},
+    {codigo:'PA000000001459',descricao:'ETIQUETA REGATTIERI',substrato:'COUCHÊ',
+      larg_substrato:112,larg_etiqueta:50,alt_etiqueta:30,gap_etiqueta:2,cores:2,
+      conversoes:[{um:'MILHEIRO',fator:1000}],
+      roteiro:[{grupo:'FLEXO 250',carreiras:2,acab:{verniz:false,laminacao:false},ov:null},{grupo:'BATIDA',carreiras:1,acab:{verniz:false,laminacao:false},ov:null}]}
+  ];
+}
+function load(key,seedFn){ try{var v=localStorage.getItem(key); if(v)return JSON.parse(v);}catch(e){} var s=seedFn(); save(key,s); return s; }
+function save(key,val){ try{localStorage.setItem(key,JSON.stringify(val));}catch(e){} }
+
+var MAQUINAS=load(LS_MAQ,seedMaquinas);
+var PRODUTOS=load(LS_PROD,seedProdutos);
+function salvarMaquinas(){ save(LS_MAQ,MAQUINAS); }
+function salvarProdutos(){ save(LS_PROD,PRODUTOS); }
+
+function grupoPorNome(n){ return MAQUINAS.filter(function(g){return g.nome===n;})[0]||null; }
+function num(v,def){ var n=parseFloat(v); return isNaN(n)?(def||0):n; }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function fmt(n){ return (Math.round(n*100)/100).toString().replace('.',','); }
+
+var MODO_LABEL={por_cor:'Por cor',fixo:'Fixo',unidade:'Por unidade',validacao:'Validação'};
+function velUnidade(g){ return g.modo==='unidade'?'un/h':'m/h'; }
+function despSetupUnidade(g){ return g.modo==='unidade'?'un':'m'; }
+
+// Campos de parâmetro visíveis por modo (usado em Máquinas e no override da etapa)
+function camposModo(modo){
+  if(modo==='por_cor')  return [['setup_min_cor','Setup por cor (min)'],['desp_m_cor','Desperdício setup por cor (m)']];
+  if(modo==='unidade')  return [['setup_min','Setup (min)'],['desp_un','Desperdício setup (un)']];
+  return [['setup_min','Setup (min)'],['desp_m','Desperdício setup (m)']];
+}
+
+// =====================================================================
+// Navegação
+// =====================================================================
+var abaAtual='produtos';
+function mudarAba(aba){
+  abaAtual=aba;
+  document.getElementById('tab-produtos').classList.toggle('active',aba==='produtos');
+  document.getElementById('tab-maquinas').classList.toggle('active',aba==='maquinas');
+  document.getElementById('tab-apont').classList.toggle('active',aba==='apont');
+  document.getElementById('produtos-view').style.display=aba==='produtos'?'block':'none';
+  document.getElementById('maquinas-view').style.display=aba==='maquinas'?'block':'none';
+  document.getElementById('apont-view').style.display=aba==='apont'?'block':'none';
+  if(aba==='produtos')renderProdutos();
+  if(aba==='maquinas')renderMaquinas();
+  if(aba==='apont')renderApont();
+}
+
+// =====================================================================
+// MÁQUINAS
+// =====================================================================
+function renderMaquinas(){
+  var el=document.getElementById('lista-maquinas');
+  var gs=MAQUINAS.slice().sort(function(a,b){return a.ordem-b.ordem;});
+  el.innerHTML=gs.map(function(g){
+    var gi=MAQUINAS.indexOf(g);
+    var fluxo={1:'Pré-impressão',2:'Impressão',3:'Corte',4:'Revisão'}[g.ordem_fluxo]||g.ordem_fluxo;
+    var modos=['por_cor','fixo','unidade','validacao'].map(function(m){
+      return '<span class="modo-opt'+(g.modo===m?' on':'')+'" onclick="setModo('+gi+',\''+m+'\')">'+MODO_LABEL[m]+'</span>';
+    }).join('');
+    var ehValid=(g.modo==='validacao');
+    var params='<label class="fld">Velocidade ('+velUnidade(g)+')'+
+        '<input type="number" min="0" step="1" value="'+esc(g.velocidade||0)+'" onchange="setParam('+gi+',\'velocidade\',this.value)"></label>'+
+      '<label class="fld">Desperdício produtivo (%)'+
+        '<input type="number" min="0" step="0.1" value="'+esc(g.desp_prod_pct||0)+'" onchange="setParam('+gi+',\'desp_prod_pct\',this.value)"></label>'+
+      camposModo(g.modo).map(function(c){
+        return '<label class="fld">'+c[1]+'<input type="number" min="0" step="1" value="'+esc(g[c[0]]||0)+'" onchange="setParam('+gi+',\''+c[0]+'\',this.value)"></label>';
+      }).join('');
+    var subs=(g.subs||[]).map(function(s,i){
+      return '<div class="sub-line">'+
+        '<span style="flex:1;font-weight:600">'+esc(s.nome)+'</span>'+
+        '<span class="hint">Veloc. ('+velUnidade(g)+'):</span>'+
+        '<input type="number" min="0" step="1" style="max-width:120px" value="'+esc(s.velocidade!=null?s.velocidade:'')+'" placeholder="usa grupo" onchange="setSubVel('+gi+','+i+',this.value)">'+
+        '<button class="btn-ghost btn-danger" onclick="remSub('+gi+','+i+')"><i class="ti ti-trash"></i></button>'+
+      '</div>';
+    }).join('');
+    return '<div class="grupo-card">'+
+      '<div class="grupo-header">'+
+        '<div class="grupo-nome"><div class="grupo-icon">'+esc(g.icon||'??')+'</div>'+esc(g.display||g.nome)+
+          ' <span class="tag">'+esc(fluxo)+'</span></div>'+
+        '<button class="btn-ghost btn-danger" onclick="remGrupo('+gi+')"><i class="ti ti-trash"></i> grupo</button>'+
+      '</div>'+
+      '<div class="modo-bar">'+modos+'</div>'+
+      (ehValid
+        ? '<div class="param-grid"><div class="hint">Etapa de validação/análise (ex.: pré-impressão) — sem velocidade, setup, desperdício ou acabamento. O responsável apenas valida e avança para a próxima etapa.</div></div>'
+        : '<div class="param-grid">'+params+'</div>'+
+          '<div class="param-grid" style="padding-top:0">'+
+            '<div class="fld">Acabamentos que aplica'+
+              '<div class="row" style="gap:14px;padding-top:4px">'+
+                '<label class="chk"><input type="checkbox" '+(g.aplica_verniz?'checked':'')+' onchange="setAcabFlag('+gi+',\'aplica_verniz\',this.checked)"> Verniz</label>'+
+                '<label class="chk"><input type="checkbox" '+(g.aplica_laminacao?'checked':'')+' onchange="setAcabFlag('+gi+',\'aplica_laminacao\',this.checked)"> Laminação</label>'+
+              '</div>'+
+            '</div>'+
+            '<label class="fld">Setup por acabamento (min)<input type="number" min="0" step="1" value="'+esc(g.acab_min||0)+'" onchange="setParam('+gi+',\'acab_min\',this.value)"></label>'+
+            '<label class="fld">Desperdício por acabamento ('+despSetupUnidade(g)+')<input type="number" min="0" step="1" value="'+esc(g.acab_desp||0)+'" onchange="setParam('+gi+',\'acab_desp\',this.value)"></label>'+
+          '</div>'+
+          subs+
+          '<div class="sub-line">'+
+            '<input placeholder="Nova máquina física do grupo" style="flex:1" id="ns-nome-'+gi+'">'+
+            '<input placeholder="Veloc. (opcional)" type="number" style="max-width:140px" id="ns-vel-'+gi+'">'+
+            '<button class="btn-ghost" onclick="addSub('+gi+')"><i class="ti ti-plus"></i> máquina</button>'+
+          '</div>')+
+    '</div>';
+  }).join('')||'<div class="vazio">Nenhuma máquina.</div>';
+}
+function setModo(gi,modo){ var g=MAQUINAS[gi]; if(g){g.modo=modo;salvarMaquinas();renderMaquinas();} }
+function setParam(gi,campo,val){ var g=MAQUINAS[gi]; if(g){g[campo]=num(val);salvarMaquinas();} }
+function setAcabFlag(gi,campo,val){ var g=MAQUINAS[gi]; if(g){g[campo]=!!val;salvarMaquinas();renderMaquinas();} }
+function setSubVel(gi,i,val){ var g=MAQUINAS[gi]; if(g&&g.subs[i]){ g.subs[i].velocidade=(val===''?null:num(val)); salvarMaquinas(); } }
+function remSub(gi,i){ var g=MAQUINAS[gi]; if(g&&g.subs){g.subs.splice(i,1);salvarMaquinas();renderMaquinas();} }
+function addSub(gi){
+  var g=MAQUINAS[gi]; if(!g)return;
+  var n=(document.getElementById('ns-nome-'+gi).value||'').trim();
+  var v=document.getElementById('ns-vel-'+gi).value;
+  if(!n){alert('Informe o nome da máquina.');return;}
+  g.subs=g.subs||[]; g.subs.push({nome:n,velocidade:(v===''?null:num(v))}); salvarMaquinas(); renderMaquinas();
+}
+function remGrupo(gi){
+  var g=MAQUINAS[gi]; if(!g)return;
+  if(!confirm('Remover o grupo "'+g.nome+'"?'))return;
+  MAQUINAS.splice(gi,1); salvarMaquinas(); renderMaquinas();
+}
+function adicionarGrupo(){
+  var nome=(document.getElementById('mg-nome').value||'').trim().toUpperCase();
+  var icon=(document.getElementById('mg-icon').value||'').trim();
+  var modo=document.getElementById('mg-modo').value;
+  if(!nome){alert('Informe o nome do grupo.');return;}
+  if(grupoPorNome(nome)){alert('Já existe um grupo com esse nome.');return;}
+  MAQUINAS.push({nome:nome,display:nome,icon:icon||'??',ordem_fluxo:2,ordem:(MAQUINAS.length+1)*10,modo:modo,
+    velocidade:0,desp_prod_pct:10,setup_min:0,setup_min_cor:0,desp_m:0,desp_m_cor:0,desp_un:0,
+    aplica_verniz:false,aplica_laminacao:false,acab_min:0,acab_desp:0,subs:[]});
+  salvarMaquinas();
+  document.getElementById('mg-nome').value=''; document.getElementById('mg-icon').value='';
+  renderMaquinas();
+}
+
+// =====================================================================
+// PRODUTOS
+// =====================================================================
+function renderProdutos(){
+  var q=(document.getElementById('busca-prod').value||'').toLowerCase().trim();
+  var lista=PRODUTOS.filter(function(p){
+    if(!q)return true;
+    return (p.codigo||'').toLowerCase().indexOf(q)>=0||(p.descricao||'').toLowerCase().indexOf(q)>=0;
+  });
+  var el=document.getElementById('lista-produtos');
+  if(!lista.length){ el.innerHTML='<div class="vazio">Nenhum produto. Clique em “Novo produto”.</div>'; return; }
+  el.innerHTML='<table><thead><tr><th>Código</th><th>Descrição</th><th>Cores</th><th>Acab.</th><th>Roteiro</th><th></th></tr></thead><tbody>'+
+    lista.map(function(p){
+      var idx=PRODUTOS.indexOf(p);
+      var rot=(p.roteiro||[]).map(function(e){var g=grupoPorNome(e.grupo);return '<span class="tag">'+esc((g&&g.icon)||'?')+'</span>';}).join(' ');
+      var acab=[];
+      if((p.roteiro||[]).some(function(e){return e.acab&&e.acab.verniz;}))acab.push('V');
+      if((p.roteiro||[]).some(function(e){return e.acab&&e.acab.laminacao;}))acab.push('L');
+      var acabTxt=acab.length?acab.map(function(a){return '<span class="tag">'+a+'</span>';}).join(' '):'<span class="hint">—</span>';
+      return '<tr class="clik" onclick="editarProduto('+idx+')">'+
+        '<td style="font-weight:700">'+esc(p.codigo||'')+'</td>'+
+        '<td>'+esc(p.descricao||'')+'</td>'+
+        '<td>'+(p.cores||0)+'</td>'+
+        '<td>'+acabTxt+'</td>'+
+        '<td>'+(rot||'<span class="hint">sem roteiro</span>')+'</td>'+
+        '<td class="right">'+
+          '<button class="btn-ghost" onclick="event.stopPropagation();editarProduto('+idx+')" title="Editar"><i class="ti ti-edit"></i></button>'+
+          '<button class="btn-ghost btn-danger" onclick="event.stopPropagation();removerProduto('+idx+')" title="Remover"><i class="ti ti-trash"></i></button>'+
+        '</td>'+
+      '</tr>';
+    }).join('')+'</tbody></table>';
+}
+function removerProduto(i){
+  if(!confirm('Remover o produto "'+(PRODUTOS[i].codigo||'')+'"?'))return;
+  PRODUTOS.splice(i,1); salvarProdutos(); renderProdutos();
+}
+
+// --- Modal / edição ---
+var editIdx=-1;
+var roteiroTmp=[];
+var conversoesTmp=[];
+
+function renderConversoes(){
+  var el=document.getElementById('conversoes-lista');
+  if(!conversoesTmp.length){
+    el.innerHTML='<div class="hint" style="padding:6px 0">Sem conversões. Por padrão, 1 unidade da base = 1 etiqueta. Adicione ROLO, CAIXA, MILHEIRO…</div>';
+    atualizaPasso(); return;
+  }
+  el.innerHTML=conversoesTmp.map(function(c,i){
+    return '<div class="row" style="gap:8px;margin-bottom:6px">'+
+      '<input style="max-width:200px" value="'+esc(c.um||'')+'" onchange="setConv('+i+',\'um\',this.value)">'+
+      '<span class="hint">= 1 un vale</span>'+
+      '<input type="number" min="0" step="1" style="max-width:120px" value="'+esc(c.fator||0)+'" onchange="setConv('+i+',\'fator\',this.value)">'+
+      '<span class="hint">etiquetas</span>'+
+      '<button class="btn-ghost btn-danger" onclick="remConversao('+i+')"><i class="ti ti-trash"></i></button>'+
+    '</div>';
+  }).join('');
+  atualizaPasso();
+}
+function adicionarConversao(){
+  var um=(document.getElementById('nova-conv-um').value||'').trim().toUpperCase();
+  var f=num(document.getElementById('nova-conv-fator').value);
+  if(!um){alert('Informe a unidade de medida.');return;}
+  if(conversoesTmp.filter(function(c){return c.um===um;}).length){alert('Essa unidade já está na lista.');return;}
+  conversoesTmp.push({um:um,fator:f});
+  document.getElementById('nova-conv-um').value=''; document.getElementById('nova-conv-fator').value='';
+  renderConversoes();
+}
+function setConv(i,campo,val){ conversoesTmp[i][campo]=(campo==='fator')?num(val):(val||'').toUpperCase(); }
+function remConversao(i){ conversoesTmp.splice(i,1); renderConversoes(); }
+function atualizaPasso(){
+  var alt=num(document.getElementById('p-alt-etiq').value), gap=num(document.getElementById('p-gap-etiq').value);
+  document.getElementById('passo-hint').innerHTML='Passo (altura + gap): <b>'+fmt(alt+gap)+' mm</b> por etiqueta — base para converter etiquetas em metros.';
+}
+
+function preencherSelectGrupos(){
+  var sel=document.getElementById('nova-etapa-grupo');
+  sel.innerHTML=MAQUINAS.slice().sort(function(a,b){return a.ordem-b.ordem;})
+    .map(function(g){return '<option value="'+esc(g.nome)+'">'+esc(g.display||g.nome)+'</option>';}).join('');
+}
+function setVal(id,v){ document.getElementById(id).value=(v==null?'':v); }
+function setChk(id,v){ document.getElementById(id).checked=!!v; }
+function novoProduto(){
+  editIdx=-1; roteiroTmp=[]; conversoesTmp=[];
+  document.getElementById('modal-prod-titulo').textContent='Novo produto';
+  ['p-codigo','p-descricao','p-substrato','p-larg-subs','p-larg-etiq','p-alt-etiq'].forEach(function(id){setVal(id,'');});
+  setVal('p-gap-etiq','0'); setVal('p-cores','0');
+  preencherSelectGrupos(); renderConversoes(); renderRoteiro();
+  document.getElementById('modal-prod').showModal();
+}
+function editarProduto(i){
+  editIdx=i; var p=PRODUTOS[i];
+  roteiroTmp=JSON.parse(JSON.stringify(p.roteiro||[]));
+  conversoesTmp=JSON.parse(JSON.stringify(p.conversoes||[]));
+  document.getElementById('modal-prod-titulo').textContent='Editar produto';
+  setVal('p-codigo',p.codigo); setVal('p-descricao',p.descricao); setVal('p-substrato',p.substrato);
+  setVal('p-larg-subs',p.larg_substrato); setVal('p-larg-etiq',p.larg_etiqueta); setVal('p-alt-etiq',p.alt_etiqueta);
+  setVal('p-gap-etiq',p.gap_etiqueta||0); setVal('p-cores',p.cores||0);
+  preencherSelectGrupos(); renderConversoes(); renderRoteiro();
+  document.getElementById('modal-prod').showModal();
+}
+function fecharModal(){ document.getElementById('modal-prod').close(); }
+
+function adicionarEtapa(){
+  var grupo=document.getElementById('nova-etapa-grupo').value;
+  roteiroTmp.push({grupo:grupo,carreiras:1,acab:{verniz:false,laminacao:false},ov:null});
+  renderRoteiro();
+}
+function moverEtapa(i,d){
+  var j=i+d; if(j<0||j>=roteiroTmp.length)return;
+  var t=roteiroTmp[i]; roteiroTmp[i]=roteiroTmp[j]; roteiroTmp[j]=t; renderRoteiro();
+}
+function removerEtapa(i){ roteiroTmp.splice(i,1); renderRoteiro(); }
+function setCarreiras(i,val){ roteiroTmp[i].carreiras=Math.max(1,num(val,1)); recalcEtapas(); }
+function setEtapaAcab(i,campo,val){ roteiroTmp[i].acab=roteiroTmp[i].acab||{verniz:false,laminacao:false}; roteiroTmp[i].acab[campo]=!!val; renderRoteiro(); }
+function toggleOverride(i){
+  var e=roteiroTmp[i];
+  if(e.ov){ e.ov=null; }
+  else {
+    var g=grupoPorNome(e.grupo)||{};
+    e.ov={velocidade:g.velocidade||0,desp_prod_pct:g.desp_prod_pct||0};
+    camposModo(g.modo).forEach(function(c){ e.ov[c[0]]=g[c[0]]||0; });
+  }
+  renderRoteiro();
+}
+function setOv(i,campo,val){ if(roteiroTmp[i].ov){ roteiroTmp[i].ov[campo]=num(val); recalcEtapas(); } }
+
+function getP(e,g,campo){ return (e.ov&&e.ov[campo]!=null)?e.ov[campo]:((g&&g[campo])||0); }
+// nº de acabamentos marcados NA ETAPA, limitado ao que o grupo sabe aplicar
+function nAcabDe(acab,g){
+  if(!acab||!g)return 0;
+  return (acab.verniz&&g.aplica_verniz?1:0)+(acab.laminacao&&g.aplica_laminacao?1:0);
+}
+function estEtapa(e,g,cores,nAcab){
+  nAcab=nAcab||0;
+  var modo=(g&&g.modo)||'fixo', setup=0, desp=0, dunit='m';
+  if(modo==='validacao'){ return {setup:0,desp:0,dunit:'',nAcab:0,vel:0,velunit:'',pct:0}; }
+  if(modo==='por_cor'){ setup=getP(e,g,'setup_min_cor')*cores; desp=getP(e,g,'desp_m_cor')*cores; dunit='m'; }
+  else if(modo==='unidade'){ setup=getP(e,g,'setup_min'); desp=getP(e,g,'desp_un'); dunit='un'; }
+  else { setup=getP(e,g,'setup_min'); desp=getP(e,g,'desp_m'); dunit='m'; }
+  setup+=nAcab*getP(e,g,'acab_min');   // acabamento conta como +1 cor cada
+  desp +=nAcab*getP(e,g,'acab_desp');
+  return {setup:setup,desp:desp,dunit:dunit,nAcab:nAcab,vel:getP(e,g,'velocidade'),
+    velunit:(modo==='unidade'?'un/h':'m/h'),pct:getP(e,g,'desp_prod_pct')};
+}
+function renderRoteiro(){
+  var cores=num(document.getElementById('p-cores').value);
+  var el=document.getElementById('roteiro-lista');
+  if(!roteiroTmp.length){ el.innerHTML='<div class="vazio">Sem etapas. Adicione a primeira máquina do roteiro abaixo.</div>'; recalcEtapas(); return; }
+  el.innerHTML=roteiroTmp.map(function(e,i){
+    var g=grupoPorNome(e.grupo)||{display:e.grupo,modo:'fixo'};
+    var nAc=nAcabDe(e.acab,g);
+    var r=estEtapa(e,g,cores,nAc);
+    var isOv=!!e.ov;
+    var acabTxt=nAc>0?('<span class="tag warn">+'+nAc+' acab.</span>'):'';
+    var acabCtrls='';
+    if(g.aplica_verniz||g.aplica_laminacao){
+      acabCtrls='<div class="row" style="gap:14px;margin-top:6px"><span class="hint">Acabamento nesta etapa:</span>'+
+        (g.aplica_verniz?'<label class="chk"><input type="checkbox" '+((e.acab&&e.acab.verniz)?'checked':'')+' onchange="setEtapaAcab('+i+',\'verniz\',this.checked)"> Verniz</label>':'')+
+        (g.aplica_laminacao?'<label class="chk"><input type="checkbox" '+((e.acab&&e.acab.laminacao)?'checked':'')+' onchange="setEtapaAcab('+i+',\'laminacao\',this.checked)"> Laminação</label>':'')+
+      '</div>';
+    }
+    var ovFields=[['velocidade','Velocidade ('+r.velunit+')'],['desp_prod_pct','Desperdício produtivo (%)']]
+      .concat(camposModo(g.modo));
+    return '<div class="etapa">'+
+      '<div class="etapa-top">'+
+        '<span class="step-num">'+(i+1)+'</span>'+
+        '<div class="grupo-icon" style="width:26px;height:26px">'+esc(g.icon||'?')+'</div>'+
+        '<b>'+esc(g.display||e.grupo)+'</b>'+
+        '<span class="tag">'+MODO_LABEL[g.modo||'fixo']+'</span>'+
+        '<span class="carr">Carreiras <input type="number" min="1" step="1" value="'+esc(e.carreiras||1)+'" onchange="setCarreiras('+i+',this.value)"></span>'+
+        '<div class="right row">'+
+          '<button class="btn-ghost" onclick="moverEtapa('+i+',-1)" title="Subir"><i class="ti ti-arrow-up"></i></button>'+
+          '<button class="btn-ghost" onclick="moverEtapa('+i+',1)" title="Descer"><i class="ti ti-arrow-down"></i></button>'+
+          '<button class="btn-ghost" onclick="toggleOverride('+i+')" title="Parâmetros específicos deste produto"><i class="ti ti-adjustments'+(isOv?'-filled':'')+'"></i></button>'+
+          '<button class="btn-ghost btn-danger" onclick="removerEtapa('+i+')"><i class="ti ti-trash"></i></button>'+
+        '</div>'+
+      '</div>'+
+      acabCtrls+
+      '<div class="est">'+
+        '<span>setup: <b>'+fmt(r.setup)+' min</b></span>'+
+        '<span>desperdício setup: <b>'+fmt(r.desp)+' '+r.dunit+'</b></span>'+
+        '<span>velocidade: <b>'+fmt(r.vel)+' '+r.velunit+'</b></span>'+
+        '<span>desp. produtivo: <b>'+fmt(r.pct)+'%</b></span>'+
+        acabTxt+
+        (isOv?'<span class="tag warn">parâmetros próprios</span>':'<span class="hint">herdado da máquina</span>')+
+      '</div>'+
+      '<div class="ov-grid'+(isOv?'':' off')+'">'+
+        ovFields.map(function(c){
+          var val=e.ov?(e.ov[c[0]]!=null?e.ov[c[0]]:0):'';
+          return '<label class="fld">'+c[1]+'<input type="number" min="0" step="0.1" value="'+esc(val)+'" onchange="setOv('+i+',\''+c[0]+'\',this.value)"></label>';
+        }).join('')+
+      '</div>'+
+    '</div>';
+  }).join('');
+  recalcEtapas();
+}
+function recalcEtapas(){
+  var cores=num(document.getElementById('p-cores').value), totS=0;
+  roteiroTmp.forEach(function(e){ var g=grupoPorNome(e.grupo)||{}; totS+=estEtapa(e,g,cores,nAcabDe(e.acab,g)).setup; });
+  document.getElementById('tot-setup').textContent=fmt(totS);
+  document.getElementById('tot-etapas').textContent=roteiroTmp.length;
+}
+
+function salvarProduto(){
+  var codigo=(document.getElementById('p-codigo').value||'').trim();
+  if(!codigo){ alert('Informe o código (PA) do produto.'); return; }
+  var dup=PRODUTOS.filter(function(p,idx){return p.codigo===codigo&&idx!==editIdx;});
+  if(dup.length){ alert('Já existe um produto com esse código.'); return; }
+  var prod={
+    codigo:codigo,
+    descricao:(document.getElementById('p-descricao').value||'').trim(),
+    substrato:(document.getElementById('p-substrato').value||'').trim(),
+    larg_substrato:num(document.getElementById('p-larg-subs').value),
+    larg_etiqueta:num(document.getElementById('p-larg-etiq').value),
+    alt_etiqueta:num(document.getElementById('p-alt-etiq').value),
+    gap_etiqueta:num(document.getElementById('p-gap-etiq').value),
+    cores:num(document.getElementById('p-cores').value),
+    conversoes:conversoesTmp,
+    roteiro:roteiroTmp
+  };
+  if(editIdx>=0)PRODUTOS[editIdx]=prod; else PRODUTOS.push(prod);
+  salvarProdutos(); fecharModal(); renderProdutos();
+}
+
+// =====================================================================
+// Utilidades
+// =====================================================================
+function toggleTema(){
+  var cur=document.documentElement.getAttribute('data-theme');
+  var next=cur==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',next);
+  try{localStorage.setItem('pcp_proto_tema',next);}catch(e){}
+}
+(function(){ try{var t=localStorage.getItem('pcp_proto_tema'); if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){} })();
+function resetSeed(){
+  if(!confirm('Restaurar dados de exemplo? Isso apaga o que você cadastrou neste protótipo.'))return;
+  MAQUINAS=seedMaquinas(); PRODUTOS=seedProdutos(); salvarMaquinas(); salvarProdutos();
+  mudarAba(abaAtual);
+}
+
+// =====================================================================
+// APONTAMENTO (Tela 2)
+// =====================================================================
+var LS_ORD='pcp_proto_ordens_v2';
+var MOTIVOS=['Almoço','Fim de expediente','Troca de clichê','Quebra de máquina','Falta de material','Aguardando aprovação','Manutenção'];
+function seedOrdens(){
+  return [
+    {numero:'P011507-001',pedido:11507,item:1,produto:'PA000000000442',qtd:50,um:'ROLO',entrega:'2026-11-20',operacoes:null},
+    {numero:'A000661-001',pedido:661,item:1,produto:'PA000000001459',qtd:3,um:'MILHEIRO',entrega:'2026-11-15',operacoes:null}
+  ];
+}
+var ORDENS=load(LS_ORD,seedOrdens);
+function salvarOrdens(){ save(LS_ORD,ORDENS); }
+function produtoPorCodigo(c){ return PRODUTOS.filter(function(p){return p.codigo===c;})[0]||null; }
+
+// ---- Upload de "pedidos em aberto" (Excel) → cria OS ----
+function colVal(r,names){
+  var keys=Object.keys(r), n, k;
+  for(n=0;n<names.length;n++){ var w=names[n].toLowerCase(); for(k=0;k<keys.length;k++){ if(keys[k].toLowerCase().trim()===w) return r[keys[k]]; } }
+  for(n=0;n<names.length;n++){ var w2=names[n].toLowerCase(); for(k=0;k<keys.length;k++){ if(keys[k].toLowerCase().indexOf(w2)>=0) return r[keys[k]]; } }
+  return '';
+}
+function normCodigo(s){ var m=(''+s).match(/([A-Z]{2}\d{3,})/i); return m?m[1].toUpperCase():(''+s).trim(); }
+function fmtData(v){
+  if(v==null||v==='')return '';
+  if(v instanceof Date){ var mm=('0'+(v.getUTCMonth()+1)).slice(-2), dd=('0'+v.getUTCDate()).slice(-2); return v.getUTCFullYear()+'-'+mm+'-'+dd; }
+  if(typeof v==='number'&&window.XLSX&&XLSX.SSF){ var d=XLSX.SSF.parse_date_code(v); if(d) return d.y+'-'+('0'+d.m).slice(-2)+'-'+('0'+d.d).slice(-2); }
+  return (''+v).trim();
+}
+function mapLinhaPedido(r){
+  var pedido=colVal(r,['Pedido']), item=colVal(r,['Item']);
+  if((''+pedido).trim()===''&&(''+item).trim()==='') return null;
+  var codigo=normCodigo(colVal(r,['Produto'])||colVal(r,['Produto - Descrição','Produto - Descricao']));
+  var desc=colVal(r,['Produto - Descrição','Produto - Descricao','Descrição','Descricao']);
+  return {
+    numero:(''+pedido).trim()+'-'+(''+item).trim(),
+    pedido:num(pedido), item:num(item),
+    produto:codigo, descricao_origem:(''+desc).trim(),
+    qtd:num(colVal(r,['Saldo Pedido','Saldo','Quantidade','Qtde'])),
+    um:(''+colVal(r,['Un.','Un','Unidade'])).trim().toUpperCase(),
+    entrega:fmtData(colVal(r,['Entrega no Cliente','Entrega','Data de Entrega'])),
+    pedido_cliente:(''+colVal(r,['Pedido do Cliente (xPed)','Pedido do Cliente','xPed'])).trim(),
+    operacoes:null
+  };
+}
+function subirPedidos(){
+  var inp=document.getElementById('file-pedidos');
+  if(!inp||!inp.files||!inp.files[0]){ alert('Escolha um arquivo Excel (.xlsx).'); return; }
+  if(!window.XLSX){ alert('Biblioteca de leitura do Excel não carregou.'); return; }
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      var wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array'});
+      var ws=wb.Sheets[wb.SheetNames[0]];
+      var rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+      var novas=rows.map(mapLinhaPedido).filter(Boolean);
+      if(!novas.length){ alert('Não encontrei linhas válidas. Confira os cabeçalhos (Pedido, Item, Produto...).'); return; }
+      var semFicha=novas.filter(function(o){return !produtoPorCodigo(o.produto);}).length;
+      var msg='Importar '+novas.length+' ordem(ns)? Isso substitui as ordens atuais do protótipo.';
+      if(semFicha)msg+='\n\nAtenção: '+semFicha+' produto(s) sem ficha técnica cadastrada — essas OS aparecem, mas sem operações/cálculo até cadastrar a ficha.';
+      if(!confirm(msg)) return;
+      ORDENS=novas; salvarOrdens(); mudarAba('apont');
+      alert(novas.length+' ordem(ns) importada(s).');
+    }catch(e){ alert('Erro ao ler o Excel: '+(e.message||e)); }
+  };
+  reader.readAsArrayBuffer(inp.files[0]);
+}
+function ensureOperacoes(os){
+  if(os.operacoes) return;
+  var p=produtoPorCodigo(os.produto);
+  os.operacoes=((p&&p.roteiro)||[]).map(function(e){
+    return {grupo:e.grupo,carreiras:e.carreiras||1,acab:e.acab?JSON.parse(JSON.stringify(e.acab)):{verniz:false,laminacao:false},
+      maquina:null,status:'AGUARDANDO',eventos:[],lancamentos:[],qtd_produzida:null};
+  });
+}
+
+// --- Conversão e metragem estimada ---
+function fatorConv(produto,um){
+  if(!um) return 1;
+  var U=(''+um).toUpperCase();
+  var r=((produto&&produto.conversoes)||[]).filter(function(c){return (c.um||'').toUpperCase()===U;})[0];
+  if(r) return r.fator||0;
+  // defaults universais quando o produto não define a conversão
+  if(U==='UN'||U==='UNID'||U==='ETIQUETA'||U==='ET'||U==='PC') return 1;
+  if(U==='MI'||U==='MILHEIRO'||U==='MIL') return 1000;
+  return 1; // padrão: 1 unidade da base = 1 etiqueta
+}
+function quantidadeOp(produto,os,g,op){
+  if(g.modo==='validacao') return {q:0,unit:'',etiquetas:0};
+  var tot=num(os.qtd)*fatorConv(produto,os.um); // total de etiquetas
+  if(g.modo==='unidade') return {q:tot,unit:'un',etiquetas:tot};
+  var passo=(num(produto&&produto.alt_etiqueta)+num(produto&&produto.gap_etiqueta)); // mm
+  var carr=Math.max(1,num(op.carreiras,1));
+  var metros=(tot/carr)*passo/1000;
+  return {q:metros,unit:'m',etiquetas:tot};
+}
+function estimativaOp(os,op){
+  var p=produtoPorCodigo(os.produto), g=grupoPorNome(op.grupo)||{modo:'fixo'};
+  var cores=num(p&&p.cores), nAc=nAcabDe(op.acab,g);
+  var r=estEtapa({grupo:op.grupo,ov:op.ov||null},g,cores,nAc);
+  var qo=quantidadeOp(p,os,g,op);
+  // velocidade da máquina física escolhida (se tiver), senão a do grupo/override
+  var velEff=subVel(g,op.maquina)||r.vel;
+  var prodMin=(velEff>0)? (qo.q/velEff*60) : 0;
+  var despProd=qo.q*(r.pct||0)/100;
+  return {setupMin:r.setup,prodMin:prodMin,qtd:qo.q,unit:qo.unit,vel:velEff,velunit:r.velunit,
+    pct:r.pct,despSetup:r.desp,dunit:r.dunit,despProd:despProd,nAcab:nAc};
+}
+function somaLanc(op){ var q=0; (op.lancamentos||[]).forEach(function(l){q+=num(l.qtd);}); return {qtd:q}; }
+function subVel(g,maquinaNome){
+  if(!g||!g.subs||!maquinaNome)return 0;
+  var s=g.subs.filter(function(x){return x.nome===maquinaNome;})[0];
+  return (s&&s.velocidade)?num(s.velocidade):0;
+}
+
+// --- Tempos reais a partir dos eventos ---
+function somaPares(ev,ini,fim){ var t=0,st=null; ev.forEach(function(x){ if(x.tipo===ini)st=x.ts; else if(x.tipo===fim&&st!=null){t+=x.ts-st;st=null;} }); return t; }
+// paradas (fechadas) dentro da rodada de produção atual (após o último PROD_INICIO)
+function paradasRodada(op){
+  var pi=ultimoTs(op.eventos,'PROD_INICIO'); if(pi==null)return 0;
+  var t=0,st=null;
+  (op.eventos||[]).forEach(function(x){ if(x.tipo==='PARADA_INICIO'&&x.ts>=pi)st=x.ts; else if(x.tipo==='PARADA_FIM'&&st!=null){t+=x.ts-st;st=null;} });
+  return t;
+}
+function ultimoTs(ev,tipo){ for(var i=ev.length-1;i>=0;i--) if(ev[i].tipo===tipo) return ev[i].ts; return null; }
+function temposReais(op){
+  var ev=op.eventos||[];
+  var setupMs=somaPares(ev,'SETUP_INICIO','SETUP_FIM');
+  var prodBrutoMs=somaPares(ev,'PROD_INICIO','PROD_FIM');
+  var paradaMs=somaPares(ev,'PARADA_INICIO','PARADA_FIM');
+  return {setupMs:setupMs,prodMs:Math.max(0,prodBrutoMs-paradaMs),paradaMs:paradaMs};
+}
+function msMin(ms){ return ms/60000; }
+function fmtClock(ms){
+  if(ms<0)ms=0; var s=Math.floor(ms/1000), h=Math.floor(s/3600), m=Math.floor((s%3600)/60), ss=s%60;
+  function z(n){return (n<10?'0':'')+n;}
+  return (h>0?h+':':'')+z(m)+':'+z(ss);
+}
+
+// --- Render ---
+var postoAtual='GESTOR';
+var osExpand={};
+function setPosto(v){ postoAtual=v; renderApont(); }
+function preencherPosto(){
+  var sel=document.getElementById('posto'); if(!sel)return;
+  var gs=MAQUINAS.slice().sort(function(a,b){return a.ordem-b.ordem;});
+  sel.innerHTML='<option value="GESTOR">Gestor — todas as ordens</option>'+
+    gs.map(function(g){return '<option value="'+esc(g.nome)+'">Operador · '+esc(g.display||g.nome)+'</option>';}).join('');
+  sel.value=postoAtual;
+}
+function opDisponivel(os,j){ for(var k=0;k<j;k++){ if(os.operacoes[k].status!=='FINALIZADA') return false; } return true; }
+function toggleOs(i){ var n=ORDENS[i].numero; osExpand[n]=!osExpand[n]; renderApont(); }
+
+function renderApont(){
+  preencherPosto();
+  var el=document.getElementById('lista-ordens');
+  ORDENS.forEach(ensureOperacoes);
+  if(!ORDENS.length){ el.innerHTML='<div class="vazio">Nenhuma ordem. (No sistema real, virão da base de pedidos em aberto.)</div>'; return; }
+  el.innerHTML=(postoAtual==='GESTOR')?renderGestor():renderFila(postoAtual);
+  tickTimers();
+}
+function renderGestor(){
+  return ORDENS.map(function(os,i){
+    var p=produtoPorCodigo(os.produto);
+    var semFicha=!p;
+    var done=os.operacoes.filter(function(o){return o.status==='FINALIZADA';}).length, tot=os.operacoes.length;
+    var fin=tot>0&&done===tot;
+    var emAnd=os.operacoes.some(function(o){return ['EM_SETUP','SETUP_OK','EM_PRODUCAO','PARADO'].indexOf(o.status)>=0;});
+    var exp=!!osExpand[os.numero];
+    var ops=exp?(semFicha?'<div class="op-item"><div class="hint">Produto '+esc(os.produto)+' sem ficha técnica. Cadastre a ficha para gerar as operações e o cálculo.</div></div>':os.operacoes.map(function(op,j){return renderOp(os,i,op,j);}).join('')):'';
+    var badge=semFicha?'<span class="right badge b-parado">sem ficha</span>'
+      :(fin?'<span class="right badge b-fim"><i class="ti ti-circle-check"></i> Finalizada</span>'
+      :'<span class="right badge '+(emAnd?'b-prod':'b-aguard')+'">'+done+'/'+tot+' etapas'+(emAnd?' · em andamento':'')+'</span>');
+    return '<div class="os-card"'+(fin?' style="border-color:var(--ok)"':'')+'>'+
+      '<div class="os-head" style="cursor:pointer" onclick="toggleOs('+i+')">'+
+        '<i class="ti ti-chevron-'+(exp?'down':'right')+'"></i>'+
+        '<span class="num">'+esc(os.numero)+'</span>'+
+        '<span class="desc">'+esc(p?p.descricao:(os.descricao_origem||os.produto))+'</span>'+
+        '<span class="tag">pedido '+esc(os.pedido)+'-'+esc(os.item)+'</span>'+
+        '<span class="tag">'+esc(fmt(os.qtd))+' '+esc(os.um)+'</span>'+
+        badge+
+      '</div>'+ops+
+    '</div>';
+  }).join('');
+}
+function renderFila(grupo){
+  var g=grupoPorNome(grupo)||{display:grupo};
+  var itens=[], aguardando=0;
+  ORDENS.forEach(function(os,i){
+    os.operacoes.forEach(function(op,j){
+      if(op.grupo!==grupo||op.status==='FINALIZADA') return;
+      if(opDisponivel(os,j)) itens.push({os:os,i:i,op:op,j:j});
+      else aguardando++;
+    });
+  });
+  var head='<div class="muted" style="margin-bottom:12px">Fila de <b>'+esc(g.display||grupo)+'</b> · '+
+    itens.length+' pronta(s) para apontar'+(aguardando?' · '+aguardando+' aguardando etapa anterior':'')+'</div>';
+  if(!itens.length) return head+'<div class="vazio">Nenhum item pronto nesta máquina agora.</div>';
+  return head+itens.map(function(it){
+    var p=produtoPorCodigo(it.os.produto);
+    return '<div class="os-card">'+
+      '<div class="os-head">'+
+        '<span class="num">'+esc(it.os.numero)+'</span>'+
+        '<span class="desc">'+esc(p?p.descricao:it.os.produto)+'</span>'+
+        '<span class="tag">'+esc(fmt(it.os.qtd))+' '+esc(it.os.um)+'</span>'+
+        '<span class="tag">entrega '+esc(it.os.entrega||'—')+'</span>'+
+      '</div>'+renderOp(it.os,it.i,it.op,it.j)+
+    '</div>';
+  }).join('');
+}
+var ST={AGUARDANDO:['Aguardando','b-aguard'],EM_SETUP:['Em setup','b-setup'],SETUP_OK:['Setup concluído','b-setupok'],
+  EM_PRODUCAO:['Em produção','b-prod'],PARADO:['Parado','b-parado'],FINALIZADA:['Finalizada','b-fim']};
+function renderOp(os,i,op,j){
+  var g=grupoPorNome(op.grupo)||{modo:'fixo',display:op.grupo,subs:[]};
+  var est=estimativaOp(os,op);
+  var st=ST[op.status]||ST.AGUARDANDO;
+  var reais=temposReais(op);
+  var acoes='', extra='';
+  var tid='tmr-'+i+'-'+j;
+
+  if(g.modo==='validacao'){
+    var fim=(op.status==='FINALIZADA');
+    var exV=fim?'<div class="op-row" style="margin-top:8px"><i class="ti ti-circle-check" style="color:var(--ok)"></i> Validada'+(op.maquina?' · '+esc(op.maquina):'')+'</div>'
+      :'<div class="hint" style="margin-top:8px">Etapa de validação (pré-impressão) — sem setup, produção ou metragem. O responsável valida e avança.</div>';
+    var acV=fim?'<button class="btn-sec btn-lg" onclick="reabrir('+i+','+j+')"><i class="ti ti-lock-open"></i> Reabrir etapa</button>'
+      :'<button class="btn btn-lg" onclick="validarEtapa('+i+','+j+')"><i class="ti ti-check"></i> Validar e finalizar</button>';
+    return '<div class="op-item">'+
+      '<div class="op-top">'+
+        '<span class="step-num">'+(j+1)+'</span>'+
+        '<div class="grupo-icon" style="width:26px;height:26px">'+esc(g.icon||'?')+'</div>'+
+        '<b>'+esc(g.display||op.grupo)+'</b>'+
+        '<span class="tag">Validação</span>'+
+        '<span class="badge '+(fim?'b-fim':'b-aguard')+'">'+(fim?'Validada':'Aguardando validação')+'</span>'+
+      '</div>'+exV+'<div class="op-actions">'+acV+'</div>'+
+    '</div>';
+  }
+
+  if(op.status==='AGUARDANDO'){
+    var subsel='';
+    if(g.subs&&g.subs.length){
+      subsel='<select id="mq-'+i+'-'+j+'" style="max-width:190px">'+
+        '<option value="">— máquina —</option>'+
+        g.subs.map(function(s){return '<option value="'+esc(s.nome)+'">'+esc(s.nome)+'</option>';}).join('')+'</select>';
+    }
+    acoes=subsel+'<button class="btn btn-lg" onclick="iniciarSetup('+i+','+j+')"><i class="ti ti-player-play"></i> Iniciar setup</button>';
+  } else if(op.status==='EM_SETUP'){
+    extra='<div class="op-row" style="margin-top:8px">Setup em andamento: <span class="timer" data-timer="'+tid+'" data-since="'+ultimoTs(op.eventos,'SETUP_INICIO')+'"></span></div>'+
+      '<div class="qtd-wrap">Metros/un. de setup ('+est.dunit+'): <input type="number" min="0" step="1" id="qs-'+i+'-'+j+'" value="'+esc(op.setup_qtd!=null?op.setup_qtd:'')+'" placeholder="estim. '+fmt(est.despSetup)+'" onchange="setQtdSetup('+i+','+j+',this.value)"></div>';
+    acoes='<button class="btn btn-lg" onclick="finalizarSetup('+i+','+j+')"><i class="ti ti-player-stop"></i> Finalizar setup</button>';
+  } else if(op.status==='SETUP_OK'){
+    extra='<div class="op-row" style="margin-top:8px">Setup: <b>'+fmt(msMin(reais.setupMs))+' min</b> (estim. '+fmt(est.setupMin)+' min) · desperdício <b>'+fmt(op.setup_qtd!=null?op.setup_qtd:0)+' '+est.dunit+'</b> (estim. '+fmt(est.despSetup)+')</div>';
+    acoes='<button class="btn btn-lg" onclick="iniciarProducao('+i+','+j+')"><i class="ti ti-player-play"></i> Iniciar produção</button>'+
+      '<button class="btn-sec btn-lg" onclick="iniciarSetup('+i+','+j+')"><i class="ti ti-refresh"></i> Novo setup</button>';
+  } else if(op.status==='EM_PRODUCAO'){
+    extra='<div class="op-row" style="margin-top:8px">Tempo produtivo (esta rodada): <span class="timer" data-timer="'+tid+'" data-since="'+ultimoTs(op.eventos,'PROD_INICIO')+'" data-sub="'+paradasRodada(op)+'"></span> <span class="hint">(paradas não contam)</span></div>'+lancUI(os,i,op,j,est,true);
+    acoes='<select id="mt-'+i+'-'+j+'" style="max-width:190px">'+MOTIVOS.map(function(m){return '<option>'+esc(m)+'</option>';}).join('')+'</select>'+
+      '<button class="btn-sec btn-lg" onclick="registrarParada('+i+','+j+')"><i class="ti ti-player-pause"></i> Parada</button>'+
+      '<button class="btn btn-lg" onclick="finalizarProducao('+i+','+j+')"><i class="ti ti-player-stop"></i> Finalizar produção</button>';
+  } else if(op.status==='PARADO'){
+    var ultPar=(op.eventos||[]).filter(function(x){return x.tipo==='PARADA_INICIO';}).slice(-1)[0];
+    var pIni=ultimoTs(op.eventos,'PROD_INICIO');
+    var prodAcum=(pIni&&ultPar)?(ultPar.ts-pIni-paradasRodada(op)):0;
+    extra='<div class="op-row" style="margin-top:8px">Parado — '+esc(ultPar?ultPar.motivo:'')+' <span class="hint">(não produtivo)</span> há <span class="timer" data-timer="'+tid+'" data-since="'+(ultPar?ultPar.ts:'')+'"></span></div>'+
+      '<div class="hint" style="margin-top:4px">Tempo produtivo acumulado: <b>'+fmt(msMin(Math.max(0,prodAcum)))+' min</b></div>'+lancUI(os,i,op,j,est,false);
+    acoes='<button class="btn btn-lg" onclick="retomar('+i+','+j+')"><i class="ti ti-player-play"></i> Retomar produção</button>';
+  } else if(op.status==='FINALIZADA'){
+    extra=resumoEstReal(os,op,est,reais);
+    acoes='<button class="btn-sec btn-lg" onclick="reabrir('+i+','+j+')"><i class="ti ti-lock-open"></i> Reabrir etapa</button>'+
+      '<span class="hint">reabrir mantém os apontamentos; os novos somam aos anteriores</span>';
+  }
+
+  return '<div class="op-item">'+
+    '<div class="op-top">'+
+      '<span class="step-num">'+(j+1)+'</span>'+
+      '<div class="grupo-icon" style="width:26px;height:26px">'+esc(g.icon||'?')+'</div>'+
+      '<b>'+esc(g.display||op.grupo)+'</b>'+
+      (op.maquina?'<span class="tag">'+esc(op.maquina)+'</span>':'')+
+      '<span class="tag">'+MODO_LABEL[g.modo||'fixo']+'</span>'+
+      '<span class="badge '+st[1]+'">'+st[0]+'</span>'+
+      '<span class="right hint">estim.: setup '+fmt(est.setupMin)+' min · prod '+fmt(est.prodMin)+' min · '+fmt(est.qtd)+' '+est.unit+'</span>'+
+    '</div>'+
+    extra+
+    '<div class="op-actions">'+acoes+'</div>'+
+  '</div>';
+}
+function ultimoTs2(op){ // início do segmento de produção em curso
+  var a=ultimoTs(op.eventos,'PROD_INICIO'), b=ultimoTs(op.eventos,'PARADA_FIM');
+  return Math.max(a||0,b||0);
+}
+function lancUI(os,i,op,j,est,editavel){
+  var s=somaLanc(op);
+  var lista=(op.lancamentos||[]).map(function(l,k){
+    return '<span class="tag">#'+(k+1)+': '+fmt(l.qtd)+' '+est.unit+'</span>';
+  }).join(' ');
+  var entrada=editavel?('<div class="row" style="gap:8px">'+
+      '<span class="hint">Trecho rodado:</span>'+
+      '<input type="number" min="0" step="1" id="lq-'+i+'-'+j+'" placeholder="metragem/qtd ('+est.unit+')" style="max-width:190px">'+
+      '<button class="btn-sec" onclick="lancarTrecho('+i+','+j+')"><i class="ti ti-plus"></i> Lançar trecho</button>'+
+    '</div>'):'';
+  return '<div class="qtd-wrap" style="flex-direction:column;align-items:flex-start;gap:6px">'+
+    (lista?('<div class="row" style="gap:6px">'+lista+'</div>'):'')+
+    entrada+
+    '<div class="hint">Produzido: <b>'+fmt(s.qtd)+' '+est.unit+'</b> (estim. '+fmt(est.qtd)+')</div>'+
+  '</div>';
+}
+function lancarTrecho(i,j){
+  var op=ORDENS[i].operacoes[j];
+  var q=document.getElementById('lq-'+i+'-'+j);
+  var qv=q&&q.value!==''?num(q.value):0;
+  if(qv<=0){ alert('Informe a metragem/quantidade do trecho.'); return; }
+  op.lancamentos=op.lancamentos||[]; op.lancamentos.push({qtd:qv,ts:Date.now()});
+  op.qtd_produzida=somaLanc(op).qtd;
+  salvarOrdens(); renderApont();
+}
+function resumoEstReal(os,op,est,reais){
+  var setupR=msMin(reais.setupMs), prodR=msMin(reais.prodMs), paradaR=msMin(reais.paradaMs);
+  var s=somaLanc(op);
+  function box(l,real,estv,unit){
+    var d=''; if(estv>0){ var dif=(real-estv)/estv*100; d='<div class="er-d '+(dif>0?'er-up':'er-dn')+'">'+(dif>0?'+':'')+fmt(dif)+'%</div>'; }
+    return '<div class="er-box"><div class="er-l">'+l+'</div><div class="er-v">'+fmt(real)+' '+unit+'</div><div class="er-l">estim. '+fmt(estv)+' '+unit+'</div>'+d+'</div>';
+  }
+  return '<div class="est-real">'+
+    box('Setup',setupR,est.setupMin,'min')+
+    box('Produção',prodR,est.prodMin,'min')+
+    '<div class="er-box"><div class="er-l">Paradas (não produtivo)</div><div class="er-v">'+fmt(paradaR)+' min</div></div>'+
+    box('Desperdício setup',(op.setup_qtd!=null?num(op.setup_qtd):0),est.despSetup,est.dunit)+
+    box('Quantidade',s.qtd,est.qtd,est.unit)+
+  '</div>';
+}
+
+// --- Ações (eventos append-only) ---
+function pushEv(op,tipo,extra){ op.eventos=op.eventos||[]; var e={tipo:tipo,ts:Date.now()}; if(extra)for(var k in extra)e[k]=extra[k]; op.eventos.push(e); }
+function iniciarSetup(i,j){
+  var op=ORDENS[i].operacoes[j], g=grupoPorNome(op.grupo)||{subs:[]};
+  if(g.subs&&g.subs.length&&!op.maquina){
+    var sel=document.getElementById('mq-'+i+'-'+j); var v=sel?sel.value:'';
+    if(!v){ alert('Selecione a máquina física antes de iniciar.'); return; }
+    op.maquina=v;
+  }
+  pushEv(op,'SETUP_INICIO'); op.status='EM_SETUP'; salvarOrdens(); renderApont();
+}
+function validarEtapa(i,j){ var op=ORDENS[i].operacoes[j]; pushEv(op,'VALIDADA'); op.status='FINALIZADA'; salvarOrdens(); renderApont(); }
+function reabrir(i,j){
+  var op=ORDENS[i].operacoes[j]; if(!op)return;
+  var g=grupoPorNome(op.grupo)||{};
+  pushEv(op,'REABERTURA');
+  op.status=(g.modo==='validacao')?'AGUARDANDO':'SETUP_OK'; // mantém eventos; novos somam
+  salvarOrdens(); renderApont();
+}
+function finalizarSetup(i,j){ var op=ORDENS[i].operacoes[j]; var inp=document.getElementById('qs-'+i+'-'+j); if(inp&&inp.value!=='')op.setup_qtd=num(inp.value); pushEv(op,'SETUP_FIM'); op.status='SETUP_OK'; salvarOrdens(); renderApont(); }
+function iniciarProducao(i,j){ var op=ORDENS[i].operacoes[j]; pushEv(op,'PROD_INICIO'); op.status='EM_PRODUCAO'; salvarOrdens(); renderApont(); }
+function registrarParada(i,j){
+  var op=ORDENS[i].operacoes[j];
+  var q=document.getElementById('lq-'+i+'-'+j); var qv=q&&q.value!==''?num(q.value):0;
+  if(qv>0){ op.lancamentos=op.lancamentos||[]; op.lancamentos.push({qtd:qv,ts:Date.now()}); op.qtd_produzida=somaLanc(op).qtd; }
+  var sel=document.getElementById('mt-'+i+'-'+j);
+  pushEv(op,'PARADA_INICIO',{motivo:sel?sel.value:''}); op.status='PARADO'; salvarOrdens(); renderApont();
+}
+function retomar(i,j){ var op=ORDENS[i].operacoes[j]; pushEv(op,'PARADA_FIM'); op.status='EM_PRODUCAO'; salvarOrdens(); renderApont(); }
+function finalizarProducao(i,j){
+  var op=ORDENS[i].operacoes[j];
+  var q=document.getElementById('lq-'+i+'-'+j);
+  var qv=q&&q.value!==''?num(q.value):0;
+  if(qv>0){ op.lancamentos=op.lancamentos||[]; op.lancamentos.push({qtd:qv,ts:Date.now()}); }
+  var s=somaLanc(op);
+  if(s.qtd<=0 && postoAtual!=='GESTOR'){
+    alert('Lance a metragem/quantidade produzida antes de finalizar.\n(Apenas o Gestor pode finalizar sem apontamento — ex.: material já impresso, só cortar.)');
+    return;
+  }
+  op.qtd_produzida=s.qtd;
+  pushEv(op,'PROD_FIM'); op.status='FINALIZADA'; salvarOrdens(); renderApont();
+}
+function setQtdSetup(i,j,val){ ORDENS[i].operacoes[j].setup_qtd=(val===''?null:num(val)); salvarOrdens(); }
+
+// --- Timers ao vivo (atualiza só os spans, sem re-render) ---
+function tickTimers(){
+  var now=Date.now();
+  document.querySelectorAll('[data-timer]').forEach(function(sp){
+    var since=parseInt(sp.getAttribute('data-since'),10);
+    var sub=parseInt(sp.getAttribute('data-sub')||'0',10)||0;
+    if(!isNaN(since)&&since>0){ var v=now-since-sub; if(v<0)v=0; sp.textContent=fmtClock(v); }
+  });
+}
+setInterval(tickTimers,1000);
+
+renderProdutos();
+</script>
+</body>
+</html>

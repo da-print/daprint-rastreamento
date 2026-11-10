@@ -136,6 +136,28 @@ tr.drag-over td{border-top:2px solid var(--accent)}
 .btn-finalizar{margin-top:6px;font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--ok);background:rgba(31,157,102,.08);color:var(--ok);cursor:pointer;display:inline-flex;align-items:center;gap:4px}
 .btn-finalizar:hover{background:rgba(31,157,102,.16)}
 .btn-reabrir{font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--warn);background:rgba(184,118,11,.08);color:var(--warn);cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+.btn-apontar{margin-top:6px;margin-left:6px;font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--accent);background:rgba(197,46,53,.08);color:var(--accent);cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+.ap-op{border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;background:var(--bg3)}
+.ap-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ap-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
+.ap-btn{font-size:12px;font-weight:600;padding:9px 15px;border-radius:8px;cursor:pointer;border:1px solid var(--accent);background:var(--accent);color:#fff;display:inline-flex;align-items:center;gap:5px}
+.ap-btn-sec{font-size:12px;font-weight:600;padding:9px 15px;border-radius:8px;cursor:pointer;border:1px solid var(--btn-border);background:var(--btn-bg);color:var(--btn-color);display:inline-flex;align-items:center;gap:5px}
+.ap-badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid var(--border)}
+.ap-b-aguard{color:var(--text3)} .ap-b-setup{color:var(--warn);border-color:var(--warn)}
+.ap-b-prod{color:var(--ok);border-color:var(--ok)} .ap-b-parado{color:var(--accent);border-color:var(--accent)}
+.ap-b-fim{color:var(--ok);border-color:var(--ok)}
+.ap-est{font-size:11px;color:var(--text3);margin-top:8px;display:flex;gap:14px;flex-wrap:wrap}
+.ap-est b{color:var(--text)} .ap-sel{padding:7px 9px;border-radius:7px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:12px}
+.ap-input{padding:7px 9px;border-radius:7px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:12px;width:150px}
+.ap-chip{font-size:11px;padding:2px 8px;border-radius:12px;background:var(--btn-bg);border:1px solid var(--border);color:var(--text3)}
+.ap-timer{font-variant-numeric:tabular-nums;font-weight:800}
+.f-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.f-fld{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--text3);font-weight:600}
+.f-fld input,.f-fld select{padding:8px 9px;border-radius:7px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px}
+.f-sub{font-size:13px;font-weight:700;margin:16px 0 8px;display:flex;gap:8px;align-items:center}
+.f-et{border:1px solid var(--border);border-radius:9px;padding:10px;margin-bottom:8px;background:var(--bg3)}
+.f-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.f-chk{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text);font-weight:600;cursor:pointer}
 .btn-reabrir:hover{background:rgba(184,118,11,.16)}
 .sel-maquina,.sel-sub,.sel-obs{font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--sel-border);background:var(--sel-bg);color:var(--sel-color)}
 .sel-obs.ativo{border-color:var(--obs-border);background:var(--obs-bg);color:var(--obs-color)}
@@ -388,6 +410,8 @@ th{font-size:10.5px}
     <div class="tab-btn" id="tab-categorias" onclick="mudarAba('categorias')">Categorias</div>
     <div class="tab-btn" id="tab-vendedores" onclick="mudarAba('vendedores')">Vendedores</div>
     <div class="tab-btn" id="tab-maquinas" onclick="mudarAba('maquinas')">Máquinas</div>
+    <div class="tab-btn" id="tab-fichas" onclick="mudarAba('fichas')">Fichas técnicas</div>
+    <div class="tab-btn" id="tab-kpis" onclick="mudarAba('kpis')">KPIs</div>
     <div class="tab-btn" id="tab-usuarios" onclick="mudarAba('usuarios')">Usuários</div>
     <div class="tab-btn" id="tab-historico" onclick="mudarAba('historico')" style="display:none">Histórico</div>
   </div>
@@ -589,10 +613,90 @@ th{font-size:10.5px}
   </div>
 </div>
 
+<div id="fichas-view" style="display:none">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+    <div>
+      <h2 style="font-size:16px;margin:0">Fichas técnicas</h2>
+      <div style="font-size:12px;color:var(--text3)">Base de produtos: dimensões, conversões e roteiro de máquinas.</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <input id="fichas-busca" placeholder="Buscar código ou descrição" oninput="renderFichasLista()" style="padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px">
+      <button class="btn-sec" onclick="baixarModeloFichas()"><i class="ti ti-file-download"></i> Modelo Excel</button>
+      <button class="btn-sec" onclick="document.getElementById('fichas-file').click()"><i class="ti ti-upload"></i> Importar Excel</button>
+      <input type="file" id="fichas-file" accept=".xlsx,.xls" style="display:none" onchange="importarFichas(this)">
+      <button class="btn-primary" onclick="abrirFicha('')">+ Novo produto</button>
+    </div>
+  </div>
+  <div id="fichas-conteudo"></div>
+</div>
+
+<div id="kpis-view" style="display:none">
+  <style>
+    #kpis-view .kpi-f{padding:7px 9px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px}
+    #kpis-view table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:4px}
+    #kpis-view th,#kpis-view td{padding:7px 9px;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap}
+    #kpis-view th{color:var(--text3);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.03em}
+    #kpis-view th.l,#kpis-view td.l{text-align:left}
+    #kpis-view h3{font-size:14px;margin:18px 0 6px}
+    #kpis-view .kpi-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+    #kpis-view .kpi-scroll th.grp{text-align:center}
+    #kpis-view .kpi-scroll th.sep,#kpis-view .kpi-scroll td.sep{border-left:1px solid var(--border)}
+    #modal-kpi-os .modal-box{max-width:96vw;width:min(1150px,96vw);max-height:92vh;overflow:hidden;display:flex;flex-direction:column}
+    #modal-kpi-os #kpi-os-conteudo{overflow:auto;flex:1;min-height:0}
+    #kpis-view tr.kpi-os-row{cursor:pointer}
+    #kpis-view tr.kpi-os-row:hover td{background:var(--hover,rgba(127,127,127,.08))}
+  </style>
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+    <div>
+      <h2 style="font-size:16px;margin:0">KPIs de produção</h2>
+      <div style="font-size:12px;color:var(--text3)">Estimado × real, paradas e metros — tudo derivado dos apontamentos.</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <select id="kpi-periodo" class="kpi-f" onchange="kpiPeriodoChange()">
+        <option value="7">Últimos 7 dias</option>
+        <option value="30">Últimos 30 dias</option>
+        <option value="0">Hoje</option>
+        <option value="tudo">Tudo</option>
+        <option value="custom">Personalizado…</option>
+      </select>
+      <input type="date" id="kpi-de" class="kpi-f" style="display:none" onchange="renderKpiTabelas()">
+      <input type="date" id="kpi-ate" class="kpi-f" style="display:none" onchange="renderKpiTabelas()">
+      <select id="kpi-grupo" class="kpi-f" onchange="kpiGrupoChange()"><option value="">Todos os grupos</option></select>
+      <select id="kpi-maquina" class="kpi-f" onchange="renderKpiTabelas()"><option value="">Todas as máquinas</option></select>
+      <select id="kpi-operador" class="kpi-f" onchange="renderKpiTabelas()"><option value="">Todos os operadores</option></select>
+      <select id="kpi-cliente" class="kpi-f" onchange="renderKpiTabelas()"><option value="">Todos os clientes</option></select>
+      <input id="kpi-os" class="kpi-f" style="width:120px" placeholder="OS (ped-item)" oninput="renderKpiTabelas()">
+    </div>
+  </div>
+  <div id="kpi-cards" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px"></div>
+  <div id="kpi-conteudo"></div>
+</div>
+
 <div id="modal-parametros" class="modal-overlay" style="display:none" onclick="if(event.target===this)fecharParametros()">
   <div class="modal-box">
     <div class="modal-header"><h2>Parâmetros de máquina</h2><button class="btn-sec" onclick="fecharParametros()">Fechar</button></div>
     <div id="modal-parametros-conteudo"></div>
+  </div>
+</div>
+
+<div id="modal-apontamento" class="modal-overlay" style="display:none" onclick="if(event.target===this)fecharApontamento()">
+  <div class="modal-box">
+    <div class="modal-header"><h2 id="ap-titulo">Apontamento</h2><button class="btn-sec" onclick="fecharApontamento()">Fechar</button></div>
+    <div id="ap-conteudo"></div>
+  </div>
+</div>
+
+<div id="modal-ficha" class="modal-overlay" style="display:none" onclick="if(event.target===this)fecharFicha()">
+  <div class="modal-box">
+    <div class="modal-header"><h2 id="ficha-titulo">Ficha técnica</h2><button class="btn-sec" onclick="fecharFicha()">Fechar</button></div>
+    <div id="ficha-conteudo"></div>
+  </div>
+</div>
+
+<div id="modal-kpi-os" class="modal-overlay" style="display:none" onclick="if(event.target===this)fecharKpiOS()">
+  <div class="modal-box">
+    <div class="modal-header"><h2 id="kpi-os-titulo">Detalhe da OS</h2><button class="btn-sec" onclick="fecharKpiOS()">Fechar</button></div>
+    <div id="kpi-os-conteudo"></div>
   </div>
 </div>
 
@@ -634,6 +738,10 @@ var MAQUINAS_GRUPOS_DB=[]; // [{nome,display,icon,ordem_fluxo,setup_min,desperdi
 var MAQUINAS_SUB_DB=[];    // [{id,grupo,nome,velocidade,ordem_exibicao}]
 // Reconstroi GRUPOS, VELOCIDADES, DESPERDICIO, SETUP_FIXO e ORDEM_FLUXO
 // a partir do banco. Se o banco estiver vazio, mantem os valores padrao.
+// Rollout hibrido: grupo com apontamento_ativo=true usa o fluxo de apontamento;
+// os demais ficam em PROGRAMACAO MANUAL (gestor atribui/move a maquina e finaliza
+// manual), sem exigir apontamento. A "chave" fica na aba Maquinas.
+function grupoApontamentoOn(nome){ var g=MAQUINAS_GRUPOS_DB.find(function(x){return x.nome===nome;}); return !!(g&&g.apontamento_ativo); }
 function reconstruirMaquinas(){
   if(!MAQUINAS_GRUPOS_DB.length)return; // sem dados no banco: usa o padrao fixo
   var grupos=MAQUINAS_GRUPOS_DB.slice().sort(function(a,b){return a.ordem_exibicao-b.ordem_exibicao;});
@@ -766,6 +874,7 @@ function barraCargaHtml(horas,mlTotal,extraLabel){
 // ===================== ESTADO =====================
 var RAW={clientes:null,pedidos:null,pcp:null,faturamento:null};
 var ITENS=[];
+var APONT_ESTADO={}; // pedido|item -> {temOps, todasFinalizadas, grupoAtual, statusAtual}
 var OVERRIDES={};        // carregado do banco (tabela overrides)
 var CATEGORIAS=[];       // carregado do banco (tabela categorias_obs)
 var VENDEDORES_DEPARA={};// carregado do banco (tabela vendedores)
@@ -1076,12 +1185,89 @@ async function recarregarDoBanco(silencioso){
     MAQUINAS_SUB_DB=res[8].data||[];
     reconstruirMaquinas();
 
+    // Estado do APONTAMENTO por pedido|item: a etapa atual dirige a fila do item.
+    // (try/catch: se a camada de apontamento ainda nao existir, nao quebra o load.)
+    APONT_ESTADO={};
+    try{
+      var aOrd=await lerTabelaCompleta('ordens','id,pedido,item',['pedido','item']);
+      var aOps=await lerTabelaCompleta('ordem_operacoes','*',['ordem_id','etapa_idx']);
+      if(!aOrd.error&&!aOps.error){
+        var opsPorOrdem={};
+        (aOps.data||[]).forEach(function(o){(opsPorOrdem[o.ordem_id]=opsPorOrdem[o.ordem_id]||[]).push(o);});
+        // eventos de TODAS as operacoes em andamento (p/ timers e contagem de lancamentos)
+        var runIds=(aOps.data||[]).filter(function(o){return ['em_setup','em_producao','parado'].indexOf(o.status)>=0;}).map(function(o){return o.id;});
+        var evByOp={};
+        if(runIds.length){
+          var evr=await supabaseClient.from('apontamentos').select('operacao_id,tipo,ts,motivo,qtd').in('operacao_id',runIds).order('ts');
+          (evr.data||[]).forEach(function(e){(evByOp[e.operacao_id]=evByOp[e.operacao_id]||[]).push(e);});
+        }
+        // monta uma "entrada de fila" a partir de uma operacao (com timer do proprio evento)
+        function mkEntry(op,parcial){
+          var ev=evByOp[op.id]||[], since=0,sub=0,motivo=null;
+          if(op.status==='em_setup') since=apUltTs(ev,'setup_inicio')||0;
+          else if(op.status==='em_producao'){ since=apUltTs(ev,'prod_inicio')||0; sub=apParadasRodada(ev); }
+          else if(op.status==='parado'){ var up=ev.filter(function(e){return e.tipo==='parada_inicio';}).slice(-1)[0]; since=up?apTs(up):0; motivo=up?up.motivo:null; }
+          var produzido=ev.filter(function(e){return e.tipo==='lancamento';}).reduce(function(s,e){return s+(Number(e.qtd)||0);},0);
+          return {opId:op.id,grupo:op.grupo,maquina:op.maquina||null,status:op.status,
+            qtdEst:op.qtd_est,qtdRodar:op.qtd_rodar_est,unidadeEst:op.unidade_est,setupEst:op.setup_est_min,prodEst:op.prod_est_min,produzido:produzido,
+            timerSince:since,timerSub:sub,paradaMotivo:motivo,parcial:!!parcial};
+        }
+        function nLancOp(id){ return (evByOp[id]||[]).filter(function(e){return e.tipo==='lancamento';}).length; }
+        (aOrd.data||[]).forEach(function(od){
+          var ops=(opsPorOrdem[od.id]||[]).slice().sort(function(a,b){return a.etapa_idx-b.etapa_idx;});
+          if(!ops.length)return;
+          var startIdx=-1; for(var k=0;k<ops.length;k++){ if(ops[k].status!=='finalizada'){startIdx=k;break;} }
+          // Hibrido: a etapa atual so dirige a fila (apontamento) se o grupo dela
+          // estiver ON. Se estiver OFF -> modo manual (gestor programa a maquina).
+          var curOn=(startIdx>=0)&&grupoApontamentoOn(ops[startIdx].grupo);
+          // CADEIA: a 1a nao-finalizada entra; cada seguinte entra (parcial) enquanto a anterior
+          // ja lancou metragem — mas so enquanto o grupo for ON (para na 1a etapa OFF).
+          var filas=[];
+          if(startIdx>=0&&curOn){
+            for(var j=startIdx;j<ops.length&&ops[j].status!=='finalizada'&&grupoApontamentoOn(ops[j].grupo);j++){
+              filas.push(mkEntry(ops[j], j>startIdx));
+              if(nLancOp(ops[j].id)===0)break;
+            }
+          }
+          APONT_ESTADO[od.pedido+'|'+od.item]={temOps:true,todasFinalizadas:startIdx<0,filas:filas,
+            manual:(startIdx>=0&&!curOn),grupoManual:(startIdx>=0?ops[startIdx].grupo:null)};
+        });
+      }
+    }catch(e){ APONT_ESTADO={}; }
+
     if(msg&&!silencioso) msg.textContent='Dados carregados do banco.';
     processarTudo();
+    iniciarRealtime();
   }catch(e){
     if(msg&&!silencioso) msg.textContent='Erro ao carregar do banco: '+(e.message||e);
     console.error(e);
   }
+}
+// ----- Painel ao vivo (Supabase Realtime) -----
+// Gestor/editor/visualizador acompanham os apontamentos em tempo real: qualquer
+// INSERT/UPDATE/DELETE em apontamentos ou ordem_operacoes recarrega o painel
+// (com debounce). O operador recarrega sozinho ao apontar, entao fica de fora.
+// Requer Realtime habilitado nas tabelas (parte G do 13_).
+var _rtTimer=null;
+function rtAgendarReload(){
+  if(_rtTimer)clearTimeout(_rtTimer);
+  _rtTimer=setTimeout(function(){ _rtTimer=null;
+    var abertos=['modal-apontamento','modal-ficha','modal-kpi-os'].some(function(id){var e=document.getElementById(id);return e&&e.style.display&&e.style.display!=='none';});
+    if(abertos)return; // nao puxa o tapete enquanto edita um modal; o proximo evento recarrega
+    if(typeof recarregarDoBanco==='function')recarregarDoBanco(true);
+  }, 1500);
+}
+function iniciarRealtime(){
+  if(window._rtStarted)return;
+  if(window._ehOperador)return;
+  if(!supabaseClient||typeof supabaseClient.channel!=='function')return;
+  try{
+    window._rtChannel=supabaseClient.channel('painel-ao-vivo')
+      .on('postgres_changes',{event:'*',schema:'public',table:'apontamentos'},rtAgendarReload)
+      .on('postgres_changes',{event:'*',schema:'public',table:'ordem_operacoes'},rtAgendarReload)
+      .subscribe();
+    window._rtStarted=true;
+  }catch(e){ /* realtime indisponivel: segue sem ao vivo */ }
 }
 
 // ===================== UPLOAD DE PLANILHAS (para o banco) =====================
@@ -1144,6 +1330,16 @@ async function enviarParaBanco(){
       msg.textContent='Enviando pedidos...';
       var r2=await supabaseClient.rpc('upload_pedidos_abertos',{linhas:mapearPedidos(window._upload_pedidos)});
       if(r2.error) throw r2.error;
+      // Alimenta a camada de apontamento (tabela 'ordens') a partir dos pedidos.
+      // IMPORTANTE: rpc() NAO lanca em erro do Postgres — devolve {error}. Precisamos
+      // checar e AVISAR, senao a sincronizacao falha em silencio e as OS nao aparecem.
+      try{
+        var rsinc=await supabaseClient.rpc('sincronizar_ordens');
+        if(rsinc&&rsinc.error) throw rsinc.error;
+      }catch(e){
+        console.warn('sincronizar_ordens falhou:', e);
+        alert('Pedidos enviados, mas a SINCRONIZAÇÃO da camada de apontamento (tabela ordens) falhou:\n\n'+(e.message||e)+'\n\nSem isso, as OS não aparecem no apontamento. Verifique: (1) você está logado como GESTOR; (2) o 13_producao_apontamentos.sql atualizado foi aplicado. Depois refaça o upload.');
+      }
     }
     if(window._upload_pcp){
       msg.textContent='Enviando PCP...';
@@ -1474,6 +1670,27 @@ function processarTudo(){
     var grupoCalc=(calc.grupo==='DIGITAL')?'PRE-IMPRESSAO':calc.grupo;
     var grupoFinal=(ov&&ov.grupo!==undefined&&ov.grupo!==null&&ov.grupo!=='')?ov.grupo:grupoCalc;
     var subFinal=(ov&&ov.sub)?ov.sub:'';
+    // Se a OS tem apontamento, a ETAPA ATUAL dirige a fila (nao o flag manual).
+    var ae=APONT_ESTADO[it.pedido+'|'+it.item];
+    var apEntryMain=null;
+    var apManual=false;
+    if(ae&&ae.temOps){
+      if(ae.todasFinalizadas){
+        calc={status:'AGUARDANDO_FATURAMENTO',grupo:null,ordemPCP:null,nf:null,pedidoCliente:calc.pedidoCliente};
+        grupoFinal=null; subFinal='';
+      }else if(ae.filas&&ae.filas.length){
+        calc.status='EM_PRODUCAO';
+        grupoFinal=ae.filas[0].grupo;          // fila do grupo da etapa atual
+        subFinal=ae.filas[0].maquina||'';      // e da sub-maquina escolhida no apontamento
+        apEntryMain=ae.filas[0];
+      }else if(ae.manual){
+        // etapa atual num grupo com apontamento DESLIGADO -> programacao manual:
+        // mostra em producao; grupo = override do gestor ou o grupo da etapa atual.
+        apManual=true;
+        calc.status='EM_PRODUCAO';
+        if(!(ov&&ov.grupo!==undefined&&ov.grupo!==null&&ov.grupo!==''))grupoFinal=ae.grupoManual;
+      }
+    }
     resultado.push(Object.assign({},it,calc,{
       key:key,
       clienteNome:cli.nomeReduzido||it.clienteNomeOrigem,
@@ -1487,8 +1704,24 @@ function processarTudo(){
       hasOverride:!!ov,
       obs:(ov&&ov.obs)?ov.obs:'',
       finalizadoManual:!!(ov&&ov.finalizado_em),
+      apEntry:apEntryMain,
+      apManual:apManual,
       pedidoCliente:calc.pedidoCliente||it.pedidoClienteAberto||null
     }));
+    // Linhas EXTRAS: as proximas etapas ja disponiveis em PARCIAL (cadeia)
+    if(ae&&ae.temOps&&!ae.todasFinalizadas&&ae.filas&&ae.filas.length>1){
+      for(var fi=1;fi<ae.filas.length;fi++){
+        var pe=ae.filas[fi];
+        resultado.push(Object.assign({},it,{
+          key:key+'|PARC:'+pe.opId,
+          clienteNome:cli.nomeReduzido||it.clienteNomeOrigem,
+          clienteCnpj:cli.cnpj||null, vendedor:cli.vendedor||null,
+          status:'EM_PRODUCAO', grupo:pe.grupo, grupoOriginal:pe.grupo, sub:pe.maquina||'',
+          ordem:null, imagens:null, hasOverride:false, obs:'', finalizadoManual:false,
+          apEntry:pe, pedidoCliente:calc.pedidoCliente||it.pedidoClienteAberto||null
+        }));
+      }
+    }
   });
   // 2) linhas de faturamento (uma por NF) - status FATURADO
   linhasFaturamento.forEach(function(f){
@@ -1548,9 +1781,349 @@ function mudarAba(aba){
   if(aba==='categorias')renderCategorias();
   if(aba==='vendedores')renderVendedores();
   if(aba==='maquinas')renderMaquinas();
+  var fv=document.getElementById('fichas-view');
+  if(fv)fv.style.display=aba==='fichas'?'block':'none';
+  var tf=document.getElementById('tab-fichas');
+  if(tf)tf.classList.toggle('active',aba==='fichas');
+  if(aba==='fichas')renderFichas();
+  var kv=document.getElementById('kpis-view');
+  if(kv)kv.style.display=aba==='kpis'?'block':'none';
+  var tk=document.getElementById('tab-kpis');
+  if(tk)tk.classList.toggle('active',aba==='kpis');
+  if(aba==='kpis')renderKPIs();
   if(aba==='usuarios'){uAtualizarCampos();carregarListaUsuarios();}
   var ha=document.getElementById('header-acoes');
   if(ha)ha.style.display=(aba==='painel')?'flex':'none';
+}
+
+// ===================== RENDER: KPIs =====================
+var KPI_OPS=[], KPI_PARADAS=[], KPI_NOMES={}, KPI_BASE={};
+function kNum(x){return Number(x)||0;}
+function kFmt(n){return (Math.round(n*100)/100).toString().replace('.',',');}
+function kHM(min){min=Math.round(kNum(min));if(min<60)return min+' min';var h=Math.floor(min/60),m=min%60;return h+'h'+(m?(' '+m+'m'):'');}
+function kGnome(g){return (typeof dispNome==='function'&&dispNome(g))||g||'—';}
+function kCard(t,big,sub){return '<div style="flex:1;min-width:150px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px">'+
+  '<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em">'+apEsc(t)+'</div>'+
+  '<div style="font-size:22px;font-weight:700;margin-top:2px">'+big+'</div>'+
+  '<div style="font-size:11px;color:var(--text3);margin-top:2px">'+apEsc(sub||'')+'</div></div>';}
+function kTbl(headers,rows){
+  if(!rows.length)return '<div class="ap-hint">Sem dados no período/seleção.</div>';
+  return '<table><thead><tr>'+headers.map(function(c){return '<th'+(c.l?' class="l"':'')+'>'+apEsc(c.t)+'</th>';}).join('')+'</tr></thead><tbody>'+
+    rows.map(function(r){return '<tr>'+r.map(function(cell,i){return '<td'+(headers[i].l?' class="l"':'')+'>'+cell+'</td>';}).join('')+'</tr>';}).join('')+'</tbody></table>';
+}
+async function renderKPIs(){
+  var cont=document.getElementById('kpi-conteudo');
+  cont.innerHTML='<div class="ap-hint">Carregando…</div>';
+  try{
+    var r1=await supabaseClient.from('v_operacao_kpi').select('*');
+    if(r1.error)throw r1.error;
+    KPI_OPS=r1.data||[];
+    try{ var r2=await supabaseClient.from('v_parada_detalhe').select('*'); KPI_PARADAS=(r2&&!r2.error&&r2.data)?r2.data:[]; }catch(e){ KPI_PARADAS=[]; }
+    KPI_NOMES={};
+    var ids=KPI_OPS.map(function(o){return o.operador_id;}).filter(Boolean);
+    ids=ids.filter(function(v,i){return ids.indexOf(v)===i;});
+    if(ids.length){ try{ var pr=await supabaseClient.from('profiles').select('id,nome').in('id',ids); (pr.data||[]).forEach(function(p){KPI_NOMES[p.id]=p.nome;}); }catch(e){} }
+    try{ if(!window._meuUid){ window._meuUid=(await supabaseClient.auth.getUser()).data.user.id; } }catch(e){}
+    // operador: visão pessoal — esconde os filtros de gestor, mantém o período
+    ['kpi-grupo','kpi-maquina','kpi-operador','kpi-cliente','kpi-os'].forEach(function(id){ var el=document.getElementById(id); if(el)el.style.display=window._ehOperador?'none':''; });
+    kpiPreencherFiltros();
+    renderKpiTabelas();
+  }catch(e){
+    cont.innerHTML='<div class="ap-hint" style="white-space:pre-wrap">Não foi possível carregar os KPIs.\n\nProvavelmente o 13_producao_apontamentos.sql atualizado (colunas vel_est/qtd_rodar_est/cliente/descrição na v_operacao_kpi + v_parada_detalhe) ainda não foi aplicado no banco.\n\nDetalhe: '+apEsc(e.message||e)+'</div>';
+    document.getElementById('kpi-cards').innerHTML='';
+  }
+}
+function kpiPreencherFiltros(){
+  var gsel=document.getElementById('kpi-grupo');
+  var grupos=KPI_OPS.map(function(o){return o.grupo;}).filter(Boolean);
+  grupos=grupos.filter(function(v,i){return grupos.indexOf(v)===i;}).sort();
+  gsel.innerHTML='<option value="">Todos os grupos</option>'+grupos.map(function(g){return '<option value="'+apEsc(g)+'">'+apEsc(kGnome(g))+'</option>';}).join('');
+  kpiGrupoChange(true);
+  var osel=document.getElementById('kpi-operador');
+  var ops=KPI_OPS.map(function(o){return o.operador_id;}).filter(Boolean);
+  ops=ops.filter(function(v,i){return ops.indexOf(v)===i;});
+  osel.innerHTML='<option value="">Todos os operadores</option>'+ops.map(function(id){return '<option value="'+apEsc(id)+'">'+apEsc(KPI_NOMES[id]||'—')+'</option>';}).join('');
+  var csel=document.getElementById('kpi-cliente');
+  if(csel){
+    var cur=csel.value;
+    var cls=KPI_OPS.map(function(o){return o.cliente_nome;}).filter(Boolean);
+    cls=cls.filter(function(v,i){return cls.indexOf(v)===i;}).sort();
+    csel.innerHTML='<option value="">Todos os clientes</option>'+cls.map(function(c){return '<option value="'+apEsc(c)+'"'+(c===cur?' selected':'')+'>'+apEsc(c)+'</option>';}).join('');
+  }
+}
+function kPct(real,base){ base=kNum(base); if(base<=0)return '—'; var d=(kNum(real)-base)/base*100; return (d>=0?'+':'')+kFmt(d)+'%'; }
+function kPctD(delta,base){ base=kNum(base); if(base<=0)return '—'; var d=kNum(delta)/base*100; return (d>=0?'+':'')+kFmt(d)+'%'; }
+function kDescCurta(d){ d=(d||'').toString(); return d.length>46?d.slice(0,45)+'…':d; }
+// "a rodar" (cascata); OS antigas, sem o snapshot novo, caem no estimado liquido.
+function kRodar(o){ var r=kNum(o.qtd_rodar_est); return r>0?r:kNum(o.qtd_est); }
+// Base do desperdicio REAL (operacional) por etapa: o que a etapa precisa ENTREGAR
+// de bom a seguinte = produção da próxima (qtd_rodar) + o ACERTO/setup da próxima
+// (ela tb gasta material no setup). Ultima etapa = liquido final (qtd_est). Escala
+// pela razao de qtd_est p/ transferir a unidade entre carreiras. Independe de filtros.
+// O refugo de producao da etapa = rodado - base; o setup PROPRIO fica so em "Desp. setup".
+function kBasesLiquidas(){
+  var byOs={}; KPI_OPS.forEach(function(o){ var k=o.pedido+'-'+o.item; (byOs[k]=byOs[k]||[]).push(o); });
+  var map={};
+  Object.keys(byOs).forEach(function(k){
+    var arr=byOs[k].slice().sort(function(a,b){return kNum(a.etapa_idx)-kNum(b.etapa_idx);});
+    for(var i=0;i<arr.length;i++){
+      var liq=kNum(arr[i].qtd_est), base;
+      if(i===arr.length-1){ base=liq; }
+      else { var nx=arr[i+1], nxLiq=kNum(nx.qtd_est), nxNeed=kRodar(nx)+kNum(nx.desp_setup_est); base=(nxLiq>0&&nxNeed>0)?(liq*nxNeed/nxLiq):liq; }
+      map[arr[i].operacao_id]=base;
+    }
+  });
+  return map;
+}
+function kBase(o){ var b=KPI_BASE[o.operacao_id]; return (b!=null)?b:kNum(o.qtd_est); }
+// METRAGEM "da OS": metros NAO somam entre etapas (job sequencial + carreiras
+// diferentes), entao usamos UMA etapa de referencia. Pega a 1a etapa (menor
+// etapa_idx) que JA RODOU (qtd_real>0); se nenhuma rodou, a 1a com meta a rodar
+// (>0). Assim etapas sem metragem (ex. pre-impressao/validacao) nao zeram o
+// resumo quando nao ha filtro de maquina.
+function kOsMetros(arr){
+  var s=arr.slice().sort(function(a,b){return kNum(a.etapa_idx)-kNum(b.etapa_idx);});
+  var run=null, est=null;
+  for(var i=0;i<s.length;i++){ if(run==null&&kNum(s[i].qtd_real)>0)run=s[i]; if(est==null&&kRodar(s[i])>0)est=s[i]; }
+  return run||est||s[0]||null;
+}
+function kpiGrupoChange(keep){
+  var g=document.getElementById('kpi-grupo').value;
+  var msel=document.getElementById('kpi-maquina');
+  var maqs=KPI_OPS.filter(function(o){return !g||o.grupo===g;}).map(function(o){return o.maquina;}).filter(Boolean);
+  maqs=maqs.filter(function(v,i){return maqs.indexOf(v)===i;}).sort();
+  msel.innerHTML='<option value="">Todas as máquinas</option>'+maqs.map(function(m){return '<option value="'+apEsc(m)+'">'+apEsc(m)+'</option>';}).join('');
+  if(keep!==true)renderKpiTabelas();
+}
+function kpiPeriodoChange(){
+  var v=document.getElementById('kpi-periodo').value, show=v==='custom';
+  document.getElementById('kpi-de').style.display=show?'inline-block':'none';
+  document.getElementById('kpi-ate').style.display=show?'inline-block':'none';
+  renderKpiTabelas();
+}
+function kpiPeriodo(){
+  var v=document.getElementById('kpi-periodo').value;
+  if(v==='tudo')return null;
+  if(v==='custom'){
+    var de=document.getElementById('kpi-de').value, ate=document.getElementById('kpi-ate').value;
+    return {de:de?new Date(de+'T00:00:00').getTime():null, ate:ate?new Date(ate+'T23:59:59').getTime():null};
+  }
+  var dias=parseInt(v,10)||0, now=new Date();
+  var start=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime()-dias*86400000;
+  return {de:start, ate:null};
+}
+function kpiDataRef(o){ var d=o.data_ref||o.ultimo_evento||o.fim_prod||o.inicio_prod; return d?new Date(d).getTime():null; }
+function kpiNoPeriodo(ts,per){ if(!per)return true; if(ts==null)return false; if(per.de!=null&&ts<per.de)return false; if(per.ate!=null&&ts>per.ate)return false; return true; }
+// Visão pessoal do operador: só as operações em que ELE produziu (operador_id = seu uid).
+// O RLS já restringe às máquinas dele; aqui filtra por quem de fato apontou a produção.
+function renderKpiOperador(per){
+  var meu=window._meuUid||'';
+  var rows=KPI_OPS.filter(function(o){ if(meu&&o.operador_id!==meu)return false; return kpiNoPeriodo(kpiDataRef(o),per); });
+  var sSetup=0,sProd=0,sPar=0,sQtd=0,osSet={};
+  rows.forEach(function(o){ sSetup+=kNum(o.setup_real_min); sProd+=kNum(o.prod_real_min); sPar+=kNum(o.parada_min); sQtd+=kNum(o.qtd_real); osSet[o.pedido+'-'+o.item]=1; });
+  var cards=document.getElementById('kpi-cards');
+  if(cards)cards.innerHTML=[
+    kCard('Horas produtivas',kHM(sProd),'tempo rodando (sem setup)'),
+    kCard('Setup',kHM(sSetup),'tempo de acerto'),
+    kCard('Paradas',kHM(sPar),''),
+    kCard('Produzido',kFmt(sQtd)+' m',''),
+    kCard('Ordens',String(Object.keys(osSet).length),'OS que você produziu')
+  ].join('');
+  var pos={}; rows.forEach(function(o){ var k=o.pedido+'-'+o.item; var a=(pos[k]=pos[k]||{pedido:o.pedido,item:o.item,desc:o.descricao||'',prod:0,setup:0,qtd:0,ref:0}); a.prod+=kNum(o.prod_real_min); a.setup+=kNum(o.setup_real_min); a.qtd+=kNum(o.qtd_real); var r=kpiDataRef(o)||0; if(r>a.ref)a.ref=r; });
+  var lista=Object.keys(pos).map(function(k){return pos[k];}).sort(function(a,b){return b.ref-a.ref;});
+  var linhas=lista.map(function(a){ return [apEsc(a.pedido+'-'+a.item), apEsc(kDescCurta(a.desc)), kHM(a.prod), kHM(a.setup), kFmt(a.qtd)+' m']; });
+  var tbl=kTbl([{t:'OS',l:true},{t:'Produto',l:true},{t:'Horas produtivas'},{t:'Setup'},{t:'Metros'}],linhas);
+  document.getElementById('kpi-conteudo').innerHTML='<h3>Minhas ordens</h3><div class="kpi-scroll">'+tbl+'</div>';
+}
+function renderKpiTabelas(){
+  if(!document.getElementById('kpi-conteudo'))return;
+  var per=kpiPeriodo();
+  // --- OPERADOR: visão pessoal (só o próprio desempenho) ---
+  if(window._ehOperador){ renderKpiOperador(per); return; }
+  var g=document.getElementById('kpi-grupo').value, m=document.getElementById('kpi-maquina').value, op=document.getElementById('kpi-operador').value;
+  var cliEl=document.getElementById('kpi-cliente'), osEl=document.getElementById('kpi-os');
+  var cli=cliEl?cliEl.value:'', os=osEl?(osEl.value||'').trim().toLowerCase():'';
+  var rows=KPI_OPS.filter(function(o){
+    if(g&&o.grupo!==g)return false;
+    if(m&&o.maquina!==m)return false;
+    if(op&&o.operador_id!==op)return false;
+    if(cli&&(o.cliente_nome||'')!==cli)return false;
+    if(os&&(''+o.pedido+'-'+o.item).toLowerCase().indexOf(os)<0)return false;
+    return kpiNoPeriodo(kpiDataRef(o),per);
+  });
+  KPI_BASE=kBasesLiquidas();
+  // ---- cards resumo (com comparativos em %) ----
+  // Tempo e desp. setup SOMAM entre etapas (aditivos). Metros NAO somam entre
+  // etapas (job sequencial + carreiras diferentes) -> usa a 1a etapa de cada OS.
+  // Desperdicio/desvio sao PERDAS -> somam por etapa (cada etapa compara contra o
+  // que ela entrega a seguinte = kBase, isolando-a). Assim filtrar 1 maquina mostra
+  // SO a perda dela, e sem filtro a soma = perda da OS inteira. Metros "produzidos"
+  // (1a etapa) e tempo seguem as regras proprias (nao somam / somam).
+  var sSetup=0,sProd=0,sPar=0,sDespS=0,sDespSEst=0,sProdEst=0,sRodadoAll=0,sRodarAll=0,sKBase=0;
+  rows.forEach(function(o){ sSetup+=kNum(o.setup_real_min); sProd+=kNum(o.prod_real_min); sPar+=kNum(o.parada_min); sDespS+=kNum(o.desp_setup_real); sDespSEst+=kNum(o.desp_setup_est); sProdEst+=kNum(o.prod_est_min); sRodadoAll+=kNum(o.qtd_real); sRodarAll+=kRodar(o); sKBase+=kBase(o); });
+  var opsByOs={}; rows.forEach(function(o){ var k=o.pedido+'-'+o.item; (opsByOs[k]=opsByOs[k]||[]).push(o); });
+  var sQtd=0,sRodar=0,sBase=0,nOs=0; Object.keys(opsByOs).forEach(function(k){ var o=kOsMetros(opsByOs[k]); if(!o)return; sQtd+=kNum(o.qtd_real); sRodar+=kRodar(o); sBase+=kNum(o.qtd_est); nOs++; });
+  var rodando=sSetup+sProd, desvio=sProd-sProdEst, pctPar=(rodando+sPar)>0?(sPar/(rodando+sPar)*100):0;
+  var dReal=sRodadoAll-sKBase, dPrev=sRodadoAll-sRodarAll; // refugo de producao por etapa (base ja inclui o acerto da proxima); setup fica em Desp. setup
+  document.getElementById('kpi-cards').innerHTML=[
+    kCard('Tempo rodando',kHM(rodando),'setup '+kHM(sSetup)+' + prod '+kHM(sProd)),
+    kCard('Paradas',kHM(sPar),kFmt(pctPar)+'% do tempo'),
+    kCard('Produzido (1ª etapa)',kFmt(sQtd)+' m','a rodar '+kFmt(sRodar)+' · líq. '+kFmt(sBase)+' · '+nOs+' OS'),
+    kCard('Desperdício real',(dReal>=0?'+':'')+kFmt(dReal)+' m','operacional (soma por etapa) · '+(sRodadoAll>0?kFmt(dReal/sRodadoAll*100)+'% do rodado':'—')),
+    kCard('Desp. vs previsto',(dPrev>=0?'+':'')+kFmt(dPrev)+' m','vs a rodar · '+kPctD(dPrev,sRodarAll)),
+    kCard('Desvio produção',(desvio>=0?'+':'')+kFmt(desvio)+' min','real × estim. · '+kPct(sProd,sProdEst)),
+    kCard('Desp. setup',kFmt(sDespS)+' m','estim. '+kFmt(sDespSEst)+' m · '+kPct(sDespS,sDespSEst))
+  ].join('');
+  // ---- por maquina (agrupado: Tempo | Metros) ----
+  var pm={}; rows.forEach(function(o){ var k=(o.grupo||'')+'||'+(o.maquina||'(sem máquina)'); var a=(pm[k]=pm[k]||{grupo:o.grupo,maquina:o.maquina||'(sem máquina)',n:0,setup:0,prod:0,prodEst:0,qtd:0,rodar:0,base:0,despS:0,velSum:0,velN:0}); a.n++; a.setup+=kNum(o.setup_real_min); a.prod+=kNum(o.prod_real_min); a.prodEst+=kNum(o.prod_est_min); a.qtd+=kNum(o.qtd_real); a.rodar+=kRodar(o); a.base+=kBase(o); a.despS+=kNum(o.desp_setup_real); if(kNum(o.vel_est)>0){a.velSum+=kNum(o.vel_est);a.velN++;} });
+  var maqArr=Object.keys(pm).map(function(k){return pm[k];}).sort(function(a,b){return b.prod-a.prod;});
+  var tMaq;
+  if(!maqArr.length){ tMaq='<div class="ap-hint">Sem dados no período/seleção.</div>'; }
+  else { tMaq='<table><thead>'+
+    '<tr><th class="l" rowspan="2">Máquina</th><th rowspan="2">Ops</th>'+
+    '<th class="grp sep" colspan="3">Tempo</th><th class="grp sep" colspan="4">Metros</th>'+
+    '<th class="sep" rowspan="2">Vel. méd/prev</th></tr>'+
+    '<tr><th class="sep">Setup</th><th>Produção real/est.</th><th>Desvio prod.</th>'+
+    '<th class="sep">Produzido real/est.</th><th>Desp. real</th><th>Desp. vs prev</th><th>Desp. setup</th></tr>'+
+    '</thead><tbody>'+maqArr.map(function(a){
+      var dReal=a.qtd-a.base, dPrev=a.qtd-a.rodar, dvT=a.prod-a.prodEst, velReal=a.prod>0?(a.qtd/a.prod*60):0, velPrev=a.velN>0?(a.velSum/a.velN):0;
+      return '<tr><td class="l">'+apEsc(kGnome(a.grupo))+' · '+apEsc(a.maquina)+'</td><td>'+a.n+'</td>'+
+        '<td class="sep">'+kHM(a.setup)+'</td><td>'+kHM(a.prod)+' / '+kHM(a.prodEst)+'</td>'+
+        '<td>'+(dvT>=0?'+':'')+kFmt(dvT)+' min ('+kPctD(dvT,a.prodEst)+')</td>'+
+        '<td class="sep">'+kFmt(a.qtd)+' / '+kFmt(a.rodar)+'</td>'+
+        '<td>'+(dReal>=0?'+':'')+kFmt(dReal)+' ('+kPctD(dReal,a.base)+')</td>'+
+        '<td>'+(dPrev>=0?'+':'')+kFmt(dPrev)+' ('+kPct(a.qtd,a.rodar)+')</td>'+
+        '<td>'+kFmt(a.despS)+'</td>'+
+        '<td class="sep">'+kFmt(velReal)+' / '+kFmt(velPrev)+'</td></tr>';
+    }).join('')+'</tbody></table>'; }
+  // ---- por operador (com tempo de setup) ----
+  var po={}; rows.forEach(function(o){ if(!o.operador_id)return; var a=(po[o.operador_id]=po[o.operador_id]||{id:o.operador_id,n:0,setup:0,prod:0,par:0,qtd:0}); a.n++; a.setup+=kNum(o.setup_real_min); a.prod+=kNum(o.prod_real_min); a.par+=kNum(o.parada_min); a.qtd+=kNum(o.qtd_real); });
+  var opRows=Object.keys(po).map(function(k){return po[k];}).sort(function(a,b){return (b.setup+b.prod)-(a.setup+a.prod);}).map(function(a){ return [apEsc(KPI_NOMES[a.id]||'—'), String(a.n), kHM(a.setup), kHM(a.prod), kHM(a.par), kFmt(a.qtd)+' m']; });
+  var tOp=kTbl([{t:'Operador',l:true},{t:'Ops'},{t:'Setup'},{t:'Horas produtivas'},{t:'Paradas'},{t:'Metros'}],opRows);
+  // ---- paradas por motivo ----
+  var pp=KPI_PARADAS.filter(function(d){ if(g&&d.grupo!==g)return false; if(m&&d.maquina!==m)return false; if(op&&d.operador_id&&d.operador_id!==op)return false; var ts=d.inicio?new Date(d.inicio).getTime():null; return kpiNoPeriodo(ts,per); });
+  var pmt={}; pp.forEach(function(d){ var mo=d.motivo||'(sem motivo)'; var a=(pmt[mo]=pmt[mo]||{motivo:mo,n:0,min:0}); a.n++; a.min+=kNum(d.minutos); });
+  var parRows=Object.keys(pmt).map(function(k){return pmt[k];}).sort(function(a,b){return b.min-a.min;}).map(function(a){ return [apEsc(a.motivo), String(a.n), kHM(a.min)]; });
+  var tPar=kTbl([{t:'Motivo',l:true},{t:'Ocorrências'},{t:'Tempo'}],parRows);
+  // ---- estimado x real por OS (agregado por OS; clique abre o detalhe) ----
+  var pos={}; rows.forEach(function(o){ var k=o.pedido+'-'+o.item; var a=(pos[k]=pos[k]||{pedido:o.pedido,item:o.item,cliente:o.cliente_nome||'',desc:o.descricao||'',ops:[],despS:0,rodadoAll:0,kbaseAll:0,rodarAll:0,prod:0,prodEst:0,ref:0}); a.ops.push(o); a.despS+=kNum(o.desp_setup_real); a.rodadoAll+=kNum(o.qtd_real); a.kbaseAll+=kBase(o); a.rodarAll+=kRodar(o); a.prod+=kNum(o.prod_real_min); a.prodEst+=kNum(o.prod_est_min); var r=kpiDataRef(o)||0; if(r>a.ref)a.ref=r; });
+  var osList=Object.keys(pos).map(function(k){ var a=pos[k], f=kOsMetros(a.ops)||{}; a.qtd=kNum(f.qtd_real); a.rodar=kRodar(f); a.base=kNum(f.qtd_est); a.dReal=a.rodadoAll-a.kbaseAll; a.dPrev=a.rodadoAll-a.rodarAll; return a; }).sort(function(a,b){return b.ref-a.ref;}).slice(0,200);
+  var tDet=kOsTabela(osList);
+  document.getElementById('kpi-conteudo').innerHTML=
+    '<h3>Por máquina</h3><div class="kpi-scroll">'+tMaq+'</div>'+
+    '<h3>Por operador</h3><div class="kpi-scroll">'+tOp+'</div>'+
+    '<h3>Paradas por motivo</h3><div class="kpi-scroll">'+tPar+'</div>'+
+    '<h3>Estimado × real por OS <span style="font-weight:400;color:var(--text3);font-size:12px">(clique na linha p/ detalhe · máx. 200)</span></h3><div class="kpi-scroll">'+tDet+'</div>';
+}
+// tabela de OS (linhas clicaveis -> popup de detalhe por maquina/etapa)
+function kOsTabela(list){
+  if(!list.length)return '<div class="ap-hint">Sem dados no período/seleção.</div>';
+  var head='<thead>'+
+    '<tr><th class="l" rowspan="2">OS</th><th class="l" rowspan="2">Cliente</th><th class="l" rowspan="2">Produto</th>'+
+    '<th class="grp sep" colspan="3">Metros</th><th class="sep" rowspan="2">Tempo prod. real/est. (min)</th></tr>'+
+    '<tr><th class="sep">Produzido real/est.</th><th>Desp. real</th><th>Desp. vs prev</th></tr></thead>';
+  var body=list.map(function(a){ var dReal=kNum(a.dReal), dPrev=kNum(a.dPrev), pctR=a.rodadoAll>0?(dReal/a.rodadoAll*100):null;
+    return '<tr class="kpi-os-row" onclick="kpiAbrirOS('+a.pedido+','+a.item+')">'+
+      '<td class="l">'+apEsc(a.pedido+'-'+a.item)+'</td>'+
+      '<td class="l">'+apEsc(a.cliente||'—')+'</td>'+
+      '<td class="l">'+apEsc(kDescCurta(a.desc))+'</td>'+
+      '<td class="sep">'+kFmt(a.qtd)+' / '+kFmt(a.rodar)+'</td>'+
+      '<td>'+(dReal>=0?'+':'')+kFmt(dReal)+(pctR!=null?(' ('+(pctR>=0?'+':'')+kFmt(pctR)+'%)'):'')+'</td>'+
+      '<td>'+(dPrev>=0?'+':'')+kFmt(dPrev)+' ('+kPctD(dPrev,a.rodarAll)+')</td>'+
+      '<td class="sep">'+kFmt(a.prod)+' / '+kFmt(a.prodEst)+'</td></tr>';
+  }).join('');
+  return '<table>'+head+'<tbody>'+body+'</tbody></table>';
+}
+async function kpiAbrirOS(pedido,item){
+  if(!Object.keys(KPI_BASE).length)KPI_BASE=kBasesLiquidas();
+  var ops=KPI_OPS.filter(function(o){return ''+o.pedido===''+pedido && ''+o.item===''+item;})
+    .sort(function(a,b){return kNum(a.etapa_idx)-kNum(b.etapa_idx);});
+  if(!ops.length)return;
+  var cli=ops[0].cliente_nome||'—', desc=ops[0].descricao||'';
+  var tt=document.getElementById('kpi-os-titulo'); if(tt)tt.textContent='OS '+pedido+'-'+item;
+  var tProd=0,tProdEst=0,tSetup=0,tSetupEst=0,tDespS=0,tDReal=0,tDPrev=0,tRodAll=0,tRodarAll=0;
+  var linhas=ops.map(function(o){
+    var rodar=kRodar(o), base=kBase(o), qtd=kNum(o.qtd_real), prod=kNum(o.prod_real_min);
+    tProd+=prod; tProdEst+=kNum(o.prod_est_min); tSetup+=kNum(o.setup_real_min); tSetupEst+=kNum(o.setup_est_min); tDespS+=kNum(o.desp_setup_real);
+    tDReal+=(qtd-base); tDPrev+=(qtd-rodar); tRodAll+=qtd; tRodarAll+=rodar;
+    var velReal=prod>0?(qtd/prod*60):0, velPrev=kNum(o.vel_est), dReal=qtd-base, dPrev=qtd-rodar;
+    return '<tr>'+
+      '<td class="l">'+apEsc(o.etapa_idx)+'. '+apEsc(kGnome(o.grupo))+'</td>'+
+      '<td class="l">'+apEsc(o.maquina||'—')+'</td>'+
+      '<td class="sep">'+kFmt(kNum(o.setup_real_min))+' / '+kFmt(kNum(o.setup_est_min))+'</td>'+
+      '<td>'+kFmt(prod)+' / '+kFmt(kNum(o.prod_est_min))+'</td>'+
+      '<td class="sep">'+kFmt(qtd)+' / '+kFmt(rodar)+'</td>'+
+      '<td>'+(dReal>=0?'+':'')+kFmt(dReal)+' ('+kPctD(dReal,base)+')</td>'+
+      '<td>'+(dPrev>=0?'+':'')+kFmt(dPrev)+' ('+kPct(qtd,rodar)+')</td>'+
+      '<td>'+kFmt(kNum(o.desp_setup_real))+'</td>'+
+      '<td class="sep">'+kFmt(velReal)+' / '+kFmt(velPrev)+'</td></tr>';
+  }).join('');
+  var head='<thead>'+
+    '<tr><th class="l" rowspan="2">Etapa</th><th class="l" rowspan="2">Máquina</th>'+
+    '<th class="grp sep" colspan="2">Tempo (min)</th><th class="grp sep" colspan="4">Metros</th>'+
+    '<th class="sep" rowspan="2">Vel. méd/prev</th></tr>'+
+    '<tr><th class="sep">Setup real/est.</th><th>Produção real/est.</th>'+
+    '<th class="sep">Produzido real/est.</th><th>Desp. real</th><th>Desp. vs prev</th><th>Desp. setup</th></tr></thead>';
+  // Produzido do total = 1a etapa (metros nao somam); desperdicio = SOMA por etapa; tempos somam
+  var f0=kOsMetros(ops)||{}, tQtd=kNum(f0.qtd_real), tRodar=kRodar(f0);
+  var dRealT=tDReal, dPrevT=tDPrev, pctRT=tRodAll>0?(dRealT/tRodAll*100):null;
+  var foot='<tr style="font-weight:700"><td class="l" colspan="2">Total <span style="font-weight:400">(produzido = 1ª etapa · desp. = soma das etapas)</span></td>'+
+    '<td class="sep">'+kFmt(tSetup)+' / '+kFmt(tSetupEst)+'</td><td>'+kFmt(tProd)+' / '+kFmt(tProdEst)+'</td>'+
+    '<td class="sep">'+kFmt(tQtd)+' / '+kFmt(tRodar)+'</td>'+
+    '<td>'+(dRealT>=0?'+':'')+kFmt(dRealT)+(pctRT!=null?(' ('+(pctRT>=0?'+':'')+kFmt(pctRT)+'%)'):'')+'</td>'+
+    '<td>'+(dPrevT>=0?'+':'')+kFmt(dPrevT)+' ('+kPctD(dPrevT,tRodarAll)+')</td>'+
+    '<td>'+kFmt(tDespS)+'</td><td class="sep">—</td></tr>';
+  document.getElementById('kpi-os-conteudo').innerHTML=
+    '<div class="ap-hint" style="margin-bottom:8px">Cliente: <b>'+apEsc(cli)+'</b>'+(desc?' · '+apEsc(desc):'')+'</div>'+
+    '<div class="kpi-scroll"><table>'+head+'<tbody>'+linhas+foot+'</tbody></table></div>'+
+    '<div class="ap-hint" style="margin-top:8px">real/est. = realizado / estimado. <b>Desp. real</b> = refugo de <b>produção</b> da etapa = rodado − (o que a próxima precisa rodar + o acerto dela); a <b>última etapa</b> = rodado − líquido do produto. O setup de cada máquina fica <b>só</b> na coluna Desp. setup. O <b>Total</b> soma as etapas. <b>Desp. vs prev</b> = rodado × o que deveria rodar (cascata). Vel. em '+(ops[0].unidade_est==='un'?'un':'m')+'/h.</div>'+
+    '<h4 style="margin:14px 0 4px">Ocorrências por etapa</h4>'+
+    '<div id="kpi-os-ocorr" class="ap-hint">Carregando apontamentos…</div>';
+  document.getElementById('modal-kpi-os').style.display='flex';
+  // ocorrencias por etapa: data/hora, operador, metragem e velocidade por trecho
+  try{
+    var ids=ops.map(function(o){return o.operacao_id;});
+    var ra=await supabaseClient.from('apontamentos').select('operacao_id,tipo,ts,operador_id,maquina,motivo,qtd').in('operacao_id',ids).order('ts',{ascending:true});
+    if(ra&&ra.error)throw ra.error;
+    var evByOp={}; (ra.data||[]).forEach(function(a){ (evByOp[a.operacao_id]=evByOp[a.operacao_id]||[]).push(a); });
+    var nids=(ra.data||[]).map(function(a){return a.operador_id;}).filter(function(v){return v&&!KPI_NOMES[v];});
+    nids=nids.filter(function(v,i){return nids.indexOf(v)===i;});
+    if(nids.length){ try{ var pr=await supabaseClient.from('profiles').select('id,nome').in('id',nids); (pr.data||[]).forEach(function(p){KPI_NOMES[p.id]=p.nome;}); }catch(e){} }
+    var oc=document.getElementById('kpi-os-ocorr'); if(oc){ oc.className=''; oc.innerHTML=kpiOcorrenciasHtml(ops,evByOp); }
+  }catch(e){ var oc2=document.getElementById('kpi-os-ocorr'); if(oc2)oc2.innerHTML='<span class="ap-hint">Não foi possível carregar os apontamentos: '+apEsc(e.message||e)+'</span>'; }
+}
+function fecharKpiOS(){ var el=document.getElementById('modal-kpi-os'); if(el)el.style.display='none'; }
+function kpiNome(id){ return (id&&KPI_NOMES[id])||'—'; }
+// historico de apontamentos (reusa apHistorico) com velocidade por trecho, p/ o popup de KPI
+function kpiHistHtml(ev,unit){
+  var rows=apHistorico(ev); if(!rows.length)return '<div class="ap-hint" style="padding:4px 0">Sem apontamentos.</div>';
+  var u=apEsc(unit||'m');
+  var IC={setup:'🔧',prod:'▶️',parada:'⏸️',validada:'✅',reabertura:'🔓',lanc:'➕',obs:'📝'};
+  var LB={setup:'Setup',prod:'Produção',parada:'Parada',validada:'Validação',reabertura:'Reabertura',lanc:'Lançamento',obs:'Observação'};
+  return rows.map(function(r){
+    var ponto=(r.k==='validada'||r.k==='reabertura'||r.k==='obs'||(r.k==='lanc'&&!r.fim));
+    var dur=(r.fim?(r.fim-r.ini):0);
+    var per=ponto?apDT(r.ini):(r.fim?(apDT(r.ini)+' → '+apDT(r.fim)+' · '+apClock(dur)):(apDT(r.ini)+' · <i>em andamento</i>'));
+    var extra='';
+    if(r.k==='setup')extra=(r.qtd!=null?(' · desp. '+kFmt(r.qtd)+' '+u):'');
+    else if(r.k==='prod'){ var h=dur/3600000; extra=' · total '+kFmt(r.qtd)+' '+u+(r.trechos>1?(' ('+r.trechos+' trechos)'):'')+((h>0&&r.qtd>0)?(' · <b>'+kFmt(r.qtd/h)+' '+u+'/h</b>'):''); }
+    else if(r.k==='lanc'){ var h2=dur/3600000; extra=' · '+kFmt(r.qtd)+' '+u+((h2>0&&r.qtd>0)?(' · '+kFmt(r.qtd/h2)+' '+u+'/h'):''); }
+    else if(r.k==='parada')extra=(r.motivo?(' · '+apEsc(r.motivo)):'');
+    else if(r.k==='obs')extra=' · <i>'+apEsc(r.motivo||'')+'</i>';
+    return '<div style="display:flex;gap:8px;align-items:baseline;font-size:12px;padding:3px 0;border-top:1px solid var(--border)'+(r.k==='lanc'?';padding-left:18px;opacity:.9':'')+'">'+
+      '<span style="width:18px;flex:none;text-align:center">'+IC[r.k]+'</span>'+
+      '<span style="width:78px;flex:none;font-weight:600">'+LB[r.k]+'</span>'+
+      '<span style="flex:1">'+per+extra+'</span>'+
+      '<span style="color:var(--text3);white-space:nowrap">'+apEsc(kpiNome(r.op))+(r.fimOp&&r.fimOp!==r.op?(' / '+apEsc(kpiNome(r.fimOp))):'')+'</span></div>';
+  }).join('');
+}
+function kpiOcorrenciasHtml(ops,evByOp){
+  return ops.map(function(o){
+    var ev=(evByOp[o.operacao_id]||[]), u=o.unidade_est||'m';
+    return '<div style="margin-top:8px;padding:8px 10px;border:1px solid var(--border);border-radius:8px">'+
+      '<div style="font-weight:600;font-size:13px">'+apEsc(o.etapa_idx)+'. '+apEsc(kGnome(o.grupo))+(o.maquina?(' · '+apEsc(o.maquina)):'')+'</div>'+
+      kpiHistHtml(ev,u)+'</div>';
+  }).join('');
 }
 
 // ===================== RENDER: PAINEL DE PRODUÇÃO =====================
@@ -1822,9 +2395,35 @@ function linhaHtml(r,draggable){
   var tagFinalizado=r.finalizadoManual?'<span class="tag-override" style="background:rgba(31,157,102,.12);color:var(--ok)">finalizado manual</span>':'';
   var tagPreImpressao=(r.grupoOriginal==='DIGITAL'&&r.grupo==='PRE-IMPRESSAO')?'<span class="tag-override" style="background:#E7EFFB;color:#2563AF">aguardando liberação p/ Digital</span>':'';
   var gInfo=gInfoDe(r.grupo);
+  var ent=r.apEntry||null;
+  var temApont=!!ent;
+  var apTimer=temApont?(' '+apTimerSpan(ent.timerSince,ent.timerSub)):'';
+  var apStatusTxt='';
+  if(ent){
+    apStatusTxt=apEsc(AP_STATUS_LABEL[ent.status]||ent.status);
+    if(ent.status==='parado'&&ent.paradaMotivo)apStatusTxt='Parado · '+apEsc(ent.paradaMotivo);
+  }
+  var parcialTag=(ent&&ent.parcial)?' <span class="ap-badge ap-b-setup" style="font-size:10px;white-space:nowrap">Parcial · etapa anterior em andamento</span>':'';
+  var apSubBadge=apStatusTxt?('<span class="ap-badge '+(AP_SUB_CLASS[ent.status]||'ap-b-aguard')+'" style="margin-left:4px;font-size:10px;white-space:nowrap">'+apStatusTxt+apTimer+'</span>'+parcialTag):'';
   var maquinaCell='';
   if(r.status==='EM_PRODUCAO'||r.status==='EM_CARTEIRA'){
-    if(window._podeEditar){
+    if(temApont){
+      if(ent.status==='aguardando'&&window._podeEditar){
+        // Programador atribui a sub-maquina (vai para a fila da maquina) SEM iniciar setup.
+        var subsAp=(gInfo&&gInfo.subs)||[];
+        if(subsAp.length){
+          var optsAp='<option value="">— atribuir máquina —</option>'+subsAp.map(function(s){return '<option value="'+apEsc(s)+'"'+(r.sub===s?' selected':'')+'>'+apEsc(s)+'</option>';}).join('');
+          maquinaCell='<select class="sel-maquina" onchange="atribuirMaquina(\''+(ent.opId||'')+'\',this.value)">'+optsAp+'</select>';
+        }else{
+          var nm0=r.grupo?dispNome(r.grupo):null;
+          maquinaCell=nm0?('<span class="campo-leitura">'+nm0+'</span>'):'<span class="campo-leitura sem-valor">—</span>';
+        }
+      }else{
+        // Em andamento: so leitura. Se ha sub-maquina escolhida, mostra SO ela.
+        var nmA=r.sub?apEsc(r.sub):(r.grupo?dispNome(r.grupo):null);
+        maquinaCell=nmA?('<span class="campo-leitura">'+nmA+'</span>'):'<span class="campo-leitura sem-valor">—</span>';
+      }
+    }else if(window._podeEditar){
       maquinaCell='<div class="maquina-cell"><select class="sel-maquina" onchange="mudarGrupoManual(\''+r.key+'\',this.value)">'+opcoesGrupoHtml(r)+'</select>'+opcoesSubHtml(r,gInfo)+'</div>';
       if(r.grupo==='BATIDA'){
         maquinaCell+='<div class="imgs-wrap">Imgs faca:<input type="number" min="1" step="1" class="imgs-input" value="'+(r.imagens||'')+'" placeholder="1" onchange="mudarImagensManual(\''+r.key+'\',this.value)"></div>';
@@ -1840,8 +2439,26 @@ function linhaHtml(r,draggable){
   if(r.status==='AGUARDANDO_FATURAMENTO'&&r.finalizadoManual&&window._podeEditar){
     maquinaCell='<button class="btn-reabrir" onclick="reabrirItem(\''+r.key+'\')"><i class="ti ti-arrow-back-up"></i> Reabrir</button>';
   }
+  if(r.status==='EM_PRODUCAO'&&grupoApontamentoOn(r.grupo)){
+    maquinaCell+='<button class="btn-apontar" onclick="abrirApontamento(\''+r.key+'\')"><i class="ti ti-stopwatch"></i> Apontamento</button>';
+  }
   var tempo=r.status==='EM_PRODUCAO'?formatarTempo(tempoHoras(r)):null;
   var tempoCell=tempo?'<span class="tempo-tag">'+tempo+'</span>':'<span style="color:var(--text3);font-size:10px">—</span>';
+  // M/L e Tempo estimado dirigidos pelo apontamento (etapa atual), quando houver
+  // M/L total + restante e TEMPO RESTANTE (desconta setup feito e produção proporcional ao lançado)
+  var mlUnit=(temApont&&ent.unidadeEst==='un')?'un':'m/l';
+  var mlProd=temApont?(ent.produzido||0):0;
+  var mlTotal=temApont?((ent.qtdRodar!=null)?ent.qtdRodar:(ent.qtdEst!=null?ent.qtdEst:null)):null;
+  var mlRest=(mlTotal!=null)?Math.max(0,mlTotal-mlProd):null;
+  var mlCell=(mlTotal!=null)?(fmtQtd(mlTotal)+' '+mlUnit):(r.ml?fmtQtd(r.ml)+' m/l':'');
+  var mlRestCell=(mlRest!=null)?'<span class="tempo-tag">'+fmtQtd(mlRest)+' '+mlUnit+'</span>':'<span style="color:var(--text3);font-size:10px">—</span>';
+  var tempoCell2=tempoCell;
+  if(temApont&&(ent.setupEst!=null||ent.prodEst!=null)){
+    var setupFeito=['setup_ok','em_producao','parado'].indexOf(ent.status)>=0;
+    var frac=(mlTotal&&mlTotal>0&&mlRest!=null)?(mlRest/mlTotal):1;
+    var tempoRestMin=(setupFeito?0:(ent.setupEst||0))+(ent.prodEst||0)*frac;
+    tempoCell2='<span class="tempo-tag">'+formatarTempo(tempoRestMin/60)+'</span>';
+  }
   var handle=draggable?'<i class="ti ti-grip-vertical drag-handle"></i>':'';
   return '<tr'+(draggable?' draggable="true" data-key="'+r.key+'" ondragstart="onDragStart(event)" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)" ondragend="onDragEnd(event)"':'')+'>'+
     '<td>'+handle+r.pedido+'-'+r.item+'</td>'+
@@ -1849,9 +2466,10 @@ function linhaHtml(r,draggable){
     '<td>'+(r.produto||'')+'<div class="desc">'+(r.produtoDesc||'').split(' - ').slice(1).join(' - ')+'</div></td>'+
     '<td>'+fmtData(r.entrega)+'</td>'+
     '<td>'+(r.saldo!==null&&r.saldo!==undefined?fmtQtd(r.saldo)+' '+(r.um||''):'')+'</td>'+
-    '<td>'+(r.ml?fmtQtd(r.ml)+' m/l':'')+'</td>'+
-    '<td>'+tempoCell+'</td>'+
-    '<td><span class="badge '+r.status.toLowerCase()+'">'+statusLabel(r.status)+'</span>'+override+tagFinalizado+tagPreImpressao+'</td>'+
+    '<td>'+mlCell+'</td>'+
+    '<td>'+mlRestCell+'</td>'+
+    '<td>'+tempoCell2+'</td>'+
+    '<td><span class="badge '+r.status.toLowerCase()+'">'+statusLabel(r.status)+'</span>'+apSubBadge+override+tagFinalizado+tagPreImpressao+'</td>'+
     '<td>'+maquinaCell+'</td>'+
     '<td>'+opcoesObsHtml(r)+'</td>'+
     '</tr>';
@@ -1860,7 +2478,7 @@ function linhaHtml(r,draggable){
 function tabelaHtml(itens,draggable){
   if(!itens.length)return'<div class="vazio">Nenhum item nesta categoria.</div>';
   return '<table><thead><tr>'+
-    '<th>Pedido-Item</th><th>Cliente</th><th>Produto</th><th>Entrega</th><th>Saldo</th><th>M/L</th><th>Tempo est.</th><th>Status</th><th>Máquina</th><th>Obs</th>'+
+    '<th>Pedido-Item</th><th>Cliente</th><th>Produto</th><th>Entrega</th><th>Saldo</th><th>M/L</th><th>M/L rest.</th><th>Tempo rest.</th><th>Status</th><th>Máquina</th><th>Obs</th>'+
     '</tr></thead><tbody>'+itens.map(function(r){return linhaHtml(r,draggable);}).join('')+'</tbody></table>';
 }
 
@@ -2123,6 +2741,11 @@ async function removerVendedorNome(codigo,silencioso){
 }
 
 // ===================== GESTÃO DE MÁQUINAS (só gestor) =====================
+var MODO_OPTS_MAQ=[['por_cor','Por cor (impressão)'],['fixo','Fixo'],['unidade','Por unidade (batida)'],['validacao','Validação (sem tempo)']];
+function pNumMaq(gi,campo,label,val){
+  return '<label style="display:inline-flex;flex-direction:column;gap:3px;font-size:11px;color:var(--text3);margin:0 12px 8px 0">'+label+
+    '<input class="obs-input" style="width:150px" type="number" min="0" value="'+(val!=null?val:0)+'" onchange="setParamGrupoNum('+gi+',\''+campo+'\',this.value)"></label>';
+}
 function renderMaquinas(){
   var el=document.getElementById('lista-maquinas');
   if(!MAQUINAS_GRUPOS_DB.length){
@@ -2131,34 +2754,75 @@ function renderMaquinas(){
   }
   var grupos=MAQUINAS_GRUPOS_DB.slice().sort(function(a,b){return a.ordem_exibicao-b.ordem_exibicao;});
   el.innerHTML=grupos.map(function(g){
-    var subs=MAQUINAS_SUB_DB.filter(function(s){return s.grupo===g.nome;})
-      .sort(function(a,b){return a.ordem_exibicao-b.ordem_exibicao;});
-    var fluxoTxt={1:'Pré-impressão',2:'Impressão',3:'Corte',4:'Revisão'}[g.ordem_fluxo]||g.ordem_fluxo;
+    var gi=MAQUINAS_GRUPOS_DB.indexOf(g);
+    var modo=g.modo||'fixo', ehValid=(modo==='validacao');
+    var dunit=modo==='unidade'?'un':'m', velunit=modo==='unidade'?'un/h':'m/h';
     var idBase=g.nome.replace(/[^a-zA-Z0-9]/g,"");
-    return '<div class="grupo-card" style="margin-bottom:14px">'+
-      '<div class="grupo-header" style="cursor:default">'+
-        '<div class="grupo-nome"><div class="grupo-icon">'+(g.icon||'??')+'</div>'+(g.display||g.nome)+
-          ' <span style="font-size:11px;color:var(--text3);font-weight:400">('+fluxoTxt+' · setup '+g.setup_min+'min · desp. '+g.desperdicio_m+'m)</span></div>'+
-        '<button class="btn-sec" onclick="removerGrupoMaquina(\''+g.nome.replace(/\'/g,"")+'\')">Remover grupo</button>'+
-      '</div>'+
-      '<div style="padding:12px 18px">'+
+    var subs=MAQUINAS_SUB_DB.filter(function(s){return s.grupo===g.nome;}).sort(function(a,b){return a.ordem_exibicao-b.ordem_exibicao;});
+    var modoSel='<select class="obs-input" style="width:180px" onchange="setModoGrupo('+gi+',this.value)">'+
+      MODO_OPTS_MAQ.map(function(m){return '<option value="'+m[0]+'"'+(modo===m[0]?' selected':'')+'>'+m[1]+'</option>';}).join('')+'</select>';
+    var params;
+    if(ehValid){
+      params='<div style="font-size:12px;color:var(--text3)">Etapa de validação/análise — sem velocidade, setup, desperdício ou acabamento.</div>';
+    }else{
+      var setupDesp = (modo==='por_cor')
+        ? pNumMaq(gi,'setup_min_cor','Setup por cor (min)',g.setup_min_cor)+pNumMaq(gi,'desp_m_cor','Desperdício setup por cor (m)',g.desp_m_cor)
+        : (modo==='unidade')
+          ? pNumMaq(gi,'setup_min','Setup (min)',g.setup_min)+pNumMaq(gi,'desp_un','Desperdício setup (un)',g.desp_un)
+          : pNumMaq(gi,'setup_min','Setup (min)',g.setup_min)+pNumMaq(gi,'desperdicio_m','Desperdício setup (m)',g.desperdicio_m);
+      params=
+        '<div style="display:flex;flex-wrap:wrap;align-items:flex-end">'+
+          pNumMaq(gi,'velocidade','Velocidade ('+velunit+')',g.velocidade)+
+          pNumMaq(gi,'desp_prod_pct','Desperdício produtivo (%)',g.desp_prod_pct)+
+          setupDesp+
+        '</div>'+
+        '<div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px;margin-top:4px">'+
+          '<div style="font-size:11px;color:var(--text3)">Acabamentos que aplica:<br>'+
+            '<label style="font-size:12px;color:var(--text);margin-right:12px"><input type="checkbox" '+(g.aplica_verniz?'checked':'')+' onchange="setParamGrupoBool('+gi+',\'aplica_verniz\',this.checked)"> Verniz</label>'+
+            '<label style="font-size:12px;color:var(--text)"><input type="checkbox" '+(g.aplica_laminacao?'checked':'')+' onchange="setParamGrupoBool('+gi+',\'aplica_laminacao\',this.checked)"> Laminação</label></div>'+
+          pNumMaq(gi,'acab_min','Setup por acabamento (min)',g.acab_min)+
+          pNumMaq(gi,'acab_desp','Desperdício por acabamento ('+dunit+')',g.acab_desp)+
+        '</div>';
+    }
+    var subsHtml = ehValid ? '' :
+      '<div style="margin-top:10px;border-top:1px dashed var(--border);padding-top:10px">'+
         (subs.length?subs.map(function(s){
           return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">'+
-            '<span style="flex:0 0 200px">'+s.nome+'</span>'+
+            '<span style="flex:0 0 200px;font-weight:600">'+apEsc(s.nome)+'</span>'+
             '<span style="font-size:12px;color:var(--text3)">Velocidade:</span>'+
-            '<input class="obs-input" style="width:100px" type="number" value="'+(s.velocidade||'')+'" onchange="atualizarVelocidadeSub('+s.id+',this.value)">'+
+            '<input class="obs-input" style="width:110px" type="number" value="'+(s.velocidade!=null?s.velocidade:'')+'" placeholder="usa grupo" onchange="atualizarVelocidadeSub('+s.id+',this.value)">'+
             '<button class="btn-sec" onclick="removerSubMaquina('+s.id+')">Remover</button>'+
           '</div>';
-        }).join(''):'<div style="font-size:12px;color:var(--text3);margin-bottom:8px">Sem sub-máquinas.</div>')+
+        }).join(''):'<div style="font-size:12px;color:var(--text3);margin-bottom:8px">Sem máquinas físicas.</div>')+
         '<div style="display:flex;gap:8px;margin-top:8px">'+
-          '<input class="obs-input" id="sub-nome-'+idBase+'" style="flex:0 0 200px" placeholder="Nova sub-máquina">'+
-          '<input class="obs-input" id="sub-vel-'+idBase+'" style="width:100px" type="number" placeholder="Veloc.">'+
-          '<button class="btn-sec" onclick="adicionarSubMaquina(\''+g.nome.replace(/\'/g,"")+'\')">+ sub-máquina</button>'+
+          '<input class="obs-input" id="sub-nome-'+idBase+'" style="flex:0 0 200px" placeholder="Nova máquina física">'+
+          '<input class="obs-input" id="sub-vel-'+idBase+'" style="width:110px" type="number" placeholder="Veloc. (opc.)">'+
+          '<button class="btn-sec" onclick="adicionarSubMaquina(\''+g.nome.replace(/\'/g,"")+'\')">+ máquina</button>'+
         '</div>'+
+      '</div>';
+    return '<div class="grupo-card" style="margin-bottom:14px">'+
+      '<div class="grupo-header" style="cursor:default">'+
+        '<div class="grupo-nome"><div class="grupo-icon">'+apEsc(g.icon||'??')+'</div>'+apEsc(g.display||g.nome)+' &nbsp;'+modoSel+
+          '<label title="Liga o fluxo de apontamento neste grupo; desligado = programação manual" style="font-size:12px;margin-left:12px;font-weight:600;color:'+(g.apontamento_ativo?'var(--ok,#1a7f37)':'var(--text3)')+'"><input type="checkbox" '+(g.apontamento_ativo?'checked':'')+' onchange="toggleApontamentoGrupo('+gi+',this.checked)"> Apontamento ativo</label></div>'+
+        '<button class="btn-sec" onclick="removerGrupoMaquina(\''+g.nome.replace(/\'/g,"")+'\')">Remover grupo</button>'+
       '</div>'+
+      '<div style="padding:12px 18px">'+params+subsHtml+'</div>'+
     '</div>';
   }).join('');
 }
+async function saveGrupoParam(nome,payload,reRender){
+  try{ var r=await supabaseClient.from('maquinas_grupos').update(payload).eq('nome',nome); if(r.error)throw r.error; await recarregarConfigMaquinas(!reRender); }
+  catch(e){ alert('Não foi possível salvar o parâmetro: '+(e.message||e)); }
+}
+function setParamGrupoNum(gi,campo,val){ var g=MAQUINAS_GRUPOS_DB[gi]; if(!g)return; var p={}; p[campo]=parseFloat(val)||0; saveGrupoParam(g.nome,p,false); }
+function setParamGrupoBool(gi,campo,val){ var g=MAQUINAS_GRUPOS_DB[gi]; if(!g)return; var p={}; p[campo]=!!val; saveGrupoParam(g.nome,p,false); }
+// Chave do rollout hibrido: alem de salvar, reprocessa o painel para refletir na hora.
+async function toggleApontamentoGrupo(gi,val){
+  var g=MAQUINAS_GRUPOS_DB[gi]; if(!g)return;
+  try{ await saveGrupoParam(g.nome,{apontamento_ativo:!!val},false); }catch(e){}
+  if(typeof recarregarDoBanco==='function') recarregarDoBanco(true);
+}
+function setModoGrupo(gi,modo){ var g=MAQUINAS_GRUPOS_DB[gi]; if(!g)return; saveGrupoParam(g.nome,{modo:modo},true); }
 async function adicionarGrupoMaquina(){
   var nome=(document.getElementById('mg-nome').value||'').trim().toUpperCase();
   var icon=(document.getElementById('mg-icon').value||'').trim();
@@ -2374,6 +3038,652 @@ async function removerUsuario(id,nome){
 
 function statusClienteLabel(s){
   return{EM_PRODUCAO:'Em produção',EM_CARTEIRA:'Em produção',AGUARDANDO_FATURAMENTO:'Finalizado, aguardando faturamento',FATURADO:'Faturado'}[s]||s;
+}
+
+// ===================== APONTAMENTO (integração produção) =====================
+// Conversa com as tabelas de 13_producao_apontamentos.sql (ordens,
+// ordem_operacoes, apontamentos, motivos_parada). Enquanto o schema nao
+// estiver aplicado no banco, mostra um aviso amigavel (degradacao graciosa).
+var AP_KEY=null, AP_ORDEM=null, AP_OPS=[], AP_MODOS={}, AP_MOTIVOS=[], AP_EVENTOS={}, _apTick=null;
+var AP_OPERADORES={}, AP_USERS=[];
+function apEventos(id){return AP_EVENTOS[id]||[];}
+function apTs(x){return new Date(x.ts).getTime();}
+function apUltTs(ev,tipo){for(var i=ev.length-1;i>=0;i--)if(ev[i].tipo===tipo)return apTs(ev[i]);return null;}
+function apSomaPares(ev,ini,fim){var t=0,st=null;ev.forEach(function(x){if(x.tipo===ini)st=apTs(x);else if(x.tipo===fim&&st!=null){t+=apTs(x)-st;st=null;}});return t;}
+function apParadasRodada(ev){var pi=apUltTs(ev,'prod_inicio');if(pi==null)return 0;var t=0,st=null;ev.forEach(function(x){var ts=apTs(x);if(x.tipo==='parada_inicio'&&ts>=pi)st=ts;else if(x.tipo==='parada_fim'&&st!=null){t+=ts-st;st=null;}});return t;}
+function apSomaLanc(ev){var q=0;ev.forEach(function(x){if(x.tipo==='lancamento')q+=Number(x.qtd)||0;});return q;}
+function apSetupMetros(ev){var q=0;ev.forEach(function(x){if(x.tipo==='setup_fim')q+=Number(x.qtd)||0;});return q;}
+function apMsMin(ms){return ms/60000;}
+function apClock(ms){if(ms<0)ms=0;var s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor((s%3600)/60),ss=s%60;function z(n){return(n<10?'0':'')+n;}return (h>0?h+':':'')+z(m)+':'+z(ss);}
+// Cronometro ancorado no relogio do CLIENTE (evita travar em 0 por diferenca
+// de horario cliente/servidor): base = tempo ja decorrido no momento do render,
+// anchor = Date.now() do render; a cada tick soma o delta do cliente.
+function apTick(){var now=Date.now();document.querySelectorAll('[data-aptimer]').forEach(function(sp){var base=parseInt(sp.getAttribute('data-base'),10)||0;var anchor=parseInt(sp.getAttribute('data-anchor'),10)||now;var v=base+(now-anchor);if(v<0)v=0;sp.textContent=apClock(v);});}
+function apTimerSpan(sinceTs,subMs,extraCls){
+  if(!sinceTs)return '';
+  var base=Math.max(0, Date.now()-sinceTs-(subMs||0));
+  return '<span class="ap-timer'+(extraCls?' '+extraCls:'')+'" data-aptimer data-base="'+base+'" data-anchor="'+Date.now()+'">'+apClock(base)+'</span>';
+}
+function apEnsureTick(){if(_apTick)return;_apTick=setInterval(apTick,1000);apTick();}
+apEnsureTick(); // relógio global único: atualiza TODOS os timers (fila + modal)
+var AP_LABEL={aguardando:['Aguardando','ap-b-aguard'],em_setup:['Em setup','ap-b-setup'],
+  setup_ok:['Setup concluído','ap-b-setup'],em_producao:['Em produção','ap-b-prod'],
+  parado:['Parado','ap-b-parado'],finalizada:['Finalizada','ap-b-fim']};
+var AP_LABEL_MODO={por_cor:'Por cor',fixo:'Fixo',unidade:'Por unidade',validacao:'Validação'};
+function apEsc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function apNum(id){var el=document.getElementById(id);return el&&el.value!==''?parseFloat(el.value):null;}
+function apFmt(n){return n==null?'—':(Math.round(n*100)/100).toString().replace('.',',');}
+function apSubs(grupo){return MAQUINAS_SUB_DB.filter(function(s){return s.grupo===grupo;});}
+
+function abrirApontamento(key){
+  var r=ITENS.find(function(x){return x.key===key;}); if(!r)return;
+  AP_KEY=key;
+  document.getElementById('ap-titulo').textContent='Apontamento · '+r.pedido+'-'+r.item;
+  document.getElementById('ap-conteudo').innerHTML='<div class="ap-op"><div class="ap-hint">Carregando…</div></div>';
+  document.getElementById('modal-apontamento').style.display='flex';
+  apCarregar(r);
+}
+function fecharApontamento(){document.getElementById('modal-apontamento').style.display='none';AP_KEY=null;
+  if(typeof recarregarDoBanco==='function')recarregarDoBanco(true); // atualiza as filas pelo apontamento
+}
+var AP_STATUS_LABEL={aguardando:'Aguardando',em_setup:'Setup em processo',setup_ok:'Setup concluído',em_producao:'Produção iniciada',parado:'Parado'};
+var AP_SUB_CLASS={aguardando:'ap-b-aguard',em_setup:'ap-b-setup',setup_ok:'ap-b-setup',em_producao:'ap-b-prod',parado:'ap-b-parado'};
+// Programador atribui a sub-maquina a uma operacao AGUARDANDO (sem iniciar setup):
+// o item entra na fila daquela maquina. (Gestor/editor, via RLS.)
+async function atribuirMaquina(opId,maquina){
+  if(!opId)return;
+  try{
+    var upd={maquina:maquina||null};
+    // Gestor atribuindo: ja ajusta a velocidade/tempo estimado pela sub-maquina
+    // (ex.: VOREY 600 vs BROTECH 2000), para o painel refletir antes do setup.
+    if(maquina){
+      var v=getVelocidade({sub:maquina});
+      if(v!=null&&v>0){
+        var cur=(await supabaseClient.from('ordem_operacoes').select('qtd_rodar_est,qtd_est').eq('id',opId).maybeSingle()).data||{};
+        var base=(cur.qtd_rodar_est!=null)?Number(cur.qtd_rodar_est):(Number(cur.qtd_est)||0);
+        upd.vel_est=v; if(base>0)upd.prod_est_min=base/v*60;
+      }
+    }
+    var r=await supabaseClient.from('ordem_operacoes').update(upd).eq('id',opId);
+    if(r.error)throw r.error;
+    recarregarDoBanco(true);
+  }catch(e){ alert('Não foi possível atribuir a máquina.\n'+(e.message||e)); }
+}
+function apAviso(msg){
+  document.getElementById('ap-conteudo').innerHTML='<div class="ap-op"><div class="ap-hint" style="white-space:pre-wrap">'+apEsc(msg)+'</div></div>';
+}
+
+async function apCarregar(r){
+  try{
+    try{ var gm=await supabaseClient.from('maquinas_grupos').select('nome,modo');
+      AP_MODOS={}; (gm.data||[]).forEach(function(g){AP_MODOS[g.nome]=g.modo;}); }catch(e){ AP_MODOS={}; }
+    try{ var mt=await supabaseClient.from('motivos_parada').select('nome').eq('ativo',true).order('ordem');
+      AP_MOTIVOS=(mt.data||[]).map(function(x){return x.nome;}); }catch(e){ AP_MOTIVOS=[]; }
+    if(!AP_MOTIVOS.length)AP_MOTIVOS=['Almoço','Fim de expediente','Troca de clichê','Quebra de máquina','Falta de material','Manutenção'];
+    var ro=await supabaseClient.from('ordens').select('*').eq('pedido',r.pedido).eq('item',r.item).maybeSingle();
+    if(ro.error) throw ro.error;
+    AP_ORDEM=ro.data;
+    if(!AP_ORDEM){ apAviso('Esta OS ainda não existe na camada de apontamento.\n\nApós aplicar o schema 13_producao_apontamentos.sql e subir os pedidos em aberto, a OS e suas operações (geradas pela ficha técnica) aparecem aqui.'); return; }
+    var rop=await supabaseClient.from('ordem_operacoes').select('*').eq('ordem_id',AP_ORDEM.id).order('etapa_idx');
+    if(rop.error) throw rop.error;
+    AP_OPS=rop.data||[];
+    if(!AP_OPS.length){
+      var paCod=AP_ORDEM.produto_codigo||(r.produto||'');
+      document.getElementById('ap-conteudo').innerHTML='<div class="ap-op"><div class="ap-hint">OS sem operações. O produto <b>'+apEsc(paCod)+'</b> precisa de ficha técnica (roteiro de máquinas) para gerar as etapas e o cálculo.</div><div class="ap-actions"><button class="ap-btn" onclick="abrirFichaDaOS()"><i class="ti ti-file-plus"></i> Cadastrar / editar ficha técnica</button></div></div>';
+      return;
+    }
+    // carrega os eventos (apontamentos) para mostrar histórico, totais e cronômetro
+    AP_EVENTOS={};
+    var opIds=AP_OPS.map(function(o){return o.id;});
+    if(opIds.length){
+      var evr=await supabaseClient.from('apontamentos').select('*').in('operacao_id',opIds).order('ts');
+      (evr.data||[]).forEach(function(e){(AP_EVENTOS[e.operacao_id]=AP_EVENTOS[e.operacao_id]||[]).push(e);});
+    }
+    // nomes dos operadores que aparecem no historico (degrada p/ '—' se a RLS nao liberar)
+    AP_OPERADORES={};
+    var _ev=[]; Object.keys(AP_EVENTOS).forEach(function(k){_ev=_ev.concat(AP_EVENTOS[k]);});
+    var operIds=_ev.map(function(e){return e.operador_id;}).filter(Boolean);
+    operIds=operIds.filter(function(v,i){return operIds.indexOf(v)===i;});
+    if(operIds.length){ try{ var pr=await supabaseClient.from('profiles').select('id,nome').in('id',operIds);
+      (pr.data||[]).forEach(function(p){AP_OPERADORES[p.id]=p.nome;}); }catch(e){} }
+    // gestor pode indicar o operador no lancamento manual: carrega a lista uma vez
+    if(PERFIL&&PERFIL.papel==='gestor'&&!AP_USERS.length){ try{ var us=await supabaseClient.from('profiles').select('id,nome').order('nome');
+      AP_USERS=(us.data||[]).filter(function(u){return u.nome;}); }catch(e){} }
+    apRender(r);
+  }catch(e){
+    apAviso('Não foi possível carregar o apontamento.\n\nProvavelmente o schema 13_producao_apontamentos.sql ainda não foi aplicado no banco.\n\nDetalhe técnico: '+(e.message||e));
+  }
+}
+
+function apRender(r){
+  var html='';
+  // CADEIA de etapas acionaveis: a 1a nao-finalizada + as seguintes enquanto a anterior ja lancou metragem.
+  var apStartIdx=-1; for(var si=0;si<AP_OPS.length;si++){ if(AP_OPS[si].status!=='finalizada'){apStartIdx=si;break;} }
+  var apReady={};
+  if(apStartIdx>=0){
+    for(var rj=apStartIdx;rj<AP_OPS.length&&AP_OPS[rj].status!=='finalizada';rj++){
+      apReady[rj]=true;
+      if(apEventos(AP_OPS[rj].id).filter(function(e){return e.tipo==='lancamento';}).length===0)break;
+    }
+  }
+  for(var i=0;i<AP_OPS.length;i++){
+    var op=AP_OPS[i];
+    var estado = op.status==='finalizada' ? 'done' : (apReady[i] ? 'current' : 'future');
+    html+=apRenderOp(r,op,estado);
+  }
+  document.getElementById('ap-conteudo').innerHTML=html;
+  apEnsureTick();
+}
+
+// ---- Historico de apontamentos (uma linha por bloco, em ordem cronologica) ----
+function apNomeOp(id){return (id&&AP_OPERADORES[id])||'—';}
+function apDT(ts){var d=new Date(ts);function z(n){return(n<10?'0':'')+n;}return z(d.getDate())+'/'+z(d.getMonth()+1)+' '+z(d.getHours())+':'+z(d.getMinutes());}
+function apHistorico(ev){
+  var rows=[],openS=null,openP=null,openPar=null,lanc=[],prevTs=null;
+  ev.forEach(function(x){
+    var ts=apTs(x);
+    if(x.tipo==='setup_inicio'){openS=x;}
+    else if(x.tipo==='setup_fim'){rows.push({k:'setup',ini:openS?apTs(openS):ts,fim:ts,qtd:Number(x.qtd)||0,op:(openS||x).operador_id,fimOp:x.operador_id});openS=null;}
+    else if(x.tipo==='prod_inicio'){openP=x;lanc=[];}
+    else if(x.tipo==='lancamento'){var li=(openP&&prevTs!=null)?prevTs:ts;rows.push({k:'lanc',ini:li,fim:(openP?ts:null),qtd:Number(x.qtd)||0,op:x.operador_id});if(openP){lanc.push(x);}}
+    else if(x.tipo==='prod_fim'){var tot=lanc.reduce(function(a,l){return a+(Number(l.qtd)||0);},0);rows.push({k:'prod',ini:openP?apTs(openP):ts,fim:ts,qtd:tot,trechos:lanc.length,op:(openP||x).operador_id,fimOp:x.operador_id});openP=null;lanc=[];}
+    else if(x.tipo==='parada_inicio'){openPar=x;}
+    else if(x.tipo==='parada_fim'){rows.push({k:'parada',ini:openPar?apTs(openPar):ts,fim:ts,motivo:openPar?openPar.motivo:'',op:(openPar||x).operador_id});openPar=null;}
+    else if(x.tipo==='validada'){rows.push({k:'validada',ini:ts,fim:null,op:x.operador_id});}
+    else if(x.tipo==='reabertura'){rows.push({k:'reabertura',ini:ts,fim:null,op:x.operador_id});}
+    else if(x.tipo==='observacao'){rows.push({k:'obs',ini:ts,fim:null,op:x.operador_id,motivo:x.motivo,id:x.id});}
+    prevTs=ts;
+  });
+  if(openS)rows.push({k:'setup',ini:apTs(openS),fim:null,qtd:null,op:openS.operador_id,aberto:true});
+  if(openP){var t2=lanc.reduce(function(a,l){return a+(Number(l.qtd)||0);},0);rows.push({k:'prod',ini:apTs(openP),fim:null,qtd:t2,trechos:lanc.length,op:openP.operador_id,aberto:true});}
+  if(openPar)rows.push({k:'parada',ini:apTs(openPar),fim:null,motivo:openPar.motivo,op:openPar.operador_id,aberto:true});
+  rows.sort(function(a,b){return a.ini-b.ini;});
+  return rows;
+}
+function apHistoricoHtml(ev,unit,opId,ehGestor){
+  var rows=apHistorico(ev); if(!rows.length)return '';
+  var IC={setup:'🔧',prod:'▶️',parada:'⏸️',validada:'✅',reabertura:'🔓',lanc:'➕',obs:'📝'};
+  var LB={setup:'Setup',prod:'Produção',parada:'Parada',validada:'Validação',reabertura:'Reabertura',lanc:'Lançamento',obs:'Observação'};
+  var li=rows.map(function(r){
+    var ponto=(r.k==='validada'||r.k==='reabertura'||r.k==='obs'||(r.k==='lanc'&&!r.fim));
+    var per=ponto?apDT(r.ini):(r.fim?(apDT(r.ini)+' → '+apDT(r.fim)+' · '+apClock(r.fim-r.ini)):(apDT(r.ini)+' · <i>em andamento</i>'));
+    var extra='';
+    if(r.k==='setup')extra=(r.qtd!=null?(' · desp. '+apFmt(r.qtd)+' '+apEsc(unit||'m')):'');
+    else if(r.k==='prod')extra=' · total '+apFmt(r.qtd)+' '+apEsc(unit||'')+(r.trechos>1?(' ('+r.trechos+' trechos)'):'');
+    else if(r.k==='lanc')extra=' · '+apFmt(r.qtd)+' '+apEsc(unit||'');
+    else if(r.k==='parada')extra=(r.motivo?(' · '+apEsc(r.motivo)):'');
+    else if(r.k==='obs')extra=' · <i>'+apEsc(r.motivo||'')+'</i>';
+    var nome=apEsc(apNomeOp(r.op))+(r.fimOp&&r.fimOp!==r.op?(' / '+apEsc(apNomeOp(r.fimOp))):'');
+    var del=(r.k==='obs'&&ehGestor&&r.id)?' <a href="#" title="Excluir observação" onclick="apExcluirObs(\''+r.id+'\',\''+(opId||'')+'\');return false" style="color:#b23;text-decoration:none">✕</a>':'';
+    return '<div style="display:flex;gap:8px;align-items:baseline;font-size:12px;padding:4px 0;border-top:1px solid #eceef1;'+(r.k==='lanc'?'padding-left:18px;opacity:.88':'')+'">'+
+      '<span style="width:18px;flex:none;text-align:center">'+IC[r.k]+'</span>'+
+      '<span style="width:78px;flex:none;font-weight:600;color:#333">'+LB[r.k]+'</span>'+
+      '<span style="flex:1;color:#444">'+per+extra+'</span>'+
+      '<span style="color:#777;white-space:nowrap">'+nome+del+'</span></div>';
+  }).join('');
+  return '<details class="ap-hist" style="margin-top:8px"'+(rows.length<=6?' open':'')+'>'+
+    '<summary style="cursor:pointer;font-size:12px;font-weight:600;color:#555">Histórico de apontamentos ('+rows.length+')</summary>'+li+'</details>';
+}
+
+// ---- Lancamento manual (retroativo) — via RPC apontamento_manual ----
+function apManualFormHtml(op){
+  var ehGestor=PERFIL&&PERFIL.papel==='gestor';
+  var operSel=ehGestor?('<label class="ap-ml-f" style="display:flex;flex-direction:column;font-size:11px;color:#666;gap:2px">Operador<select class="ap-sel" id="ap-mo-'+op.id+'">'+AP_USERS.map(function(u){return '<option value="'+apEsc(u.id)+'">'+apEsc(u.nome)+'</option>';}).join('')+'</select></label>'):'';
+  function fld(lbl,inner){return '<label class="ap-ml-f" style="display:flex;flex-direction:column;font-size:11px;color:#666;gap:2px">'+lbl+inner+'</label>';}
+  return '<div id="ap-manual-'+op.id+'" style="display:none;margin-top:8px;padding:10px;border:1px dashed #cfd4da;border-radius:8px;background:#fafbfc">'+
+    '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end">'+
+      fld('Bloco','<select class="ap-sel" id="ap-mb-'+op.id+'"><option value="producao">Produção</option><option value="setup">Setup</option></select>')+
+      fld('Data','<input class="ap-input" type="date" id="ap-md-'+op.id+'" style="width:140px">')+
+      fld('Início','<input class="ap-input" type="time" id="ap-mi-'+op.id+'" style="width:110px">')+
+      fld('Fim','<input class="ap-input" type="time" id="ap-mf-'+op.id+'" style="width:110px">')+
+      fld('Metros','<input class="ap-input" type="number" min="0" id="ap-mm-'+op.id+'" style="width:110px">')+
+      operSel+
+    '</div>'+
+    '<div class="ap-actions" style="margin-top:8px"><button class="ap-btn" onclick="apManualRegistrar(\''+op.id+'\')"><i class="ti ti-check"></i> Registrar</button>'+
+      '<button class="ap-btn-sec" onclick="apManualToggle(\''+op.id+'\')">Cancelar</button></div>'+
+    '<div class="ap-hint" style="margin-top:4px">Para quando esqueceu de iniciar/finalizar. Metros = desperdício (setup) ou produzido (produção).</div>'+
+  '</div>';
+}
+function apManualToggle(opId){var el=document.getElementById('ap-manual-'+opId);if(!el)return;el.style.display=el.style.display==='none'?'block':'none';}
+async function apManualRegistrar(opId){
+  var bloco=(document.getElementById('ap-mb-'+opId)||{}).value;
+  var data=(document.getElementById('ap-md-'+opId)||{}).value;
+  var hi=(document.getElementById('ap-mi-'+opId)||{}).value;
+  var hf=(document.getElementById('ap-mf-'+opId)||{}).value;
+  var m=apNum('ap-mm-'+opId);
+  if(!data||!hi||!hf){alert('Informe data, início e fim.');return;}
+  var ini=new Date(data+'T'+hi), fim=new Date(data+'T'+hf);
+  if(isNaN(ini.getTime())||isNaN(fim.getTime())){alert('Data/horário inválidos.');return;}
+  if(!(ini<fim)){alert('O fim deve ser depois do início.');return;}
+  if(fim.getTime()>Date.now()+5*60000){alert('O fim não pode estar no futuro.');return;}
+  if(m==null||m<0){alert('Informe os metros.');return;}
+  var oper=null; var sel=document.getElementById('ap-mo-'+opId); if(sel)oper=sel.value||null;
+  try{
+    var res=await supabaseClient.rpc('apontamento_manual',{p_operacao:opId,p_bloco:bloco,p_ini:ini.toISOString(),p_fim:fim.toISOString(),p_metros:m,p_operador:oper,p_motivo:null});
+    if(res.error)throw res.error;
+    var r=ITENS.find(function(x){return x.key===AP_KEY;}); await apCarregar(r);
+  }catch(e){
+    var msg=(e.message||e)+'';
+    if(/apontamento_manual|PGRST202|function|does not exist/i.test(msg))
+      alert('O lançamento manual precisa da função do banco.\n\nAplique o 13_producao_apontamentos.sql atualizado (função apontamento_manual) e tente de novo.');
+    else alert('Não foi possível registrar o lançamento manual.\n'+msg);
+  }
+}
+function apRenderOp(r,op,estado){
+  var modo=AP_MODOS[op.grupo]||'fixo';
+  var st=AP_LABEL[op.status]||AP_LABEL.aguardando;
+  var disp=(typeof dispNome==='function'&&dispNome(op.grupo))||op.grupo;
+  // Gate de sequencia: etapas cujas anteriores nao terminaram ficam so informativas.
+  if(estado==='future'){
+    return '<div class="ap-op" style="opacity:.55"><div class="ap-top"><b>'+apEsc(op.etapa_idx)+'. '+apEsc(disp)+'</b>'+
+      '<span class="ap-chip">'+apEsc(AP_LABEL_MODO[modo]||modo)+'</span>'+
+      '<span class="ap-badge ap-b-aguard" style="margin-left:auto">Aguardando etapa anterior</span></div></div>';
+  }
+  if(!grupoApontamentoOn(op.grupo)){
+    return '<div class="ap-op" style="opacity:.8"><div class="ap-top"><b>'+apEsc(op.etapa_idx)+'. '+apEsc(disp)+'</b>'+
+      (op.maquina?'<span class="ap-chip">'+apEsc(op.maquina)+'</span>':'')+
+      '<span class="ap-badge ap-b-aguard" style="margin-left:auto">Programação manual</span></div>'+
+      '<div class="ap-est ap-hint">Grupo com apontamento <b>desligado</b> — produção programada manualmente pelo gestor, sem apontamento. Ligue em <b>Máquinas → Apontamento ativo</b> quando o operador estiver pronto.</div></div>';
+  }
+  var ev=apEventos(op.id);
+  var unit=op.unidade_est||'';
+  var somaL=apSomaLanc(ev), setupMs=apSomaPares(ev,'setup_inicio','setup_fim'), setupMet=apSetupMetros(ev);
+  var lancChips=ev.filter(function(x){return x.tipo==='lancamento';}).map(function(l,k){return '<span class="ap-chip">#'+(k+1)+': '+apFmt(l.qtd)+' '+apEsc(unit)+'</span>';}).join(' ');
+  var acoes='', fb='';
+  if(modo==='validacao'){
+    acoes = op.status==='finalizada'
+      ? '<button class="ap-btn-sec" onclick="apAcao(\''+op.id+'\',\'reabertura\')"><i class="ti ti-lock-open"></i> Reabrir</button>'
+      : '<button class="ap-btn" onclick="apAcao(\''+op.id+'\',\'validada\')"><i class="ti ti-check"></i> Validar e finalizar</button>';
+    fb=op.status==='finalizada'?'<div class="ap-est ap-hint">Validada.</div>':'<div class="ap-est ap-hint">Etapa de validação — sem tempo/metragem. Valide para avançar.</div>';
+  } else if(op.status==='aguardando'){
+    var subs=apSubs(op.grupo);
+    var sel = subs.length ? '<select class="ap-sel" id="ap-maq-'+op.id+'"><option value="">— máquina —</option>'+subs.map(function(s){return '<option value="'+apEsc(s.nome)+'"'+(op.maquina===s.nome?' selected':'')+'>'+apEsc(s.nome)+'</option>';}).join('')+'</select>' : '';
+    acoes = sel+'<button class="ap-btn" onclick="apIniciarSetup(\''+op.id+'\')"><i class="ti ti-player-play"></i> Iniciar setup</button>';
+  } else if(op.status==='em_setup'){
+    fb='<div class="ap-est">Setup em andamento: '+apTimerSpan(apUltTs(ev,'setup_inicio'),0)+'</div>';
+    acoes = '<input class="ap-input" id="ap-qs-'+op.id+'" type="number" min="0" placeholder="metros de setup"><button class="ap-btn" onclick="apAcao(\''+op.id+'\',\'setup_fim\',{qtd:apNum(\'ap-qs-'+op.id+'\')})"><i class="ti ti-player-stop"></i> Finalizar setup</button>';
+  } else if(op.status==='setup_ok'){
+    fb='<div class="ap-est">Setup concluído: <b>'+apFmt(apMsMin(setupMs))+' min</b> · desperdício <b>'+apFmt(setupMet)+' '+apEsc(unit||'m')+'</b></div>';
+    acoes = '<button class="ap-btn" onclick="apAcao(\''+op.id+'\',\'prod_inicio\')"><i class="ti ti-player-play"></i> Iniciar produção</button>';
+  } else if(op.status==='em_producao'){
+    fb=(lancChips?'<div class="ap-est">'+lancChips+'</div>':'')+
+      '<div class="ap-est">Produzido: <b>'+apFmt(somaL)+' '+apEsc(unit)+'</b> (meta a rodar '+apFmt(op.qtd_rodar_est!=null?op.qtd_rodar_est:op.qtd_est)+') · Tempo produtivo: '+apTimerSpan(apUltTs(ev,'prod_inicio'),apParadasRodada(ev))+'</div>';
+    var mot = '<select class="ap-sel" id="ap-mot-'+op.id+'">'+AP_MOTIVOS.map(function(m){return '<option>'+apEsc(m)+'</option>';}).join('')+'</select>';
+    acoes = '<input class="ap-input" id="ap-lq-'+op.id+'" type="number" min="0" placeholder="metragem deste trecho"><button class="ap-btn-sec" onclick="apLancar(\''+op.id+'\')"><i class="ti ti-plus"></i> Lançar</button>'+
+      mot+'<button class="ap-btn-sec" onclick="apParada(\''+op.id+'\')"><i class="ti ti-player-pause"></i> Parada</button>'+
+      '<button class="ap-btn" onclick="apAcao(\''+op.id+'\',\'prod_fim\')"><i class="ti ti-player-stop"></i> Finalizar</button>';
+  } else if(op.status==='parado'){
+    var ultPar=ev.filter(function(x){return x.tipo==='parada_inicio';}).slice(-1)[0];
+    fb='<div class="ap-est">Parado — '+apEsc(ultPar?ultPar.motivo:'')+' há '+apTimerSpan(ultPar?apTs(ultPar):0,0)+' · Produzido: <b>'+apFmt(somaL)+' '+apEsc(unit)+'</b></div>';
+    acoes = '<button class="ap-btn" onclick="apAcao(\''+op.id+'\',\'parada_fim\')"><i class="ti ti-player-play"></i> Retomar produção</button>';
+  } else if(op.status==='finalizada'){
+    var prodMs=apSomaPares(ev,'prod_inicio','prod_fim')-apSomaPares(ev,'parada_inicio','parada_fim');
+    fb='<div class="ap-est"><span>setup: <b>'+apFmt(apMsMin(setupMs))+' min</b></span><span>produção: <b>'+apFmt(apMsMin(Math.max(0,prodMs)))+' min</b></span><span>produzido: <b>'+apFmt(somaL)+' '+apEsc(unit)+'</b></span><span>desp. setup: <b>'+apFmt(setupMet)+'</b></span></div>';
+    acoes = '<button class="ap-btn-sec" onclick="apAcao(\''+op.id+'\',\'reabertura\')"><i class="ti ti-lock-open"></i> Reabrir</button>';
+  }
+  var est = (op.setup_est_min!=null||op.prod_est_min!=null)
+    ? '<div class="ap-est ap-hint"><span>estim.: setup '+apFmt(op.setup_est_min)+' min</span><span>produção '+apFmt(op.prod_est_min)+' min</span>'+
+      (op.qtd_rodar_est!=null
+        ? '<span>rodar <b>'+apFmt(op.qtd_rodar_est)+' '+apEsc(op.unidade_est||'')+'</b> <span style="opacity:.7">(líq. '+apFmt(op.qtd_est)+')</span></span>'
+        : '<span>qtd '+apFmt(op.qtd_est)+' '+apEsc(op.unidade_est||'')+'</span>')+
+      (op.vel_est?'<span>vel. '+apFmt(op.vel_est)+'</span>':'')+'</div>'
+    : '<div class="ap-est ap-hint">estimativa ainda não calculada</div>';
+  var ehGestor=PERFIL&&PERFIL.papel==='gestor';
+  var podeManual=modo!=='validacao'&&((estado==='current')||(estado==='done'&&ehGestor));
+  var manual=podeManual
+    ? '<div class="ap-actions" style="margin-top:6px"><button class="ap-btn-sec" onclick="apManualToggle(\''+op.id+'\')"><i class="ti ti-clock-plus"></i> Lançamento manual</button></div>'+apManualFormHtml(op)
+    : '';
+  var obs='<div class="ap-actions" style="margin-top:6px"><input class="ap-input" id="ap-obs-'+op.id+'" placeholder="Observação / ocorrência (ex.: máquina patinando)" style="flex:1;min-width:180px"><button class="ap-btn-sec" onclick="apObservar(\''+op.id+'\')"><i class="ti ti-message-plus"></i> Observação</button></div>';
+  var temEvOp=ev.some(function(x){return x.tipo!=='observacao';});
+  var delLast=(ehGestor&&temEvOp)?'<div class="ap-actions" style="margin-top:6px"><button class="ap-btn-sec" style="color:#b23" onclick="apExcluirUltimo(\''+op.id+'\')"><i class="ti ti-trash"></i> Excluir último apontamento</button></div>':'';
+  var hist=apHistoricoHtml(ev,unit,op.id,ehGestor);
+  return '<div class="ap-op">'+
+    '<div class="ap-top"><b>'+apEsc(op.etapa_idx)+'. '+apEsc(disp)+'</b>'+
+      (op.maquina?'<span class="ap-chip">'+apEsc(op.maquina)+'</span>':'')+
+      '<span class="ap-chip">'+apEsc(AP_LABEL_MODO[modo]||modo)+'</span>'+
+      '<span class="ap-badge '+st[1]+'" style="margin-left:auto">'+st[0]+'</span></div>'+
+    est+fb+'<div class="ap-actions">'+acoes+'</div>'+manual+obs+delLast+hist+
+  '</div>';
+}
+
+async function apIniciarSetup(opId){
+  var op=AP_OPS.find(function(o){return o.id===opId;}); if(!op)return;
+  var subs=apSubs(op.grupo), maq=null;
+  if(subs.length){ var el=document.getElementById('ap-maq-'+opId); maq=el?el.value:''; if(!maq){alert('Selecione a máquina física.');return;} }
+  await apAcao(opId,'setup_inicio',{maquina:maq});
+}
+async function apLancar(opId){
+  var q=apNum('ap-lq-'+opId); if(!q||q<=0){alert('Informe a metragem do trecho.');return;}
+  await apAcao(opId,'lancamento',{qtd:q});
+}
+async function apParada(opId){
+  var el=document.getElementById('ap-mot-'+opId); var motivo=el?el.value:'';
+  var q=apNum('ap-lq-'+opId); if(q&&q>0){ await apAcao(opId,'lancamento',{qtd:q},true); }
+  await apAcao(opId,'parada_inicio',{motivo:motivo});
+}
+async function apAcao(opId,tipo,extra,silencioso){
+  try{
+    var payload=Object.assign({operacao_id:opId,tipo:tipo}, extra||{});
+    var ins=await supabaseClient.from('apontamentos').insert(payload);
+    if(ins.error) throw ins.error;
+    if(!silencioso){ var r=ITENS.find(function(x){return x.key===AP_KEY;}); await apCarregar(r); }
+  }catch(e){ alert('Não foi possível registrar o apontamento.\n'+(e.message||e)); }
+}
+async function apObservar(opId){
+  var el=document.getElementById('ap-obs-'+opId); var txt=el?(el.value||'').trim():'';
+  if(!txt){alert('Escreva a observação.');return;}
+  var op=AP_OPS.find(function(o){return o.id===opId;});
+  await apAcao(opId,'observacao',{motivo:txt, maquina:(op&&op.maquina)||null});
+}
+async function apExcluirUltimo(opId){
+  if(!confirm('Excluir o ÚLTIMO apontamento desta etapa? O status é recalculado. Ação irreversível.'))return;
+  try{
+    var res=await supabaseClient.rpc('excluir_ultimo_apontamento',{p_operacao:opId});
+    if(res&&res.error)throw res.error;
+    var r=ITENS.find(function(x){return x.key===AP_KEY;}); await apCarregar(r);
+  }catch(e){ var m=(e.message||e)+''; if(/excluir_ultimo_apontamento|PGRST202|function|does not exist/i.test(m)) alert('Precisa aplicar o 13_ atualizado (função excluir_ultimo_apontamento).'); else alert('Não foi possível excluir.\n'+m); }
+}
+async function apExcluirObs(id,opId){
+  if(!confirm('Excluir esta observação?'))return;
+  try{
+    var res=await supabaseClient.rpc('excluir_observacao',{p_id:id});
+    if(res&&res.error)throw res.error;
+    var r=ITENS.find(function(x){return x.key===AP_KEY;}); await apCarregar(r);
+  }catch(e){ var m=(e.message||e)+''; if(/excluir_observacao|PGRST202|function|does not exist/i.test(m)) alert('Precisa aplicar o 13_ atualizado (função excluir_observacao).'); else alert('Não foi possível excluir a observação.\n'+m); }
+}
+
+// ===================== FICHA TECNICA (produtos) + MATERIALIZACAO =====================
+var FICHA_PA=null, FICHA_ROTEIRO=[], FICHA_CONV=[], FICHA_GRUPOS=[];
+function fval(id){var e=document.getElementById(id);return e?e.value:'';}
+function fnum(id){var e=document.getElementById(id);return e&&e.value!==''?parseFloat(e.value):0;}
+function grupoFicha(nome){return FICHA_GRUPOS.filter(function(g){return g.nome===nome;})[0]||{};}
+
+function abrirFichaDaOS(){
+  var pa=(AP_ORDEM&&AP_ORDEM.produto_codigo)||'';
+  if(!pa&&AP_KEY){ var r=ITENS.find(function(x){return x.key===AP_KEY;}); pa=(r&&r.produto)||''; }
+  abrirFicha(pa);
+}
+async function abrirFicha(codigoPa){
+  FICHA_PA=(codigoPa||'').toUpperCase();
+  document.getElementById('ficha-titulo').textContent='Ficha técnica · '+FICHA_PA;
+  document.getElementById('ficha-conteudo').innerHTML='<div class="ap-op"><div class="ap-hint">Carregando…</div></div>';
+  document.getElementById('modal-ficha').style.display='flex';
+  try{
+    FICHA_GRUPOS=(await supabaseClient.from('maquinas_grupos').select('*')).data||[];
+    var prod=(await supabaseClient.from('produtos').select('*').eq('codigo_pa',FICHA_PA).maybeSingle()).data;
+    FICHA_CONV=(await supabaseClient.from('produto_conversoes').select('*').eq('produto_codigo',FICHA_PA)).data||[];
+    FICHA_ROTEIRO=(await supabaseClient.from('produto_etapas').select('*').eq('produto_codigo',FICHA_PA).order('ordem')).data||[];
+    if(!FICHA_CONV.length)FICHA_CONV=[{um:'MI',fator:1000}];
+    renderFicha(prod||{});
+  }catch(e){ document.getElementById('ficha-conteudo').innerHTML='<div class="ap-op"><div class="ap-hint">Erro ao carregar a ficha. O schema 13_ foi aplicado?\n'+apEsc(e.message||e)+'</div></div>'; }
+}
+function fecharFicha(){document.getElementById('modal-ficha').style.display='none';}
+
+function renderFicha(p){
+  var grupos=FICHA_GRUPOS.slice().sort(function(a,b){return (a.ordem_exibicao||0)-(b.ordem_exibicao||0);});
+  var optsGrupo=grupos.map(function(g){return '<option value="'+apEsc(g.nome)+'">'+apEsc(g.display||g.nome)+'</option>';}).join('');
+  var html='<div class="f-grid">'+
+    '<label class="f-fld">Código (PA)<input id="f-pa" value="'+apEsc(FICHA_PA)+'" placeholder="PA000000000000"'+(FICHA_PA?' readonly':'')+'></label>'+
+    '<label class="f-fld" style="grid-column:1/-1">Descrição<input id="f-desc" value="'+apEsc(p.descricao||'')+'"></label>'+
+    '<label class="f-fld">Substrato<input id="f-subs" value="'+apEsc(p.substrato||'')+'"></label>'+
+    '<label class="f-fld">Largura substrato (mm)<input id="f-lsub" type="number" value="'+apEsc(p.larg_substrato!=null?p.larg_substrato:'')+'"></label>'+
+    '<label class="f-fld">Largura etiqueta (mm)<input id="f-let" type="number" value="'+apEsc(p.larg_etiqueta!=null?p.larg_etiqueta:'')+'"></label>'+
+    '<label class="f-fld">Altura etiqueta (mm)<input id="f-aet" type="number" value="'+apEsc(p.alt_etiqueta!=null?p.alt_etiqueta:'')+'" oninput="renderFichaRoteiro()"></label>'+
+    '<label class="f-fld">Gap (mm)<input id="f-gap" type="number" value="'+apEsc(p.gap_etiqueta!=null?p.gap_etiqueta:0)+'" oninput="renderFichaRoteiro()"></label>'+
+    '<label class="f-fld">Nº de cores<input id="f-cores" type="number" value="'+apEsc(p.cores!=null?p.cores:0)+'" oninput="renderFichaRoteiro()"></label>'+
+  '</div>'+
+  '<div class="f-sub">Unidades de medida (conversão) <span class="ap-hint" style="font-weight:400">unidade da base → etiquetas</span></div>'+
+  '<div id="f-conv"></div>'+
+  '<div class="f-row" style="margin-top:4px"><input class="ap-input" id="f-nconv-um" placeholder="Unidade (ROLO, CAIXA)" style="width:160px"><input class="ap-input" id="f-nconv-f" type="number" placeholder="etiquetas" style="width:110px"><button class="ap-btn-sec" onclick="fichaAddConv()">+ Adicionar</button></div>'+
+  '<div class="f-sub">Roteiro de produção <span class="ap-hint" style="font-weight:400">grupos na ordem; acabamento por etapa</span></div>'+
+  '<div id="f-roteiro"></div>'+
+  '<div class="f-row" style="margin-top:4px"><select class="ap-sel" id="f-netapa" style="max-width:220px">'+optsGrupo+'</select><button class="ap-btn-sec" onclick="fichaAddEtapa()">+ Adicionar etapa</button></div>'+
+  '<div class="ap-actions" style="margin-top:16px"><button class="ap-btn" onclick="salvarFicha()"><i class="ti ti-check"></i> Salvar ficha e materializar</button></div>';
+  document.getElementById('ficha-conteudo').innerHTML=html;
+  renderFichaConv(); renderFichaRoteiro();
+}
+function renderFichaConv(){
+  document.getElementById('f-conv').innerHTML=FICHA_CONV.map(function(c,i){
+    return '<div class="f-row" style="margin-bottom:5px"><input class="ap-input" style="width:160px" value="'+apEsc(c.um||'')+'" onchange="FICHA_CONV['+i+'].um=this.value.toUpperCase()"><span class="ap-hint">= 1 un vale</span><input class="ap-input" type="number" style="width:110px" value="'+apEsc(c.fator!=null?c.fator:0)+'" onchange="FICHA_CONV['+i+'].fator=parseFloat(this.value)||0"><span class="ap-hint">etiquetas</span><button class="ap-btn-sec" onclick="FICHA_CONV.splice('+i+',1);renderFichaConv()">remover</button></div>';
+  }).join('')||'<div class="ap-hint">Sem conversões. Por padrão MI=1000 e UN=1.</div>';
+}
+function fichaAddConv(){
+  var um=(fval('f-nconv-um')||'').trim().toUpperCase(), f=fnum('f-nconv-f');
+  if(!um){alert('Informe a unidade.');return;}
+  FICHA_CONV.push({um:um,fator:f}); document.getElementById('f-nconv-um').value='';document.getElementById('f-nconv-f').value=''; renderFichaConv();
+}
+function renderFichaRoteiro(){
+  var cores=fnum('f-cores'), passo=fnum('f-aet')+fnum('f-gap');
+  document.getElementById('f-roteiro').innerHTML=FICHA_ROTEIRO.map(function(e,i){
+    var g=grupoFicha(e.grupo);
+    var acab='';
+    if(g.aplica_verniz||g.aplica_laminacao){
+      acab='<div class="f-row" style="margin-top:6px"><span class="ap-hint">Acabamento:</span>'+
+        (g.aplica_verniz?'<label class="f-chk"><input type="checkbox" '+(e.acab_verniz?'checked':'')+' onchange="FICHA_ROTEIRO['+i+'].acab_verniz=this.checked;renderFichaRoteiro()"> Verniz</label>':'')+
+        (g.aplica_laminacao?'<label class="f-chk"><input type="checkbox" '+(e.acab_laminacao?'checked':'')+' onchange="FICHA_ROTEIRO['+i+'].acab_laminacao=this.checked;renderFichaRoteiro()"> Laminação</label>':'')+'</div>';
+    }
+    // estimativa por etapa (como no protótipo): setup, desperdício, velocidade, passo
+    var modo=g.modo||'fixo', nAc=nAcabFicha(e,g), estLine;
+    if(modo==='validacao'){ estLine='<div class="ap-est ap-hint">Validação — sem setup/tempo/metragem.</div>'; }
+    else {
+      var setupE=(modo==='por_cor'?((g.setup_min_cor||0)*cores):(g.setup_min||0))+nAc*(g.acab_min||0);
+      var despE=(modo==='por_cor'?((g.desp_m_cor||0)*cores):(modo==='unidade'?(g.desp_un||0):(g.desperdicio_m||0)))+nAc*(g.acab_desp||0);
+      var dunit=modo==='unidade'?'un':'m';
+      var velE=g.velocidade||0, velunit=modo==='unidade'?'un/h':'m/h';
+      estLine='<div class="ap-est"><span>setup est.: <b>'+apFmt(setupE)+' min</b></span>'+
+        '<span>desperdício setup: <b>'+apFmt(despE)+' '+dunit+'</b></span>'+
+        '<span>velocidade: <b>'+apFmt(velE)+' '+velunit+'</b></span>'+
+        (modo==='unidade'?'':'<span>passo: <b>'+apFmt(passo)+' mm</b></span>')+'</div>';
+    }
+    return '<div class="f-et"><div class="f-row"><b>'+(i+1)+'. '+apEsc(g.display||e.grupo)+'</b>'+
+      '<span class="ap-chip">'+apEsc(AP_LABEL_MODO[g.modo]||g.modo||'fixo')+'</span>'+
+      '<span class="ap-hint">Carreiras</span><input class="ap-input" type="number" min="1" style="width:70px" value="'+apEsc(e.carreiras||1)+'" onchange="FICHA_ROTEIRO['+i+'].carreiras=parseInt(this.value)||1;renderFichaRoteiro()">'+
+      '<button class="ap-btn-sec" onclick="fichaMoveEtapa('+i+',-1)">↑</button><button class="ap-btn-sec" onclick="fichaMoveEtapa('+i+',1)">↓</button>'+
+      '<button class="ap-btn-sec" onclick="FICHA_ROTEIRO.splice('+i+',1);renderFichaRoteiro()">remover</button></div>'+acab+estLine+'</div>';
+  }).join('')||'<div class="ap-hint">Sem etapas. Adicione os grupos de máquina do roteiro.</div>';
+}
+function fichaAddEtapa(){
+  var grupo=fval('f-netapa'); if(!grupo)return;
+  FICHA_ROTEIRO.push({grupo:grupo,carreiras:1,acab_verniz:false,acab_laminacao:false}); renderFichaRoteiro();
+}
+function fichaMoveEtapa(i,d){var j=i+d;if(j<0||j>=FICHA_ROTEIRO.length)return;var t=FICHA_ROTEIRO[i];FICHA_ROTEIRO[i]=FICHA_ROTEIRO[j];FICHA_ROTEIRO[j]=t;renderFichaRoteiro();}
+
+// --- Estimativa (mesma formula do prototipo) ---
+function fatorConvFicha(conv,um){
+  if(!um)return 1; var U=(''+um).toUpperCase();
+  var r=(conv||[]).filter(function(c){return (c.um||'').toUpperCase()===U;})[0];
+  if(r)return Number(r.fator)||0;
+  if(U==='UN'||U==='UNID'||U==='ETIQUETA'||U==='ET'||U==='PC')return 1;
+  if(U==='MI'||U==='MILHEIRO'||U==='MIL')return 1000;
+  return 1;
+}
+function nAcabFicha(e,g){return ((e.acab_verniz&&g.aplica_verniz)?1:0)+((e.acab_laminacao&&g.aplica_laminacao)?1:0);}
+function estimarEtapa(prod,o,g,e,conv){
+  var modo=g.modo||'fixo', cores=Number(prod&&prod.cores)||0, nAc=nAcabFicha(e,g);
+  if(modo==='validacao')return {setup:0,prodMin:0,qtd:0,unit:'',desp:0,despProd:0,vel:0};
+  var tot=(Number(o.qtd)||0)*fatorConvFicha(conv,o.um);
+  var setup,desp,qtd,unit;
+  if(modo==='por_cor'){ setup=(Number(g.setup_min_cor)||0)*cores; desp=(Number(g.desp_m_cor)||0)*cores; }
+  else if(modo==='unidade'){ setup=Number(g.setup_min)||0; desp=Number(g.desp_un)||0; }
+  else { setup=Number(g.setup_min)||0; desp=Number(g.desperdicio_m)||0; }
+  setup+=nAc*(Number(g.acab_min)||0); desp+=nAc*(Number(g.acab_desp)||0);
+  if(modo==='unidade'){ qtd=tot; unit='un'; }
+  else { var passo=(Number(prod.alt_etiqueta)||0)+(Number(prod.gap_etiqueta)||0); var carr=Math.max(1,Number(e.carreiras)||1); qtd=(tot/carr)*passo/1000; unit='m'; }
+  var vel=Number(g.velocidade)||0;
+  return {setup:setup,desp:desp,qtd:qtd,unit:unit,vel:vel,prodMin:vel>0?(qtd/vel*60):0,despProd:qtd*(Number(g.desp_prod_pct)||0)/100};
+}
+async function materializarProduto(pa){
+  var prod=(await supabaseClient.from('produtos').select('*').eq('codigo_pa',pa).maybeSingle()).data||{};
+  var etapas=(await supabaseClient.from('produto_etapas').select('*').eq('produto_codigo',pa).order('ordem')).data||[];
+  var conv=(await supabaseClient.from('produto_conversoes').select('*').eq('produto_codigo',pa)).data||[];
+  var grupos=(await supabaseClient.from('maquinas_grupos').select('*')).data||[]; var gmap={}; grupos.forEach(function(g){gmap[g.nome]=g;});
+  if(!etapas.length)return 0;
+  var ords=(await supabaseClient.from('ordens').select('id,qtd,um').eq('produto_codigo',pa)).data||[];
+  var n=0;
+  for(var i=0;i<ords.length;i++){
+    var o=ords[i];
+    var ja=(await supabaseClient.from('ordem_operacoes').select('id,status').eq('ordem_id',o.id)).data||[];
+    if(ja.length){
+      var todasAguardando=ja.every(function(x){return x.status==='aguardando';});
+      if(!todasAguardando)continue;              // OS ja iniciada: preserva o historico
+      await supabaseClient.from('ordem_operacoes').delete().eq('ordem_id',o.id); // recria com estimado atual
+    }
+    var ests=etapas.map(function(e){ var g=gmap[e.grupo]||{}; return {e:e,g:g,est:estimarEtapa(prod,o,g,e,conv)}; });
+    var rows=ests.map(function(it,i){
+      // CASCATA (quanto rodar): producao liquida / (1 - desp% da propria e das proximas
+      // etapas) + acerto(setup) das proximas etapas. Assim a 1a etapa ja roda o extra que
+      // as seguintes vao desperdicar (nao falta material). Informativo ao operador e base
+      // do KPI de desperdicio (apontado x o que deveria rodar). Em metros (ou un).
+      var pct=0, setupNext=0;
+      for(var k=i;k<ests.length;k++){ pct+=(Number(ests[k].g.desp_prod_pct)||0)/100; }
+      for(var k2=i+1;k2<ests.length;k2++){ if(ests[k2].est.unit===it.est.unit) setupNext+=(Number(ests[k2].est.desp)||0); }
+      var denom=Math.max(0.05, 1-pct);
+      var qtdRodar=(Number(it.est.qtd)||0)/denom + setupNext;
+      var vel=Number(it.est.vel)||0;
+      return {ordem_id:o.id,etapa_idx:it.e.ordem,grupo:it.e.grupo,carreiras:it.e.carreiras||1,
+        acab_verniz:!!it.e.acab_verniz,acab_laminacao:!!it.e.acab_laminacao,
+        unidade_est:it.est.unit,qtd_est:it.est.qtd,qtd_rodar_est:qtdRodar,
+        setup_est_min:it.est.setup,prod_est_min:(vel>0?(qtdRodar/vel*60):0),
+        desp_setup_est:it.est.desp,desp_prod_est:it.est.despProd,vel_est:vel};
+    });
+    var ins=await supabaseClient.from('ordem_operacoes').insert(rows);
+    if(ins.error)throw ins.error; n++;
+  }
+  return n;
+}
+async function salvarFicha(){
+  try{
+    var pa=FICHA_PA||((fval('f-pa')||'').trim().toUpperCase());
+    if(!pa){ alert('Informe o código (PA) do produto.'); return; }
+    FICHA_PA=pa;
+    var prod={codigo_pa:pa,descricao:fval('f-desc').trim(),substrato:fval('f-subs').trim(),
+      larg_substrato:fnum('f-lsub'),larg_etiqueta:fnum('f-let'),alt_etiqueta:fnum('f-aet'),
+      gap_etiqueta:fnum('f-gap'),cores:fnum('f-cores'),atualizado_em:new Date().toISOString()};
+    var up=await supabaseClient.from('produtos').upsert(prod); if(up.error)throw up.error;
+    await supabaseClient.from('produto_conversoes').delete().eq('produto_codigo',pa);
+    if(FICHA_CONV.length){ var ic=await supabaseClient.from('produto_conversoes').insert(FICHA_CONV.filter(function(c){return c.um;}).map(function(c){return {produto_codigo:pa,um:c.um,fator:c.fator};})); if(ic.error)throw ic.error; }
+    await supabaseClient.from('produto_etapas').delete().eq('produto_codigo',pa);
+    if(FICHA_ROTEIRO.length){ var ie=await supabaseClient.from('produto_etapas').insert(FICHA_ROTEIRO.map(function(e,i){return {produto_codigo:pa,ordem:i+1,grupo:e.grupo,carreiras:e.carreiras||1,acab_verniz:!!e.acab_verniz,acab_laminacao:!!e.acab_laminacao};})); if(ie.error)throw ie.error; }
+    var n=await materializarProduto(pa);
+    fecharFicha();
+    alert('Ficha salva. Operações materializadas em '+n+' OS.');
+    if(AP_KEY){ var r=ITENS.find(function(x){return x.key===AP_KEY;}); if(r)apCarregar(r); }
+    var fv=document.getElementById('fichas-view');
+    if(fv&&fv.style.display!=='none')renderFichas();
+  }catch(e){ alert('Não foi possível salvar a ficha.\n'+(e.message||e)); }
+}
+
+// ===================== ABA FICHAS TÉCNICAS (lista/base de produtos) =====================
+var FICHAS_LISTA=[], FICHAS_SEMFICHA=[];
+async function renderFichas(){
+  var el=document.getElementById('fichas-conteudo'); if(!el)return;
+  el.innerHTML='<div style="color:var(--text3);padding:14px">Carregando…</div>';
+  try{
+    var prods=(await supabaseClient.from('produtos').select('codigo_pa,descricao,cores').order('codigo_pa')).data||[];
+    var etapas=(await supabaseClient.from('produto_etapas').select('produto_codigo,grupo,ordem').order('ordem')).data||[];
+    var ords=(await supabaseClient.from('ordens').select('produto_codigo')).data||[];
+    var rot={}; etapas.forEach(function(e){(rot[e.produto_codigo]=rot[e.produto_codigo]||[]).push(e.grupo);});
+    FICHAS_LISTA=prods.map(function(p){return {codigo:p.codigo_pa,descricao:p.descricao||'',cores:p.cores||0,roteiro:rot[p.codigo_pa]||[]};});
+    var tem={}; prods.forEach(function(p){tem[p.codigo_pa]=true;});
+    var seen={}; FICHAS_SEMFICHA=[];
+    // PR (revenda) e SE (serviço) nao sao fichas de produto: ficam de fora.
+    (ords||[]).forEach(function(o){ var c=o.produto_codigo; if(c&&!tem[c]&&!seen[c]&&!/^(PR|SE)/i.test(c)){seen[c]=true;FICHAS_SEMFICHA.push(c);} });
+    renderFichasLista();
+  }catch(e){ el.innerHTML='<div style="color:var(--text3);padding:14px">Erro ao carregar as fichas. O schema 13_ foi aplicado?<br>'+apEsc(e.message||e)+'</div>'; }
+}
+function renderFichasLista(){
+  var el=document.getElementById('fichas-conteudo'); if(!el)return;
+  var q=(document.getElementById('fichas-busca').value||'').toLowerCase().trim();
+  var lista=FICHAS_LISTA.filter(function(f){ return !q||f.codigo.toLowerCase().indexOf(q)>=0||(f.descricao||'').toLowerCase().indexOf(q)>=0; });
+  var html='';
+  if(FICHAS_SEMFICHA.length){
+    html+='<div style="background:rgba(184,118,11,.08);border:1px solid var(--warn);border-radius:10px;padding:10px 12px;margin-bottom:12px">'+
+      '<b style="color:var(--warn)">Produtos em OS sem ficha ('+FICHAS_SEMFICHA.length+'):</b><br>'+
+      FICHAS_SEMFICHA.map(function(c){return '<button class="btn-sec" style="margin:4px 4px 0 0" onclick="abrirFicha(\''+apEsc(c)+'\')">Cadastrar '+apEsc(c)+'</button>';}).join('')+'</div>';
+  }
+  if(!lista.length){ html+='<div style="color:var(--text3);padding:14px">Nenhuma ficha cadastrada ainda.</div>'; el.innerHTML=html; return; }
+  html+='<div class="table-wrap"><table><thead><tr><th>Código</th><th>Descrição</th><th>Cores</th><th>Roteiro</th><th></th></tr></thead><tbody>'+
+    lista.map(function(f){
+      var rotTxt=f.roteiro.map(function(g){return '<span class="ap-chip">'+apEsc(dispNome(g)||g)+'</span>';}).join(' ')||'<span style="color:var(--text3)">sem roteiro</span>';
+      return '<tr><td style="font-weight:700">'+apEsc(f.codigo)+'</td><td>'+apEsc(f.descricao)+'</td><td>'+f.cores+'</td><td>'+rotTxt+'</td>'+
+        '<td><button class="btn-sec" onclick="abrirFicha(\''+apEsc(f.codigo)+'\')">Editar</button></td></tr>';
+    }).join('')+'</tbody></table></div>';
+  el.innerHTML=html;
+}
+
+// --- Importação de fichas por Excel ---
+function fColunas(r,names){
+  var keys=Object.keys(r),n,k;
+  for(n=0;n<names.length;n++){var w=names[n].toLowerCase();for(k=0;k<keys.length;k++){if(keys[k].toLowerCase().trim()===w)return r[keys[k]];}}
+  for(n=0;n<names.length;n++){var w2=names[n].toLowerCase();for(k=0;k<keys.length;k++){if(keys[k].toLowerCase().indexOf(w2)>=0)return r[keys[k]];}}
+  return '';
+}
+function fNum(v){var n=parseFloat(v);return isNaN(n)?0:n;}
+function fCodigo(s){var m=(''+s).match(/([A-Za-z]{2}[0-9]{3,})/);return m?m[1].toUpperCase():'';}
+function fParseConv(s){return (''+s).split(/[;\n]/).map(function(p){var kv=p.split(':');return (kv.length>=2&&kv[0].trim())?{um:kv[0].trim().toUpperCase(),fator:parseFloat(kv[1])||0}:null;}).filter(Boolean);}
+function fParseRoteiro(s,normGrupo){
+  return (''+s).split(/[;\n]/).map(function(p){
+    var parts=p.split(':'); if(!parts[0]||!parts[0].trim())return null;
+    var g=normGrupo(parts[0]); if(!g)return {__erro:parts[0].trim()};
+    var carr=parts.length>1?(parseInt(parts[1],10)||1):1;
+    var flags=parts.slice(2).join('').toUpperCase();
+    return {grupo:g,carreiras:carr,acab_verniz:flags.indexOf('V')>=0,acab_laminacao:flags.indexOf('L')>=0};
+  }).filter(Boolean);
+}
+function baixarModeloFichas(){
+  if(!window.XLSX){alert('Biblioteca de Excel não carregou.');return;}
+  var data=[
+    ['Código','Descrição','Substrato','Larg. substrato','Larg. etiqueta','Alt. etiqueta','Gap','Cores','Conversões','Roteiro'],
+    ['PA000000000442','RÓTULO CMYK','COUCHÊ',165,90,60,3,4,'MI:1000;ROLO:1000','FLEXO 350:3:V;TROQUELADORAS:1;REVISORAS:1'],
+    ['PA000000001459','ETIQUETA EXEMPLO','COUCHÊ',112,50,30,2,2,'MI:1000','FLEXO 250:2;BATIDA:1']
+  ];
+  var ws=XLSX.utils.aoa_to_sheet(data), wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Fichas');
+  XLSX.writeFile(wb,'modelo_fichas.xlsx');
+}
+function importarFichas(input){
+  if(!input.files||!input.files[0])return;
+  if(!window.XLSX){alert('Biblioteca de Excel não carregou.');return;}
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    (async function(){
+      try{
+        var wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array'});
+        var rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
+        if(!rows.length){alert('Planilha vazia.');return;}
+        var grps=(await supabaseClient.from('maquinas_grupos').select('nome,display')).data||[];
+        function normGrupo(s){ s=(''+s).trim(); var g=grps.filter(function(x){return x.nome.toLowerCase()===s.toLowerCase()||(x.display||'').toLowerCase()===s.toLowerCase();})[0]; return g?g.nome:null; }
+        var ok=0, erros=[];
+        for(var i=0;i<rows.length;i++){
+          var r=rows[i];
+          var cod=fCodigo(fColunas(r,['Código','Codigo','Código (PA)','Produto']));
+          if(!cod)continue;
+          var prod={codigo_pa:cod, descricao:(''+fColunas(r,['Descrição','Descricao'])).trim(), substrato:(''+fColunas(r,['Substrato'])).trim(),
+            larg_substrato:fNum(fColunas(r,['Larg. substrato','Largura substrato','Larg substrato'])),
+            larg_etiqueta:fNum(fColunas(r,['Larg. etiqueta','Largura etiqueta'])),
+            alt_etiqueta:fNum(fColunas(r,['Alt. etiqueta','Altura etiqueta'])),
+            gap_etiqueta:fNum(fColunas(r,['Gap'])), cores:fNum(fColunas(r,['Cores'])), atualizado_em:new Date().toISOString()};
+          var up=await supabaseClient.from('produtos').upsert(prod);
+          if(up.error){erros.push(cod+': '+up.error.message);continue;}
+          await supabaseClient.from('produto_conversoes').delete().eq('produto_codigo',cod);
+          var conv=fParseConv(fColunas(r,['Conversões','Conversoes']));
+          if(conv.length){var ic=await supabaseClient.from('produto_conversoes').insert(conv.map(function(c){return {produto_codigo:cod,um:c.um,fator:c.fator};})); if(ic.error)erros.push(cod+' conv: '+ic.error.message);}
+          await supabaseClient.from('produto_etapas').delete().eq('produto_codigo',cod);
+          var rot=fParseRoteiro(fColunas(r,['Roteiro']),normGrupo);
+          var rotErr=rot.filter(function(e){return e.__erro;});
+          if(rotErr.length)erros.push(cod+' grupo desconhecido: '+rotErr.map(function(e){return e.__erro;}).join(', '));
+          var rotOk=rot.filter(function(e){return !e.__erro;});
+          if(rotOk.length){var ie=await supabaseClient.from('produto_etapas').insert(rotOk.map(function(e,idx){return {produto_codigo:cod,ordem:idx+1,grupo:e.grupo,carreiras:e.carreiras||1,acab_verniz:!!e.acab_verniz,acab_laminacao:!!e.acab_laminacao};})); if(ie.error)erros.push(cod+' roteiro: '+ie.error.message);}
+          try{await materializarProduto(cod);}catch(e){erros.push(cod+' materializar: '+(e.message||e));}
+          ok++;
+        }
+        input.value='';
+        alert(ok+' ficha(s) importada(s).'+(erros.length?('\n\nAvisos:\n'+erros.slice(0,15).join('\n')):''));
+        renderFichas();
+      }catch(e){ alert('Erro ao importar o Excel: '+(e.message||e)); input.value=''; }
+    })();
+  };
+  reader.readAsArrayBuffer(input.files[0]);
 }
 </script>
 <script>
