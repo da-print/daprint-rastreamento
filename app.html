@@ -1818,7 +1818,10 @@ async function renderKPIs(){
   try{
     var r1=await supabaseClient.from('v_operacao_kpi').select('*');
     if(r1.error)throw r1.error;
-    KPI_OPS=r1.data||[];
+    // Só operações que AINDA têm apontamento (data_ref = há ao menos um evento).
+    // Assim um item totalmente estornado (apontamentos apagados) some dos KPIs;
+    // um item só reaberto, que mantém os eventos, continua com seu histórico.
+    KPI_OPS=(r1.data||[]).filter(function(o){return o.data_ref!=null;});
     try{ var r2=await supabaseClient.from('v_parada_detalhe').select('*'); KPI_PARADAS=(r2&&!r2.error&&r2.data)?r2.data:[]; }catch(e){ KPI_PARADAS=[]; }
     KPI_NOMES={};
     var ids=KPI_OPS.map(function(o){return o.operador_id;}).filter(Boolean);
@@ -2604,6 +2607,28 @@ function reabrirItem(key){
 // Reabre uma OS finalizada PELO APONTAMENTO: insere 'reabertura' na ULTIMA etapa, que
 // volta para produção (setup_ok, ou aguardando em validação). Dali o gestor corrige ou
 // estorna (ex.: "Excluir último apontamento" no modal). Só gestor/editor.
+// Estorna a OS INTEIRA (todas as etapas): apaga todos os apontamentos e volta tudo
+// para 'aguardando'. Só gestor (RLS: delete de apontamentos = sou_gestor; update de
+// ordem_operacoes = posso_editar). Para zerar item de teste de uma vez, sem ir etapa a etapa.
+async function estornarOS(key){
+  var r=ITENS.find(function(x){return x.key===key;}); if(!r)return;
+  if(!confirm('ESTORNAR a OS inteira?\n\nApaga TODOS os apontamentos de TODAS as etapas e volta tudo para aguardando. Ação irreversível.'))return;
+  try{
+    var ro=await supabaseClient.from('ordens').select('id').eq('pedido',r.pedido).eq('item',r.item).maybeSingle();
+    if(ro.error||!ro.data)throw (ro.error||new Error('OS não encontrada na camada de apontamento.'));
+    var rop=await supabaseClient.from('ordem_operacoes').select('id').eq('ordem_id',ro.data.id);
+    if(rop.error)throw rop.error;
+    var ids=(rop.data||[]).map(function(o){return o.id;});
+    if(ids.length){
+      var del=await supabaseClient.from('apontamentos').delete().in('operacao_id',ids);
+      if(del.error)throw del.error;
+      var upd=await supabaseClient.from('ordem_operacoes').update({status:'aguardando',maquina:null}).in('id',ids);
+      if(upd.error)throw upd.error;
+    }
+    fecharApontamento();
+    await recarregarDoBanco(true);
+  }catch(e){ alert('Não foi possível estornar a OS.\n'+(e.message||e)); }
+}
 async function reabrirApontamento(key){
   var r=ITENS.find(function(x){return x.key===key;}); if(!r)return;
   if(!confirm('Reabrir esta OS? A última etapa volta para produção para correção/estorno.'))return;
@@ -3189,7 +3214,10 @@ function apRender(r){
     var estado = op.status==='finalizada' ? 'done' : (apReady[i] ? 'current' : 'future');
     html+=apRenderOp(r,op,estado);
   }
-  document.getElementById('ap-conteudo').innerHTML=html;
+  var ehGestorAp=PERFIL&&PERFIL.papel==='gestor';
+  var temEvts=AP_OPS.some(function(o){return apEventos(o.id).length;});
+  var cab=(ehGestorAp&&temEvts)?'<div class="ap-actions" style="margin-bottom:8px;justify-content:flex-end"><button class="ap-btn-sec" style="color:#b23" onclick="estornarOS(\''+r.key+'\')"><i class="ti ti-eraser"></i> Estornar OS inteira (apaga todos os apontamentos)</button></div>':'';
+  document.getElementById('ap-conteudo').innerHTML=cab+html;
   apEnsureTick();
 }
 
