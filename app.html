@@ -1706,6 +1706,7 @@ function processarTudo(){
       finalizadoManual:!!(ov&&ov.finalizado_em),
       apEntry:apEntryMain,
       apManual:apManual,
+      apFinalizado:!!(ae&&ae.temOps&&ae.todasFinalizadas),
       pedidoCliente:calc.pedidoCliente||it.pedidoClienteAberto||null
     }));
     // Linhas EXTRAS: as proximas etapas ja disponiveis em PARCIAL (cadeia)
@@ -2436,8 +2437,9 @@ function linhaHtml(r,draggable){
       maquinaCell=nomeMaq?('<span class="campo-leitura">'+nomeMaq+subTxt+imgsTxt+'</span>'):'<span class="campo-leitura sem-valor">—</span>';
     }
   }
-  if(r.status==='AGUARDANDO_FATURAMENTO'&&r.finalizadoManual&&window._podeEditar){
-    maquinaCell='<button class="btn-reabrir" onclick="reabrirItem(\''+r.key+'\')"><i class="ti ti-arrow-back-up"></i> Reabrir</button>';
+  if(r.status==='AGUARDANDO_FATURAMENTO'&&window._podeEditar&&(r.apFinalizado||r.finalizadoManual)){
+    var _reab=r.apFinalizado?('reabrirApontamento(\''+r.key+'\')'):('reabrirItem(\''+r.key+'\')');
+    maquinaCell='<button class="btn-reabrir" onclick="'+_reab+'"><i class="ti ti-arrow-back-up"></i> Reabrir</button>';
   }
   if(r.status==='EM_PRODUCAO'&&grupoApontamentoOn(r.grupo)){
     maquinaCell+='<button class="btn-apontar" onclick="abrirApontamento(\''+r.key+'\')"><i class="ti ti-stopwatch"></i> Apontamento</button>';
@@ -2598,6 +2600,22 @@ function finalizarItem(key){
 function reabrirItem(key){
   if(!confirm('Reabrir este item? Ele volta para produção na máquina em que estava.'))return;
   (async function(){ await setOverride(key,{finalizado_em:null}); processarTudo(); })();
+}
+// Reabre uma OS finalizada PELO APONTAMENTO: insere 'reabertura' na ULTIMA etapa, que
+// volta para produção (setup_ok, ou aguardando em validação). Dali o gestor corrige ou
+// estorna (ex.: "Excluir último apontamento" no modal). Só gestor/editor.
+async function reabrirApontamento(key){
+  var r=ITENS.find(function(x){return x.key===key;}); if(!r)return;
+  if(!confirm('Reabrir esta OS? A última etapa volta para produção para correção/estorno.'))return;
+  try{
+    var ro=await supabaseClient.from('ordens').select('id').eq('pedido',r.pedido).eq('item',r.item).maybeSingle();
+    if(ro.error||!ro.data)throw (ro.error||new Error('OS não encontrada na camada de apontamento.'));
+    var rop=await supabaseClient.from('ordem_operacoes').select('id').eq('ordem_id',ro.data.id).order('etapa_idx',{ascending:false}).limit(1);
+    if(rop.error||!rop.data||!rop.data.length)throw (rop.error||new Error('OS sem operações.'));
+    var ins=await supabaseClient.from('apontamentos').insert({operacao_id:rop.data[0].id,tipo:'reabertura'});
+    if(ins.error)throw ins.error;
+    await recarregarDoBanco(true);
+  }catch(e){ alert('Não foi possível reabrir: '+(e.message||e)); }
 }
 
 // ===================== ARRASTAR E SOLTAR (prioridade na fila) =====================
