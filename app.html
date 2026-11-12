@@ -461,6 +461,34 @@ body.sb-collapsed #side-nav .sb-top{ justify-content:center }
 .ent-tbl .badge.ent-espera{ background:color-mix(in srgb,#b5770a 16%,transparent); color:#b5770a }
 .ent-tbl .qtd{ font-variant-numeric:tabular-nums; white-space:nowrap }
 @keyframes pcpspin{ to{ transform:rotate(360deg) } }
+.btn-carr{ display:inline-flex; align-items:center; justify-content:center; background:var(--card); border:1px solid var(--border); color:var(--text3); border-radius:8px; padding:6px; cursor:pointer; margin-left:4px; line-height:0 }
+.btn-carr svg{ flex:0 0 auto; display:block }
+.btn-carr:hover{ border-color:var(--accent); color:var(--accent) }
+.carr-ov{ position:fixed; inset:0; z-index:9999; background:rgba(10,18,32,.55); display:flex; align-items:center; justify-content:center }
+.carr-box{ background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px 20px; width:430px; max-width:92vw; box-shadow:0 10px 40px rgba(0,0,0,.3) }
+.carr-box-wide{ width:640px; max-height:88vh; overflow:auto }
+.osr-lista{ display:flex; flex-direction:column; gap:8px; margin:8px 0 }
+.carr-h{ display:flex; align-items:center; justify-content:space-between; font-size:15px; margin-bottom:4px }
+.carr-x{ background:transparent; border:0; color:var(--text3); cursor:pointer; font-size:16px }
+.carr-sub{ font-size:12px; color:var(--text3); margin-bottom:12px }
+.carr-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin:8px 0; font-size:13px }
+.carr-row input{ width:90px; padding:7px 9px; border-radius:8px; border:1px solid var(--border); background:var(--bg2); color:var(--text); font-size:14px }
+.carr-prev{ background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:9px 11px; font-size:12.5px; color:var(--text); margin:8px 0 }
+.carr-note{ font-size:11.5px; color:var(--text3); margin-bottom:12px }
+.carr-actions{ display:flex; justify-content:flex-end; gap:8px }
+.btn-pend{ display:inline-flex; align-items:center; gap:4px; background:var(--card); border:1px solid var(--border); color:var(--text3); border-radius:8px; padding:5px 9px; cursor:pointer; margin-left:4px; font-size:12px; font-weight:600; line-height:1 }
+.btn-pend:hover{ border-color:#b5770a; color:#b5770a }
+.btn-pend.on{ background:color-mix(in srgb,#b5770a 14%,transparent); border-color:#b5770a; color:#b5770a }
+.badge.pend-badge{ background:color-mix(in srgb,#b5770a 16%,transparent); color:#b5770a; margin-left:4px }
+.pend-lista{ display:flex; flex-direction:column; gap:6px }
+.pend-item{ display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-size:13px }
+.pend-obs{ font-size:11.5px; color:var(--text3); margin-top:2px }
+.pend-sel{ padding:7px 9px; border-radius:8px; border:1px solid var(--border); background:var(--bg2); color:var(--text); font-size:13px }
+.pend-ta{ width:100%; min-height:60px; margin-top:8px; padding:8px 10px; border-radius:8px; border:1px solid var(--border); background:var(--bg2); color:var(--text); font-size:13px; font-family:inherit; resize:vertical; box-sizing:border-box }
+.pend-panel{ background:color-mix(in srgb,#b5770a 7%,transparent); border:1px solid #b5770a; border-radius:12px; padding:12px 14px; margin-bottom:14px }
+.pend-panel h3{ margin:0 0 8px; font-size:14px; color:#b5770a }
+.pend-panel .pp-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:7px 0; border-top:1px solid color-mix(in srgb,#b5770a 20%,transparent); font-size:13px; line-height:1.4 }
+.pend-panel .pp-row:first-of-type{ border-top:0 }
 .ent-tbl tfoot td{ border-top:2px solid var(--border); border-bottom:0; background:var(--bg2); font-weight:700; color:var(--text) }
 .ent-tbl tfoot .ent-sub-l{ color:var(--text3); font-weight:600; text-transform:uppercase; font-size:11px; letter-spacing:.03em }
 .ent-btn{ display:inline-flex; align-items:center; gap:6px; border:1px solid var(--border); background:var(--bg2); color:var(--text); border-radius:9px; padding:8px 12px; font-size:13px; font-weight:600; cursor:pointer }
@@ -985,6 +1013,7 @@ function barraCargaHtml(horas,mlTotal,extraLabel){
 var RAW={clientes:null,pedidos:null,pcp:null,faturamento:null};
 var ITENS=[];
 var APONT_ESTADO={}; // pedido|item -> {temOps, todasFinalizadas, grupoAtual, statusAtual}
+var PEND={};         // pedido|item -> [ {id,tipo,obs,ordem_id} ]  (pendencias ABERTAS)
 var OVERRIDES={};        // carregado do banco (tabela overrides)
 var CATEGORIAS=[];       // carregado do banco (tabela categorias_obs)
 var VENDEDORES_DEPARA={};// carregado do banco (tabela vendedores)
@@ -1326,7 +1355,7 @@ async function recarregarDoBanco(silencioso){
           else if(op.status==='em_producao'){ since=apUltTs(ev,'prod_inicio')||0; sub=apParadasRodada(ev); }
           else if(op.status==='parado'){ var up=ev.filter(function(e){return e.tipo==='parada_inicio';}).slice(-1)[0]; since=up?apTs(up):0; motivo=up?up.motivo:null; }
           var produzido=ev.filter(function(e){return e.tipo==='lancamento';}).reduce(function(s,e){return s+(Number(e.qtd)||0);},0);
-          return {opId:op.id,grupo:op.grupo,maquina:op.maquina||null,status:op.status,
+          return {opId:op.id,grupo:op.grupo,maquina:op.maquina||null,status:op.status,carreiras:op.carreiras,
             qtdEst:op.qtd_est,qtdRodar:op.qtd_rodar_est,unidadeEst:op.unidade_est,setupEst:op.setup_est_min,prodEst:op.prod_est_min,produzido:produzido,
             timerSince:since,timerSub:sub,paradaMotivo:motivo,parcial:!!parcial};
         }
@@ -1348,10 +1377,19 @@ async function recarregarDoBanco(silencioso){
             }
           }
           APONT_ESTADO[od.pedido+'|'+od.item]={temOps:true,todasFinalizadas:startIdx<0,filas:filas,
-            manual:(startIdx>=0&&!curOn),grupoManual:(startIdx>=0?ops[startIdx].grupo:null)};
+            manual:(startIdx>=0&&!curOn),grupoManual:(startIdx>=0?ops[startIdx].grupo:null),
+            opAtual:(startIdx>=0?{opId:ops[startIdx].id,carreiras:ops[startIdx].carreiras,unidadeEst:ops[startIdx].unidade_est,status:ops[startIdx].status,grupo:ops[startIdx].grupo}:null)};
         });
       }
     }catch(e){ APONT_ESTADO={}; }
+
+    // Pendencias/impedimentos abertos por OS (tabela 15_; degrada se nao aplicada)
+    PEND={};
+    try{
+      var idToPik={}; if(typeof aOrd!=='undefined'&&aOrd&&aOrd.data){ aOrd.data.forEach(function(o){ idToPik[o.id]=o.pedido+'|'+o.item; }); }
+      var pr=await supabaseClient.from('ordem_pendencias').select('*').eq('status','aberta');
+      if(!pr.error){ (pr.data||[]).forEach(function(p){ var pik=idToPik[p.ordem_id]; if(pik){ (PEND[pik]=PEND[pik]||[]).push(p); } }); }
+    }catch(e){ PEND={}; }
 
     if(msg&&!silencioso) msg.textContent='Dados carregados do banco.';
     processarTudo();
@@ -1454,6 +1492,10 @@ async function enviarParaBanco(){
       try{
         var rsinc=await supabaseClient.rpc('sincronizar_ordens');
         if(rsinc&&rsinc.error) throw rsinc.error;
+        // Materializa as operacoes das OS novas cujo produto JA tem ficha cadastrada
+        // (senao o item fica preso em "Em carteira" ate alguem reabrir e salvar a ficha).
+        msg.textContent='Materializando fichas das novas OS...';
+        try{ await materializarPendentes(); }catch(e){ console.warn('materializarPendentes falhou:', e); }
       }catch(e){
         console.warn('sincronizar_ordens falhou:', e);
         alert('Pedidos enviados, mas a SINCRONIZAÇÃO da camada de apontamento (tabela ordens) falhou:\n\n'+(e.message||e)+'\n\nSem isso, as OS não aparecem no apontamento. Verifique: (1) você está logado como GESTOR; (2) o 13_producao_apontamentos.sql atualizado foi aplicado. Depois refaça o upload.');
@@ -1825,6 +1867,7 @@ function processarTudo(){
       apEntry:apEntryMain,
       apManual:apManual,
       apFinalizado:!!(ae&&ae.temOps&&ae.todasFinalizadas),
+      opAtual:(apEntryMain?{opId:apEntryMain.opId,carreiras:apEntryMain.carreiras,unidadeEst:apEntryMain.unidadeEst,status:apEntryMain.status}:((ae&&ae.opAtual)||null)),
       pedidoCliente:calc.pedidoCliente||it.pedidoClienteAberto||null
     }));
     // Linhas EXTRAS: as proximas etapas ja disponiveis em PARCIAL (cadeia)
@@ -1837,7 +1880,8 @@ function processarTudo(){
           clienteCnpj:cli.cnpj||null, vendedor:cli.vendedor||null,
           status:'EM_PRODUCAO', grupo:pe.grupo, grupoOriginal:pe.grupo, sub:pe.maquina||'',
           ordem:null, imagens:null, hasOverride:false, obs:'', finalizadoManual:false,
-          apEntry:pe, pedidoCliente:calc.pedidoCliente||it.pedidoClienteAberto||null
+          apEntry:pe, opAtual:{opId:pe.opId,carreiras:pe.carreiras,unidadeEst:pe.unidadeEst,status:pe.status},
+          pedidoCliente:calc.pedidoCliente||it.pedidoClienteAberto||null
         }));
       }
     }
@@ -2583,6 +2627,8 @@ function opcoesObsHtml(r){
 }
 
 function linhaHtml(r,draggable){
+  var pend=(PEND[r.pedido+'|'+r.item]||[]);
+  var pendBadge=pend.length?('<span class="badge pend-badge" title="'+apEsc(pend.map(function(p){return p.tipo+(p.obs?(' — '+p.obs):'');}).join(' | '))+'">⚠ '+apEsc(pend.map(function(p){return p.tipo;}).join(', '))+'</span>'):'';
   var override=''; // a tag "editado" foi removida a pedido do usuário
   var tagFinalizado=r.finalizadoManual?'<span class="tag-override" style="background:rgba(31,157,102,.12);color:var(--ok)">finalizado manual</span>':'';
   var tagPreImpressao=(r.grupoOriginal==='DIGITAL'&&r.grupo==='PRE-IMPRESSAO')?'<span class="tag-override" style="background:#E7EFFB;color:#2563AF">aguardando liberação p/ Digital</span>':'';
@@ -2635,6 +2681,12 @@ function linhaHtml(r,draggable){
   if(r.status==='EM_PRODUCAO'&&grupoApontamentoOn(r.grupo)){
     maquinaCell+='<button class="btn-apontar" onclick="abrirApontamento(\''+r.key+'\')"><i class="ti ti-stopwatch"></i> Apontamento</button>';
   }
+  if(r.status==='EM_PRODUCAO'&&window._podeEditar&&r.opAtual&&r.opAtual.opId){
+    maquinaCell+='<button class="btn-carr" title="Configurações desta OS" onclick="abrirConfigOS(\''+r.pedido+'\',\''+r.item+'\')"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg></button>';
+  }
+  if((r.status==='EM_PRODUCAO'||r.status==='EM_CARTEIRA')&&window._podeEditar){
+    maquinaCell+='<button class="btn-pend'+(pend.length?' on':'')+'" title="Pendência / impedimento" onclick="abrirPendencia(\''+r.pedido+'\',\''+r.item+'\')">⚠ '+(pend.length?'Pendência':'Pend.')+'</button>';
+  }
   var tempo=r.status==='EM_PRODUCAO'?formatarTempo(tempoHoras(r)):null;
   var tempoCell=tempo?'<span class="tempo-tag">'+tempo+'</span>':'<span style="color:var(--text3);font-size:10px">—</span>';
   // M/L e Tempo estimado dirigidos pelo apontamento (etapa atual), quando houver
@@ -2662,7 +2714,7 @@ function linhaHtml(r,draggable){
     '<td>'+mlCell+'</td>'+
     '<td>'+mlRestCell+'</td>'+
     '<td>'+tempoCell2+'</td>'+
-    '<td>'+((apSubBadge&&r.status==='EM_PRODUCAO')?(apSubBadge):('<span class="badge '+r.status.toLowerCase()+'">'+statusLabel(r.status)+'</span>'+apSubBadge))+override+tagFinalizado+tagPreImpressao+'</td>'+
+    '<td>'+((apSubBadge&&r.status==='EM_PRODUCAO')?(apSubBadge):('<span class="badge '+r.status.toLowerCase()+'">'+statusLabel(r.status)+'</span>'+apSubBadge))+override+tagFinalizado+tagPreImpressao+pendBadge+'</td>'+
     '<td>'+maquinaCell+'</td>'+
     '<td>'+opcoesObsHtml(r)+'</td>'+
     '</tr>';
@@ -2697,7 +2749,7 @@ function renderPainel(){
   emProducao.forEach(function(r){var g=r.grupo||'(SEM GRUPO)';(porGrupo[g]=porGrupo[g]||[]).push(r);});
   porGrupoAtual=porGrupo;
 
-  var html='';
+  var html=(window._ehOperador?'':pendPanelHtml());
   var ordemGrupos=GRUPOS.map(function(g){return g.nome;});
   Object.keys(porGrupo).sort(function(a,b){
     var ia=ordemGrupos.indexOf(a),ib=ordemGrupos.indexOf(b);
@@ -3340,6 +3392,242 @@ async function atribuirMaquina(opId,maquina){
     recarregarDoBanco(true);
   }catch(e){ alert('Não foi possível atribuir a máquina.\n'+(e.message||e)); }
 }
+// ===================== AJUSTE DE CARREIRAS DESTA RODADA (gestor/editor) =====================
+// Override pontual de carreiras numa OS (ex.: material mais estreito). NAO altera a ficha do
+// produto nem outras OS. So antes de iniciar a producao da etapa. Recalcula a estimativa da
+// propria operacao a partir dos valores ja gravados (metros ~ 1/carreiras; cascata preservada).
+var CARR_OP=null, CARR_OPS=[], CARR_INFO={};
+async function abrirCarreiras(opId){
+  try{
+    var op=(await supabaseClient.from('ordem_operacoes').select('*').eq('id',opId).maybeSingle()).data;
+    if(!op){ alert('Operação não encontrada.'); return; }
+    if(['em_producao','parado','finalizada'].indexOf(op.status)>=0){ alert('Esta etapa já iniciou a produção — a carreira desta rodada não pode mais ser alterada.'); recarregarDoBanco(true); return; }
+    var ops=(await supabaseClient.from('ordem_operacoes').select('*').eq('ordem_id',op.ordem_id).order('etapa_idx')).data||[];
+    var od=(await supabaseClient.from('ordens').select('pedido,item,produto_codigo').eq('id',op.ordem_id).maybeSingle()).data||{};
+    CARR_OP=op; CARR_OPS=ops; CARR_INFO=od;
+    renderCarreirasPopup();
+  }catch(e){ alert('Não foi possível abrir o ajuste de carreiras.\n'+(e.message||e)); }
+}
+function carrCalc(newCarr){
+  var op=CARR_OP, ops=CARR_OPS;
+  var carrOld=Math.max(1,Number(op.carreiras)||1), carrNew=Math.max(1,Number(newCarr)||1);
+  var newQtd=(Number(op.qtd_est)||0)*(carrOld/carrNew);
+  var sorted=ops.slice().sort(function(a,b){return (a.etapa_idx||0)-(b.etapa_idx||0);});
+  var idx=sorted.findIndex(function(x){return x.id===op.id;});
+  var pct=0;
+  for(var k=idx;k<sorted.length;k++){ var q=Number(sorted[k].qtd_est)||0, dp=Number(sorted[k].desp_prod_est)||0; if(q>0)pct+=dp/q; }
+  var setupNext=0;
+  for(var k2=idx+1;k2<sorted.length;k2++){ if(sorted[k2].unidade_est===op.unidade_est)setupNext+=Number(sorted[k2].desp_setup_est)||0; }
+  var newRodar=newQtd/Math.max(0.05,1-pct)+setupNext;
+  var vel=Number(op.vel_est)||0;
+  var rateI=(Number(op.qtd_est)||0)>0?((Number(op.desp_prod_est)||0)/(Number(op.qtd_est)||1)):0;
+  return {carrNew:carrNew,qtd:newQtd,rodar:newRodar,prod:(vel>0?(newRodar/vel*60):0),despProd:newQtd*rateI};
+}
+function carrUnit(){ return (CARR_OP&&CARR_OP.unidade_est==='un')?'batidas':'m/l'; }
+function carreirasOnInput(){
+  var v=parseInt((document.getElementById('carr-input')||{}).value,10)||1;
+  var c=carrCalc(v), u=carrUnit(), pv=document.getElementById('carr-preview');
+  if(pv)pv.innerHTML='Metros líquidos: <b>'+apFmt(c.qtd)+' '+u+'</b> · a rodar: <b>'+apFmt(c.rodar)+' '+u+'</b> · tempo prod.: <b>'+formatarTempo((c.prod||0)/60)+'</b>';
+}
+function renderCarreirasPopup(){
+  var op=CARR_OP, info=CARR_INFO;
+  var o=document.getElementById('carr-modal');
+  if(!o){ o=document.createElement('div'); o.id='carr-modal'; o.className='carr-ov'; document.body.appendChild(o); }
+  o.innerHTML='<div class="carr-box">'+
+    '<div class="carr-h"><b>Carreiras desta rodada</b><button class="carr-x" onclick="fecharCarreiras()">✕</button></div>'+
+    '<div class="carr-sub">'+apEsc((info.produto_codigo||'')+' · pedido '+(info.pedido||'')+'-'+(info.item||'')+' · etapa '+(dispNome(op.grupo)||op.grupo))+'</div>'+
+    '<div class="carr-row"><span>Carreiras da ficha / atual</span><b>'+(op.carreiras||1)+'</b></div>'+
+    '<div class="carr-row"><label for="carr-input">Carreiras desta rodada</label><input id="carr-input" type="number" min="1" step="1" value="'+(op.carreiras||1)+'" oninput="carreirasOnInput()"></div>'+
+    '<div id="carr-preview" class="carr-prev"></div>'+
+    '<div class="carr-note">Afeta só esta OS (esta rodada). A ficha do produto não muda.</div>'+
+    '<div class="carr-actions"><button class="btn-sec" onclick="fecharCarreiras()">Cancelar</button><button class="btn-primary" onclick="salvarCarreiras()">Salvar</button></div>'+
+  '</div>';
+  o.style.display='flex';
+  carreirasOnInput();
+}
+function fecharCarreiras(){ var o=document.getElementById('carr-modal'); if(o)o.style.display='none'; }
+async function salvarCarreiras(){
+  try{
+    var op=CARR_OP; if(!op)return;
+    var v=parseInt((document.getElementById('carr-input')||{}).value,10)||1; if(v<1)v=1;
+    if(v===Number(op.carreiras)){ fecharCarreiras(); return; }
+    var c=carrCalc(v);
+    var r=await supabaseClient.from('ordem_operacoes').update({carreiras:v,qtd_est:c.qtd,qtd_rodar_est:c.rodar,prod_est_min:c.prod,desp_prod_est:c.despProd}).eq('id',op.id);
+    if(r.error)throw r.error;
+    try{ await supabaseClient.from('apontamentos').insert({operacao_id:op.id,tipo:'observacao',motivo:'Carreiras desta rodada: '+(op.carreiras||1)+' → '+v}); }catch(e){}
+    fecharCarreiras();
+    recarregarDoBanco(true);
+  }catch(e){ alert('Não foi possível salvar as carreiras.\n'+(e.message||e)); }
+}
+// ===================== PENDÊNCIAS / IMPEDIMENTOS (gestor/editor) =====================
+var PEND_TIPOS=['Solicitar faca','Solicitar clichê','Aguardando material','Outro'];
+var PEND_CTX={ordemId:null,pedido:null,item:null,produto:'',lista:[]};
+async function abrirPendencia(pedido,item){
+  try{
+    var od=(await supabaseClient.from('ordens').select('id,produto_codigo').eq('pedido',pedido).eq('item',item).maybeSingle()).data;
+    if(!od){ alert('Esta OS ainda não existe na camada de apontamento (suba os pedidos em aberto).'); return; }
+    var lista=(await supabaseClient.from('ordem_pendencias').select('*').eq('ordem_id',od.id).eq('status','aberta').order('criado_em')).data||[];
+    PEND_CTX={ordemId:od.id,pedido:pedido,item:item,produto:od.produto_codigo||'',lista:lista};
+    renderPendenciaPopup();
+  }catch(e){ alert('Não foi possível abrir as pendências.\n'+(e.message||e)); }
+}
+function renderPendenciaPopup(){
+  var c=PEND_CTX;
+  var o=document.getElementById('pend-modal');
+  if(!o){ o=document.createElement('div'); o.id='pend-modal'; o.className='carr-ov'; document.body.appendChild(o); }
+  var abertas=c.lista.map(function(p){
+    return '<div class="pend-item"><div><b>'+apEsc(p.tipo)+'</b>'+(p.obs?('<div class="pend-obs">'+apEsc(p.obs)+'</div>'):'')+'</div>'+
+      '<button class="btn-sec" onclick="resolverPendencia(\''+p.id+'\')">Resolver</button></div>';
+  }).join('')||'<div class="carr-note" style="margin:6px 0">Nenhuma pendência aberta.</div>';
+  var opts=PEND_TIPOS.map(function(t){return '<option value="'+apEsc(t)+'">'+apEsc(t)+'</option>';}).join('');
+  o.innerHTML='<div class="carr-box">'+
+    '<div class="carr-h"><b>Pendências / impedimentos</b><button class="carr-x" onclick="fecharPendencia()">✕</button></div>'+
+    '<div class="carr-sub">'+apEsc((c.produto||'')+' · pedido '+c.pedido+'-'+c.item)+'</div>'+
+    '<div class="pend-lista">'+abertas+'</div>'+
+    '<div class="carr-row" style="margin-top:12px"><label for="pend-tipo">Nova pendência</label><select id="pend-tipo" class="pend-sel">'+opts+'</select></div>'+
+    '<textarea id="pend-obs" class="pend-ta" placeholder="Observação (opcional): nº da faca, material, etc."></textarea>'+
+    '<div class="carr-actions"><button class="btn-sec" onclick="fecharPendencia()">Fechar</button><button class="btn-primary" onclick="salvarPendencia()">Adicionar pendência</button></div>'+
+  '</div>';
+  o.style.display='flex';
+}
+function fecharPendencia(){ var o=document.getElementById('pend-modal'); if(o)o.style.display='none'; }
+async function salvarPendencia(){
+  try{
+    var c=PEND_CTX; if(!c.ordemId)return;
+    var tipo=(document.getElementById('pend-tipo')||{}).value||'Outro';
+    var obs=((document.getElementById('pend-obs')||{}).value||'').trim();
+    var r=await supabaseClient.from('ordem_pendencias').insert({ordem_id:c.ordemId,tipo:tipo,obs:obs||null});
+    if(r.error)throw r.error;
+    fecharPendencia();
+    recarregarDoBanco(true);
+  }catch(e){ alert('Não foi possível salvar a pendência.\n'+(e.message||e)); }
+}
+async function resolverPendencia(id){
+  try{
+    var r=await supabaseClient.from('ordem_pendencias').update({status:'resolvida',resolvido_em:new Date().toISOString(),resolvido_por:(window._meuUid||null)}).eq('id',id);
+    if(r.error)throw r.error;
+    fecharPendencia();
+    recarregarDoBanco(true);
+  }catch(e){ alert('Não foi possível resolver a pendência.\n'+(e.message||e)); }
+}
+// ===================== CONFIGURAÇÕES DESTA OS (roteiro/carreiras pontuais) =====================
+// Abre uma mini-ficha SO desta OS, pre-preenchida com o padrao. Alteracoes valem so para esta
+// OS (reconstroi o ordem_operacoes dela) e marcam ordens.roteiro_custom=true p/ a materializacao
+// automatica nao sobrescrever. NAO altera a ficha do produto nem outras OS.
+var OSR={ordemId:null,pedido:null,item:null,produto:'',o:{},prod:{},conv:[],ops:[],started:false,roteiro:[]};
+function osrGmap(){ var m={}; (MAQUINAS_GRUPOS_DB||[]).forEach(function(g){m[g.nome]=g;}); return m; }
+function osrGrupoCfg(nome){ return osrGmap()[nome]||{}; }
+async function abrirConfigOS(pedido,item){
+  try{
+    var od=(await supabaseClient.from('ordens').select('*').eq('pedido',pedido).eq('item',item).maybeSingle()).data;
+    if(!od){ alert('Esta OS ainda não existe na camada de apontamento.'); return; }
+    var ops=(await supabaseClient.from('ordem_operacoes').select('*').eq('ordem_id',od.id).order('etapa_idx')).data||[];
+    var pa=od.produto_codigo||'';
+    var prod=pa?((await supabaseClient.from('produtos').select('*').eq('codigo_pa',pa).maybeSingle()).data||{}):{};
+    var conv=pa?((await supabaseClient.from('produto_conversoes').select('*').eq('produto_codigo',pa)).data||[]):[];
+    var fichaEt=pa?((await supabaseClient.from('produto_etapas').select('*').eq('produto_codigo',pa).order('ordem')).data||[]):[];
+    var started=ops.some(function(o){return o.status!=='aguardando';});
+    var fichaByGrupo={}; fichaEt.forEach(function(e){ if(!fichaByGrupo[e.grupo])fichaByGrupo[e.grupo]=e; });
+    var roteiro=ops.map(function(o){
+      var fe=fichaByGrupo[o.grupo]||{};
+      return {grupo:o.grupo,carreiras:o.carreiras||1,repeticoes:fe.repeticoes||1,acab_verniz:!!o.acab_verniz,acab_laminacao:!!o.acab_laminacao,status:o.status,opId:o.id};
+    });
+    OSR={ordemId:od.id,pedido:pedido,item:item,produto:pa,o:od,prod:prod,conv:conv,ops:ops,started:started,roteiro:roteiro};
+    renderConfigOS();
+  }catch(e){ alert('Não foi possível abrir as configurações da OS.\n'+(e.message||e)); }
+}
+function osrComputarRows(roteiro){
+  var o={id:OSR.ordemId,qtd:OSR.o.qtd,um:OSR.o.um}, gmap=osrGmap();
+  var ests=roteiro.map(function(e){ var g=gmap[e.grupo]||{}; return {e:e,g:g,est:estimarEtapa(OSR.prod,o,g,e,OSR.conv)}; });
+  return ests.map(function(it,i){
+    var pct=0,setupNext=0;
+    for(var k=i;k<ests.length;k++){ pct+=(Number(ests[k].g.desp_prod_pct)||0)/100; }
+    for(var k2=i+1;k2<ests.length;k2++){ if(ests[k2].est.unit===it.est.unit)setupNext+=(Number(ests[k2].est.desp)||0); }
+    var denom=Math.max(0.05,1-pct), qtdRodar=(Number(it.est.qtd)||0)/denom+setupNext, vel=Number(it.est.vel)||0;
+    return {etapa_idx:i+1,grupo:it.e.grupo,carreiras:it.e.carreiras||1,acab_verniz:!!it.e.acab_verniz,acab_laminacao:!!it.e.acab_laminacao,
+      unidade_est:it.est.unit,qtd_est:it.est.qtd,qtd_rodar_est:qtdRodar,setup_est_min:it.est.setup,
+      prod_est_min:(vel>0?(qtdRodar/vel*60):0),desp_setup_est:it.est.desp,desp_prod_est:it.est.despProd,vel_est:vel};
+  });
+}
+function renderConfigOS(){
+  var o=document.getElementById('osr-modal');
+  if(!o){ o=document.createElement('div'); o.id='osr-modal'; o.className='carr-ov'; document.body.appendChild(o); }
+  var started=OSR.started;
+  function grpOpts(sel){ return (GRUPOS||[]).map(function(g){ return '<option value="'+apEsc(g.nome)+'"'+(g.nome===sel?' selected':'')+'>'+apEsc(g.display||g.nome)+'</option>'; }).join(''); }
+  var rows=OSR.roteiro.map(function(e,i){
+    var g=osrGrupoCfg(e.grupo), modo=g.modo||'fixo', canEdit=!started||e.status==='aguardando';
+    var grpCtrl=(!started)?('<select class="ap-input" style="min-width:150px" onchange="osrSetGrupo('+i+',this.value)">'+grpOpts(e.grupo)+'</select>'):('<b>'+apEsc(dispNome(e.grupo))+'</b>');
+    var carrCtrl='<span class="ap-hint">Carreiras</span><input class="ap-input" type="number" min="1" style="width:66px" value="'+(e.carreiras||1)+'"'+(canEdit?'':' disabled')+' onchange="osrSetCarr('+i+',this.value)">';
+    var repCtrl=(modo==='unidade')?('<span class="ap-hint">Repetições</span><input class="ap-input" type="number" min="1" style="width:66px" value="'+(e.repeticoes||1)+'"'+(canEdit?'':' disabled')+' onchange="osrSetRep('+i+',this.value)"><span class="ap-hint">= '+(Math.max(1,e.carreiras||1)*Math.max(1,e.repeticoes||1))+' img</span>'):'';
+    var acab='';
+    if(g.aplica_verniz||g.aplica_laminacao){
+      acab='<div class="f-row" style="margin-top:4px"><span class="ap-hint">Acab.:</span>'+
+        (g.aplica_verniz?'<label class="f-chk"><input type="checkbox" '+(e.acab_verniz?'checked':'')+(canEdit?'':' disabled')+' onchange="osrSetAcab('+i+',\'v\',this.checked)"> Verniz</label>':'')+
+        (g.aplica_laminacao?'<label class="f-chk"><input type="checkbox" '+(e.acab_laminacao?'checked':'')+(canEdit?'':' disabled')+' onchange="osrSetAcab('+i+',\'l\',this.checked)"> Laminação</label>':'')+'</div>';
+    }
+    var chip=started?('<span class="ap-chip">'+apEsc(e.status==='aguardando'?'aguardando':(AP_STATUS_LABEL[e.status]||e.status))+'</span>'):'';
+    var tools=(!started)?('<button class="ap-btn-sec" onclick="osrMove('+i+',-1)">↑</button><button class="ap-btn-sec" onclick="osrMove('+i+',1)">↓</button><button class="ap-btn-sec" onclick="osrRemove('+i+')">remover</button>'):'';
+    return '<div class="f-et"><div class="f-row"><b>'+(i+1)+'.</b> '+grpCtrl+chip+carrCtrl+repCtrl+tools+'</div>'+acab+'</div>';
+  }).join('')||'<div class="ap-hint">Sem etapas.</div>';
+  var addCtrl=(!started)?('<div class="f-row" style="margin-top:8px"><select id="osr-add" class="ap-input">'+grpOpts('')+'</select><button class="ap-btn-sec" onclick="osrAdd()">+ Adicionar etapa</button></div>'):'';
+  var banner=started
+    ?'<div class="carr-note" style="color:#b5770a">OS já iniciada — o roteiro está travado; dá para ajustar só as carreiras/repetições das etapas ainda não iniciadas.</div>'
+    :'<div class="carr-note">Edite o roteiro só desta OS (ex.: rodar numa máquina fora da ficha). A ficha do produto não muda.</div>';
+  o.innerHTML='<div class="carr-box carr-box-wide">'+
+    '<div class="carr-h"><b>Configurações desta OS</b><button class="carr-x" onclick="fecharConfigOS()">✕</button></div>'+
+    '<div class="carr-sub">'+apEsc((OSR.produto||'')+' · pedido '+OSR.pedido+'-'+OSR.item)+'</div>'+
+    banner+'<div class="osr-lista">'+rows+'</div>'+addCtrl+
+    '<div class="carr-actions"><button class="btn-sec" onclick="fecharConfigOS()">Cancelar</button><button class="btn-primary" onclick="salvarConfigOS()">Salvar roteiro desta OS</button></div>'+
+  '</div>';
+  o.style.display='flex';
+}
+function fecharConfigOS(){ var o=document.getElementById('osr-modal'); if(o)o.style.display='none'; }
+function osrSetGrupo(i,v){ OSR.roteiro[i].grupo=v; renderConfigOS(); }
+function osrSetCarr(i,v){ OSR.roteiro[i].carreiras=Math.max(1,parseInt(v,10)||1); }
+function osrSetRep(i,v){ OSR.roteiro[i].repeticoes=Math.max(1,parseInt(v,10)||1); }
+function osrSetAcab(i,f,c){ if(f==='v')OSR.roteiro[i].acab_verniz=c; else OSR.roteiro[i].acab_laminacao=c; }
+function osrMove(i,d){ var j=i+d; if(j<0||j>=OSR.roteiro.length)return; var t=OSR.roteiro[i]; OSR.roteiro[i]=OSR.roteiro[j]; OSR.roteiro[j]=t; renderConfigOS(); }
+function osrRemove(i){ OSR.roteiro.splice(i,1); renderConfigOS(); }
+function osrAdd(){ var g=(document.getElementById('osr-add')||{}).value; if(!g)return; OSR.roteiro.push({grupo:g,carreiras:1,repeticoes:1,acab_verniz:false,acab_laminacao:false,status:'aguardando'}); renderConfigOS(); }
+async function salvarConfigOS(){
+  try{
+    if(!OSR.ordemId)return;
+    if(!OSR.roteiro.length){ alert('O roteiro desta OS não pode ficar vazio.'); return; }
+    var rows=osrComputarRows(OSR.roteiro);
+    if(!OSR.started){
+      var rins=rows.map(function(row){ row.ordem_id=OSR.ordemId; return row; });
+      var del=await supabaseClient.from('ordem_operacoes').delete().eq('ordem_id',OSR.ordemId); if(del.error)throw del.error;
+      var ins=await supabaseClient.from('ordem_operacoes').insert(rins); if(ins.error)throw ins.error;
+    }else{
+      var opsSorted=OSR.ops.slice().sort(function(a,b){return (a.etapa_idx||0)-(b.etapa_idx||0);});
+      for(var i=0;i<opsSorted.length;i++){
+        var op=opsSorted[i]; if(op.status!=='aguardando')continue; var row=rows[i]; if(!row)continue;
+        var u=await supabaseClient.from('ordem_operacoes').update({carreiras:row.carreiras,qtd_est:row.qtd_est,qtd_rodar_est:row.qtd_rodar_est,prod_est_min:row.prod_est_min,desp_prod_est:row.desp_prod_est,desp_setup_est:row.desp_setup_est,setup_est_min:row.setup_est_min,vel_est:row.vel_est,unidade_est:row.unidade_est}).eq('id',op.id);
+        if(u.error)throw u.error;
+      }
+    }
+    var ur=await supabaseClient.from('ordens').update({roteiro_custom:true}).eq('id',OSR.ordemId);
+    if(ur.error)throw ur.error;
+    fecharConfigOS();
+    recarregarDoBanco(true);
+  }catch(e){ alert('Não foi possível salvar o roteiro desta OS.\n'+(e.message||e)); }
+}
+function pendPanelHtml(){
+  var piks=Object.keys(PEND); if(!piks.length)return '';
+  var info={}; (ITENS||[]).forEach(function(r){ var k=r.pedido+'|'+r.item; if(!info[k])info[k]={cliente:r.clienteNome||'',produto:r.produto||''}; });
+  var total=0, rows='';
+  piks.forEach(function(k){
+    var arr=PEND[k]||[]; if(!arr.length)return;
+    var p=k.split('|'), nf=info[k]||{};
+    arr.forEach(function(it){
+      total++;
+      rows+='<div class="pp-row"><div><b>'+apEsc(p[0]+'-'+p[1])+'</b> · '+apEsc(nf.cliente||'')+' <span style="color:var(--text3)">'+apEsc(nf.produto||'')+'</span><br><b style="color:#b5770a">'+apEsc(it.tipo)+'</b>'+(it.obs?(' — '+apEsc(it.obs)):'')+'</div>'+
+        (window._podeEditar?('<button class="btn-sec" onclick="resolverPendencia(\''+it.id+'\')">Resolver</button>'):'')+'</div>';
+    });
+  });
+  if(!total)return '';
+  return '<div class="pend-panel"><h3>⚠ Pendências / impedimentos ('+total+')</h3>'+rows+'</div>';
+}
 function apAviso(msg){
   document.getElementById('ap-conteudo').innerHTML='<div class="ap-op"><div class="ap-hint" style="white-space:pre-wrap">'+apEsc(msg)+'</div></div>';
 }
@@ -3755,10 +4043,11 @@ async function materializarProduto(pa){
   var conv=(await supabaseClient.from('produto_conversoes').select('*').eq('produto_codigo',pa)).data||[];
   var grupos=(await supabaseClient.from('maquinas_grupos').select('*')).data||[]; var gmap={}; grupos.forEach(function(g){gmap[g.nome]=g;});
   if(!etapas.length)return 0;
-  var ords=(await supabaseClient.from('ordens').select('id,qtd,um').eq('produto_codigo',pa)).data||[];
+  var ords=(await supabaseClient.from('ordens').select('*').eq('produto_codigo',pa)).data||[];
   var n=0;
   for(var i=0;i<ords.length;i++){
     var o=ords[i];
+    if(o.roteiro_custom)continue;              // OS com roteiro proprio: nao sobrescreve
     var ja=(await supabaseClient.from('ordem_operacoes').select('id,status').eq('ordem_id',o.id)).data||[];
     if(ja.length){
       var todasAguardando=ja.every(function(x){return x.status==='aguardando';});
@@ -3787,6 +4076,27 @@ async function materializarProduto(pa){
     if(ins.error)throw ins.error; n++;
   }
   return n;
+}
+// Materializa as OS que ja tem ficha mas ainda nao tem ordem_operacoes (ex.: pedido
+// novo chegou por upload DEPOIS da ficha ja estar cadastrada). Sem isso o item fica
+// preso em "Em carteira" mesmo tendo ficha. Roda apos o sincronizar_ordens do upload.
+async function materializarPendentes(){
+  try{
+    var aOrd=await lerTabelaCompleta('ordens','id,produto_codigo',['id']);
+    var aOps=await lerTabelaCompleta('ordem_operacoes','ordem_id',['ordem_id']);
+    var aEt=await lerTabelaCompleta('produto_etapas','produto_codigo',['produto_codigo']);
+    if(aOrd.error||aOps.error||aEt.error)return {prods:0,mat:0};
+    var comOps={}; (aOps.data||[]).forEach(function(o){comOps[o.ordem_id]=true;});
+    var temFicha={}; (aEt.data||[]).forEach(function(e){temFicha[e.produto_codigo]=true;});
+    var pend={};
+    (aOrd.data||[]).forEach(function(o){
+      var c=o.produto_codigo;
+      if(c&&temFicha[c]&&!comOps[o.id]&&!/^(PR|SE)/i.test(c))pend[c]=true;
+    });
+    var pas=Object.keys(pend), mat=0;
+    for(var i=0;i<pas.length;i++){ try{ mat+=await materializarProduto(pas[i]); }catch(e){ console.warn('materializarPendentes',pas[i],e); } }
+    return {prods:pas.length,mat:mat};
+  }catch(e){ console.warn('materializarPendentes',e); return {prods:0,mat:0}; }
 }
 async function salvarFicha(){
   try{
