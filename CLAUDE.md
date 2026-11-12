@@ -210,6 +210,11 @@ e nas "Ocorrências por etapa" do popup de KPI. Gestor exclui uma observação a
 remove o **último** evento operacional (LIFO) e recalcula o status; clicar de novo desfaz o anterior.
 Para corrigir erro de lançamento. Destrutivo.
 
+**Reabrir OS finalizada por apontamento** (`reabrirApontamento`): item que fecha todas as etapas vai p/
+aguardando faturamento; o botão **Reabrir** no painel (gestor/editor; `r.apFinalizado` = APONT_ESTADO
+todasFinalizadas) insere `reabertura` na **última etapa** (volta p/ produção). Dali o gestor corrige ou
+**estorna** via "Excluir último apontamento". Separado do `reabrirItem` (que é p/ finalizado manual).
+
 **Lançamento manual** (`apManualFormHtml`/`apManualRegistrar` → RPC `apontamento_manual`): botão
 nas etapas acionáveis (e nas finalizadas, só gestor; escondido em validação). Form: bloco
 (Produção/Setup), data, hora início, hora fim, metros; **gestor** ainda escolhe o **operador**
@@ -267,4 +272,21 @@ apontamento (ver `aplicar_apontamento`).
 
 ## 8. Arquivos SQL (ordem)
 `01_schema.sql` → `02_ingestao_fix.sql` → `03_rls_papeis.sql` → ... → `09_maquinas.sql` →
-`10..12` → **`13_producao_apontamentos.sql`** (monitoramento; idempotente, reaplicável).
+`10..12` → **`13_producao_apontamentos.sql`** (monitoramento; idempotente, reaplicável) →
+**`14_batida_repeticoes.sql`** (coluna `repeticoes` em `produto_etapas`, p/ batida; idempotente).
+
+## 9. Batida — imagens por repetição (2026-11-12)
+
+`produto_etapas.repeticoes` (int, default 1; migration `14_`). **Só** afeta etapas de batida
+(grupo em `modo='unidade'`). Regra: `imagens = carreiras × repeticoes`; `nº de batidas =
+etiquetas ÷ imagens`; tempo = batidas ÷ velocidade (velocidade do grupo BATIDA já em **batidas/h**,
+golpes/h). `estimarEtapa` (modo unidade): `qtd = tot/imagens`, `unit='un'` (= nº de batidas).
+Demais grupos inalterados (carreiras seguem dividindo só a metragem nos modos em metro).
+Ficha: etapa de batida mostra campo **Repetições** + linha "Imagens = carr × rep". Excel
+(modelo/import/backup): roteiro da batida como `BATIDA:carreiras:repeticoes` (ex.: `BATIDA:2:2`);
+o parse pega dígitos como repetições e letras (V/L) como acabamento. **Aplicar `14_` antes de
+publicar o app.html** (os inserts de `produto_etapas` passam a enviar `repeticoes`).
+
+Fichas técnicas também ganharam: contador de produtos cadastrados, **Backup (baixar)** = Excel
+no formato do import (reimportável), e **overlay de progresso** no import (`mostrarProgresso`/
+`fecharProgresso`).

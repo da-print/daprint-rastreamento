@@ -1,0 +1,26 @@
+Você é o responsável por implementar um redesign VISUAL incremental do sistema D&A Print no repositório já aberto. O sistema atual funciona e não pode perder funcionalidades.
+
+LEIA ANTES: `CLAUDE.md` inteiro, `app.html`, `index.html`, os CSS existentes e as regras de `13_producao_apontamentos.sql`. Recebi um pacote de referências visuais em `DA_Print_Redesign_Claude_Code/`. Leia `03_guias/MAPA_TELAS_E_REGRAS.md`, os tokens e inspecione as imagens em `01_mockups/`. Utilize o logo e as imagens originais em `02_identidade/`; não recrie o logotipo.
+
+OBJETIVO: implementar visual moderno e consistente das páginas atuais (`tab-painel`, `tab-categorias`, `tab-vendedores`, `tab-maquinas`, `tab-fichas`, `tab-kpis`, `tab-usuarios`, `tab-historico`). Substituir os botões de navegação superiores por sidebar à esquerda com hambúrguer (expandir/recolher), destaque vermelho do item ativo, topbar e navegação por teclado. Preservar links/ações e acesso por papel. O item 'Dashboard' nos mockups é conceitual; NÃO criar uma nova página fictícia nem alterar fluxo do login sem aprovação. Pode usar 'Painel de produção' como página inicial existente.
+
+PRIORIDADE ABSOLUTA: criar/realçar a seção de **Fila de Produção por Equipamento**, acessível como subitem de Produção ou alternância de visualização no Painel. Isso é função central já existente: preservar agrupamento por máquinas, fila por etapa, seleção de submáquina quando cabível, reordenação, movimentações, ações e estados. Uma mesma OS pode aparecer simultaneamente em duas filas depois de um lançamento parcial, exibindo 'Parcial · etapa anterior em andamento', sem sair da fila da etapa de origem até finalização e sem duplicação dos totais por OS. Preservar os cálculos M/L, M/L restante e tempo restante; refletir status de setup, produção e pausas.
+
+REGRAS TÉCNICAS:
+1) Trabalhar primeiro apenas em HTML/CSS/JS do frontend. Não alterar Supabase, SQL, RLS, esquema, funções, dados, Git remoto, Vercel nem SW sem aprovação. Não fazer git push nem deploy.
+2) Não reescrever `app.html` do zero nem substituir a lógica de negócio por dados fictícios. Mapear ids, seletores e listeners antes da alteração; preferir mudanças pequenas e verificáveis com componentes/estilos reutilizáveis.
+3) Preservar todas as funcionalidades reais: upload/recarregar bases; fila/ordenação; fichas, máquinas, usuários, vendedores, categorias, histórico; apontamento (setup início/fim, iniciar/finalizar produção, trechos parciais, pausas, retomada, lançamentos manuais); KPIs, filtros e modal por OS.
+4) Mockups são DIRETRIZES DE LAYOUT, não fonte de verdade dos dados. Não usar números ou registros das imagens como dados reais.
+5) Preservar fórmulas e regras descritas no `CLAUDE.md`, sobretudo a diferença de desperdício real vs previsto, a cascata da quantidade a rodar e a regra de não somar metragens entre etapas.
+6) Garantir acessibilidade (contraste, foco visível, labels, estados), tablets, desktop, sidebar recolhida e tema escuro.
+7) Em alterações com risco, elaborar plano e informar antes de executar. Não apagar ou simplificar funcionalidades existentes por conveniência visual.
+
+PROCESSO SOLICITADO:
+FASE A (AGORA, SEM EDITAR): fazer inventário real por tela: componentes, funções, listeners, filtros, controles e pontos de risco; comparar com mockups; entregar plano detalhado, ordem de alterações, estratégia de rollback e testes de regressão. Não modificar arquivos ainda; aguardar minha aprovação.
+FASE B (APÓS APROVAÇÃO): implementar navegação/sidebar e shell responsiva mantendo todas as abas; testar.
+FASE C: painel + Fila por Equipamento com testes de ponta a ponta, inclusive produção parcial em duas filas.
+FASE D: KPIs, máquinas, fichas técnicas, categorias, vendedores, usuários e histórico.
+
+ENTREGÁVEIS DE CADA FASE: relação de arquivos editados; alterações visuais; funcionalidades preservadas; testes executados e resultados; pendências; prints antes/depois quando possível. Em toda fase: SEM push, SEM deploy e SEM SQL. Solicitar aprovação de cada fase antes de prosseguir.
+
+Responda em português, de forma objetiva. Use Claude Opus apenas para a auditoria/arquitetura ou problemas complexos; prefira Sonnet na implementação visual e nos ajustes comuns.

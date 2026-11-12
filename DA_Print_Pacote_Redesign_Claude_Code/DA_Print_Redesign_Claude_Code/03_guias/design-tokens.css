@@ -1,0 +1,24 @@
+/* REFERÊNCIA DE DESIGN — NÃO IMPORTAR DIRETAMENTE NO APP SEM INTEGRAÇÃO E TESTES */
+:root {
+  --da-navy-950: #0b1931;
+  --da-navy-900: #102745;
+  --da-navy-800: #17375d;
+  --da-red-600: #cf2332;
+  --da-red-500: #e73642;
+  --da-blue-600: #1768d8;
+  --da-blue-100: #e9f2ff;
+  --da-canvas: #f4f7fc;
+  --da-surface: #ffffff;
+  --da-border: #dce5f0;
+  --da-text: #142543;
+  --da-muted: #66758c;
+  --da-success: #168452;
+  --da-warning: #bd7908;
+  --da-danger: #c22b37;
+  --da-radius-card: 14px;
+  --da-radius-control: 9px;
+  --da-shadow-card: 0 4px 18px rgba(24, 54, 100, 0.065);
+  --da-sidebar-expanded: 244px;
+  --da-sidebar-collapsed: 68px;
+  --da-topbar-height: 62px;
+}
