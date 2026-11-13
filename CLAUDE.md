@@ -240,6 +240,12 @@ o `13_`. Para quem esqueceu de iniciar/finalizar; o status é recalculado cronol
   máquina livre do grupo (ex. FLEXO 1/2/3, BROTECH/VOREY). Coluna mostra só a sub escolhida.
 
 ### Materialização
+**No upload** (2026-11-12): após `sincronizar_ordens`, o fluxo chama `materializarPendentes()` —
+materializa as OS cujo produto já tem ficha mas que ainda não têm `ordem_operacoes` (pedido novo
+que chegou DEPOIS da ficha já existir). Sem isso o item ficava preso em "Em carteira" mesmo com
+ficha (status EM_PRODUCAO só vem de ops materializadas — inclusive grupo OFF via `ae.manual`).
+Usa `lerTabelaCompleta` (passa de 1000 linhas). Itens já presos destravam ao refazer um upload.
+
 `materializarProduto(pa)` (ao salvar ficha / importar): para cada OS do produto sem operações
 (ou com todas aguardando), cria `ordem_operacoes` com o **estimado calculado**. Base: etiquetas
 = qtd × fatorConv(um); metros = (etiquetas÷carreiras)×passo÷1000 (passo = alt+gap); setup por cor
@@ -273,7 +279,59 @@ apontamento (ver `aplicar_apontamento`).
 ## 8. Arquivos SQL (ordem)
 `01_schema.sql` → `02_ingestao_fix.sql` → `03_rls_papeis.sql` → ... → `09_maquinas.sql` →
 `10..12` → **`13_producao_apontamentos.sql`** (monitoramento; idempotente, reaplicável) →
-**`14_batida_repeticoes.sql`** (coluna `repeticoes` em `produto_etapas`, p/ batida; idempotente).
+**`14_batida_repeticoes.sql`** (coluna `repeticoes` em `produto_etapas`, p/ batida; idempotente) →
+**`15_ordem_pendencias.sql`** (tabela `ordem_pendencias`; idempotente) →
+**`16_ordens_roteiro_custom.sql`** (coluna `ordens.roteiro_custom`; idempotente) →
+**`17_pendencia_tipos.sql`** (tabela `pendencia_tipos` + policies de gestor em `motivos_parada`; idempotente) →
+**`18_papel_permissoes.sql`** (tabela `papel_permissoes`; idempotente, SEM seed).
+
+**Aba Permissões** (sidebar, só gestor): matriz papéis (editor/visualizador/visualizador_maquina/representante;
+gestor sempre full, fora da matriz) × flags — `ver_<aba>` (painel/entregas/pendencias/kpis/fichas/maquinas/
+vendedores/usuarios/historico/listas) e ações (`acao_editar`→window._podeEditar, `acao_upload`→painel de upload,
+`acao_apontar`→botão Apontamento). `perm(chave)` (gestor=true; senão `_PERMS[papel][chave]` ou `permDefault`),
+`permDe`, `carregarPermissoes` (antes de `aplicarPermissoesUI`). SEM seed = ausência de linha usa o padrão atual
+(nada muda até editar). `aplicarPermissoesUI` dirige upload/_podeEditar/sidebar por `perm()`. **Flags = só UI;
+proteção real = RLS.** Ampliar gravação de um papel exige ajuste de RLS em .sql à parte.
+
+**Aba Listas** (sidebar, só gestor; `renderListas`/`listaAdicionar`/`listaToggle`/`listaRemover`): edita
+sem código os **Motivos de parada** (`motivos_parada`) e os **Tipos de pendência** (`pendencia_tipos`,
+antes fixos em `PEND_TIPOS` — agora carregados do banco no `recarregarDoBanco`, com fallback). Categorias
+de observação seguem na aba **Categorias** (`categorias_obs`). Operações por `nome` (add/ativar-inativar/excluir).
+
+## 10. Carreiras por rodada + Pendências (2026-11-12)
+
+**Ajuste de carreiras da rodada** (frontend, SEM schema): engrenagem (SVG inline, com texto
+"Carreiras") à direita de cada item EM_PRODUCAO no painel, só gestor/editor (`window._podeEditar`),
+só enquanto a etapa atual NÃO iniciou produção (status aguardando/em_setup/setup_ok). Popup
+`abrirCarreiras(opId)` → `carrCalc`/`salvarCarreiras`: recalcula a estimativa SÓ daquela operação
+(metros ∝ 1/carreiras; cascata reconstruída dos próprios valores gravados — pct=desp_prod_est/qtd_est,
+setupNext=Σ desp_setup_est das próximas na mesma unidade) e dá UPDATE em `ordem_operacoes`
+(carreiras, qtd_est, qtd_rodar_est, prod_est_min, desp_prod_est), igual ao padrão do `atribuirMaquina`.
+NÃO altera a ficha nem outras OS. Registra observação no histórico da etapa. Exposto via `APONT_ESTADO[].opAtual`
+e `r.opAtual` (ON e manual). Serve p/ batida também (imagens ∝ carreiras).
+
+**Pendências / impedimentos** (tabela `15_`): `ordem_pendencias` (ordem_id, tipo, obs, status
+aberta/resolvida, criado/resolvido_por/em). Tipos: Solicitar faca, Solicitar clichê, Aguardando
+material, Outro. RLS: select p/ authenticated; insert/update p/ `posso_editar()`; delete p/ `sou_gestor()`.
+Front: `PEND[pedido|item]` carregado no `recarregarDoBanco` (degrada se `15_` ausente). Botão "⚠ Pend."
+nos itens EM_PRODUCAO/EM_CARTEIRA (gestor/editor) → `abrirPendencia` (popup abrir/resolver; com **Data de
+solicitação** e **Previsão de chegada**). Badge âmbar no item. **Aba "Pendências" na sidebar** (não mais
+quadro no topo — `pendPanelHtml` ficou sem uso): `renderPendencias` = tabela (Pedido-Item, PA, Descrição,
+Cliente, Entrega, Pendência, Aberta em, Solicitação, Previsão) + filtros tipo/situação/busca + Resolver,
+via embed `ordem_pendencias.select('*, ordens(...)')`. `15_` inclui as colunas `data_solicitacao`/
+`previsao_chegada` (reaplicável). Roteamento automático à pré-impressão fica p/ iteração 2.
+
+**Configurações desta OS** (engrenagem icon-only no painel, gestor/editor; tabela `16_`): abre
+mini-ficha SÓ daquela OS (`abrirConfigOS`/`renderConfigOS`/`salvarConfigOS`, estado `OSR`). OS **não
+iniciada** (todas ops `aguardando`) → edita o roteiro todo (trocar grupo/máquina — ex.: rodar fora da
+ficha —, carreiras, repetições[batida], acabamento, add/remover/reordenar); salvar **reconstrói** o
+`ordem_operacoes` só dessa OS (`osrComputarRows` = mesma lógica de `materializarProduto`: estimarEtapa +
+cascata) e marca `ordens.roteiro_custom=true`. OS **já iniciada** → roteiro travado, só carreiras/
+repetições das etapas `aguardando` (UPDATE das ops pendentes). **`materializarProduto` pula OS com
+`roteiro_custom=true`** (não sobrescreve). Reaproveita `MAQUINAS_GRUPOS_DB`/`GRUPOS`/`estimarEtapa`.
+Substituiu o popup antigo só-de-carreiras (funções `abrirCarreiras`/`carrCalc` ficaram, sem uso).
+Aplicar `16_` antes de publicar. Limitação v1: repetições por OS não persistem na op (pré-preenche da
+ficha ao reabrir).
 
 ## 9. Batida — imagens por repetição (2026-11-12)
 
