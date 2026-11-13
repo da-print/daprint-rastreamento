@@ -468,6 +468,78 @@ body.sb-collapsed #side-nav .sb-top{ justify-content:center }
 .carr-box{ background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px 20px; width:430px; max-width:92vw; box-shadow:0 10px 40px rgba(0,0,0,.3) }
 .carr-box-wide{ width:640px; max-height:88vh; overflow:auto }
 .osr-lista{ display:flex; flex-direction:column; gap:8px; margin:8px 0 }
+.pend-din{ padding:5px 7px; border-radius:7px; border:1px solid var(--border); background:var(--bg2); color:var(--text); font-size:12px; font-variant-numeric:tabular-nums }
+.pend-acoes{ white-space:nowrap }
+.pend-acoes .btn-sec, .pend-acoes .btn-primary{ padding:5px 10px; font-size:12px }
+#listas-view{ padding:18px 20px 40px }
+#permissoes-view{ padding:18px 20px 40px }
+.perm-nota{ font-size:12px; color:var(--text3); background:var(--bg2); border:1px solid var(--border); border-radius:10px; padding:10px 13px; margin-bottom:14px; max-width:900px; line-height:1.5 }
+.perm-tbl{ border-collapse:collapse; font-size:13px; max-width:760px }
+.perm-tbl th, .perm-tbl td{ border-bottom:1px solid var(--border); padding:9px 12px }
+.perm-tbl th.perm-c, .perm-tbl td.perm-c{ text-align:center; width:120px }
+.perm-tbl td.perm-l{ font-weight:600 }
+.perm-tbl .perm-sec td{ background:var(--bg3,rgba(127,127,127,.08)); font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--text3) }
+.perm-tbl input[type=checkbox]{ width:17px; height:17px; cursor:pointer }
+.lst-card{ background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px 16px; margin-bottom:16px; max-width:560px }
+.lst-card h3{ margin:0 0 2px; font-size:15px }
+.lst-sub{ font-size:12px; color:var(--text3); margin-bottom:10px }
+.lst-lista{ display:flex; flex-direction:column; gap:6px; margin-bottom:10px }
+.lst-item{ display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:7px 10px; font-size:13px }
+.lst-item.off .lst-nome{ color:var(--text3) }
+.lst-tag{ font-size:10px; color:var(--text3); border:1px solid var(--border); border-radius:5px; padding:1px 5px; margin-left:6px }
+.lst-acts{ display:flex; gap:6px; white-space:nowrap }
+.lst-acts .btn-sec{ padding:4px 9px; font-size:12px }
+.lst-add{ display:flex; gap:8px }
+.lst-add input{ flex:1; padding:8px 10px; border-radius:8px; border:1px solid var(--border); background:var(--bg2); color:var(--text); font-size:13px }
+.semficha-card{ border:1px solid var(--border); border-radius:10px; margin-bottom:12px; background:var(--bg2); overflow:hidden }
+.semficha-h{ display:flex; align-items:center; gap:8px; padding:9px 12px; cursor:pointer; font-size:13px }
+.semficha-h i{ color:var(--text3); font-size:16px }
+.semficha-n{ margin-left:auto; background:var(--warn,#b5770a); color:#fff; border-radius:20px; font-size:11px; font-weight:700; padding:1px 8px }
+.semficha-body{ display:flex; flex-wrap:wrap; gap:6px; padding:0 12px 12px }
+/* Painel mais enxuto (menos caixa, linhas mais estreitas) */
+#painel-view .grupo-card{ margin-bottom:10px; border-radius:10px; box-shadow:none }
+#painel-view .grupo-card>.grupo-header{ min-height:0; padding:9px 16px; gap:10px; background:var(--card) }
+#painel-view .grupo-card:not(.recolhido)>.grupo-header{ background:var(--card) }
+#painel-view .grupo-card>.grupo-header .grupo-nome{ font-size:13.5px }
+#painel-view .grupo-card>.grupo-header .grupo-icon{ width:26px; height:26px; font-size:11px; border-radius:7px }
+#painel-view .sub-header{ min-height:0; padding:7px 16px; font-size:12px }
+#painel-view .table-wrap table td{ padding-top:7px; padding-bottom:7px }
+/* Máquinas em lista (linha por máquina, expande p/ editar) */
+.maq-row{ border:1px solid var(--border); border-radius:9px; margin-bottom:7px; background:var(--card); overflow:hidden }
+.maq-row.aberto{ box-shadow:0 2px 10px rgba(0,0,0,.06) }
+.maq-head{ display:flex; align-items:center; gap:11px; padding:9px 13px; cursor:pointer }
+.maq-head:hover{ background:var(--bg3,rgba(127,127,127,.05)) }
+.maq-chev{ color:var(--text3); font-size:17px; flex:0 0 auto }
+.maq-head .grupo-icon{ width:26px; height:26px; font-size:11px; border-radius:7px; flex:0 0 auto }
+.maq-nome{ font-weight:700; font-size:13.5px }
+.maq-chip{ font-size:11px; color:var(--text3); border:1px solid var(--border); border-radius:6px; padding:1px 8px }
+.maq-vel{ font-size:12px; color:var(--text3); font-variant-numeric:tabular-nums }
+.maq-apont{ margin-left:auto; font-size:11px; font-weight:700; color:var(--text3); border:1px solid var(--border); border-radius:20px; padding:2px 10px }
+.maq-apont.on{ color:var(--ok,#1a7f37); border-color:color-mix(in srgb,var(--ok,#1a7f37) 45%,transparent); background:color-mix(in srgb,var(--ok,#1a7f37) 10%,transparent) }
+.maq-body{ padding:12px 15px; border-top:1px solid var(--border) }
+.maq-topline{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px }
+.maq-apont-lbl{ font-size:12px; font-weight:600; display:flex; align-items:center; gap:5px }
+/* Telas de cadastro ocupam a largura toda (fora a sidebar), alinhadas à esquerda */
+#maquinas-view .cat-box, #vendedores-view .cat-box, #usuarios-view .cat-box{ max-width:none !important; width:auto; margin:18px 20px 40px !important }
+/* Entregas por data: tabela única com faixas de data (estilo ERP) */
+.ent-tbl-unica thead th{ position:sticky; top:0; background:var(--card); z-index:1 }
+.ent-tbl .ent-band td{ background:#cfe0f3; color:#17365d; font-weight:800; padding:10px 14px; cursor:pointer; border-bottom:1px solid #a9c6e8; border-top:1px solid #a9c6e8 }
+.ent-tbl .ent-band td:hover{ background:#c3d8ef }
+.ent-tbl .ent-band .ent-chev{ color:#2f5e97; margin-right:8px }
+.ent-tbl .ent-band .ent-data{ font-size:14px }
+.ent-tbl .ent-band .ent-cnt{ margin-left:10px; font-size:12px; color:#3a618f; font-weight:700 }
+:root[data-theme=dark] .ent-tbl .ent-band td{ background:#2b3b52; color:#cfe0f3; border-color:#3a5272 }
+:root[data-theme=dark] .ent-tbl .ent-band td:hover{ background:#324462 }
+:root[data-theme=dark] .ent-tbl .ent-band .ent-chev{ color:#9bbce4 }
+:root[data-theme=dark] .ent-tbl .ent-band .ent-cnt{ color:#9bbce4 }
+.ent-tbl .ent-item td{ border-bottom:1px solid var(--border); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-top:6px; padding-bottom:6px; font-size:12.5px }
+.ent-tbl .ent-item td.qtd{ overflow:visible }
+.ent-tbl .ent-desc{ color:var(--text3); font-size:11px; margin-left:6px }
+.ent-tbl .ent-item.ent-odd td{ background:rgba(37,99,175,.035) }
+:root[data-theme=dark] .ent-tbl .ent-item.ent-odd td{ background:rgba(90,140,210,.06) }
+.ent-tbl-unica th, .ent-tbl-unica .ent-item td{ padding-left:11px; padding-right:11px }
+.ent-tbl .ent-sub td{ background:var(--bg2); font-weight:700; border-bottom:2px solid var(--border) }
+.ent-tbl .ent-sub .ent-sub-l{ color:var(--text3); font-weight:600; text-transform:uppercase; font-size:11px; letter-spacing:.03em }
 .carr-h{ display:flex; align-items:center; justify-content:space-between; font-size:15px; margin-bottom:4px }
 .carr-x{ background:transparent; border:0; color:var(--text3); cursor:pointer; font-size:16px }
 .carr-sub{ font-size:12px; color:var(--text3); margin-bottom:12px }
@@ -503,15 +575,17 @@ body.sb-collapsed #side-nav .sb-top{ justify-content:center }
     <div class="sb-gt">Produção</div>
     <a class="sb-i" data-aba="painel" href="#" onclick="navAba('painel');return false" title="Painel de produção"><i class="ti ti-layout-dashboard"></i><span>Painel de produção</span></a>
     <a class="sb-i" data-aba="entregas" href="#" onclick="navAba('entregas');return false" title="Entregas por data"><i class="ti ti-calendar-event"></i><span>Entregas por data</span></a>
+    <a class="sb-i" data-aba="pendencias" href="#" onclick="navAba('pendencias');return false" title="Pendências"><i class="ti ti-alert-triangle"></i><span>Pendências</span></a>
     <div class="sb-gt">Indicadores</div>
     <a class="sb-i" data-aba="kpis" href="#" onclick="navAba('kpis');return false" title="KPIs"><i class="ti ti-chart-bar"></i><span>KPIs</span></a>
     <div class="sb-gt">Configurações</div>
     <a class="sb-i" data-aba="fichas" href="#" onclick="navAba('fichas');return false" title="Fichas técnicas"><i class="ti ti-file-text"></i><span>Fichas técnicas</span></a>
     <a class="sb-i" data-aba="maquinas" href="#" onclick="navAba('maquinas');return false" title="Máquinas"><i class="ti ti-printer"></i><span>Máquinas</span></a>
     <a class="sb-i" data-aba="vendedores" href="#" onclick="navAba('vendedores');return false" title="Vendedores"><i class="ti ti-user-dollar"></i><span>Vendedores</span></a>
-    <a class="sb-i" data-aba="categorias" href="#" onclick="navAba('categorias');return false" title="Categorias"><i class="ti ti-tags"></i><span>Categorias</span></a>
     <a class="sb-i" data-aba="usuarios" href="#" onclick="navAba('usuarios');return false" title="Usuários"><i class="ti ti-users"></i><span>Usuários</span></a>
     <a class="sb-i" data-aba="historico" href="#" onclick="navAba('historico');return false" title="Histórico"><i class="ti ti-history"></i><span>Histórico</span></a>
+    <a class="sb-i" data-aba="listas" href="#" onclick="navAba('listas');return false" title="Listas"><i class="ti ti-list-check"></i><span>Listas</span></a>
+    <a class="sb-i" data-aba="permissoes" href="#" onclick="navAba('permissoes');return false" title="Permissões"><i class="ti ti-shield-lock"></i><span>Permissões</span></a>
   </nav>
 </aside>
 <div id="side-backdrop" onclick="fecharSidebar()"></div>
@@ -596,6 +670,29 @@ function setSidebarAtivo(key){ try{ document.querySelectorAll('#side-nav [data-a
     <div class="ent-f grow"><label>Buscar</label><div class="ent-search"><i class="ti ti-search"></i><input id="ent-busca" placeholder="Cliente, produto, pedido…" oninput="renderEntregas()"></div></div>
   </div>
   <div id="entregas-grupos"></div>
+</div>
+<div id="pendencias-view" style="display:none">
+  <div class="ent-head">
+    <div><h2 class="ent-title">Pendências / impedimentos</h2><div class="ent-sub">Itens travados aguardando faca, clichê, material, etc.</div></div>
+  </div>
+  <div class="ent-filtros">
+    <div class="ent-f"><label>Tipo</label><select id="pend-f-tipo" onchange="renderPendencias()"><option value="">Todos os tipos</option></select></div>
+    <div class="ent-f"><label>Situação</label><select id="pend-f-status" onchange="renderPendencias()"><option value="aberta">Abertas</option><option value="resolvida">Resolvidas</option><option value="">Todas</option></select></div>
+    <div class="ent-f grow"><label>Buscar</label><div class="ent-search"><i class="ti ti-search"></i><input id="pend-f-busca" placeholder="Cliente, produto, pedido…" oninput="renderPendencias()"></div></div>
+  </div>
+  <div id="pendencias-conteudo"></div>
+</div>
+<div id="listas-view" style="display:none">
+  <div class="ent-head">
+    <div><h2 class="ent-title">Listas</h2><div class="ent-sub">Edite as opções usadas no sistema sem depender de ajuste no código.</div></div>
+  </div>
+  <div id="listas-conteudo"></div>
+</div>
+<div id="permissoes-view" style="display:none">
+  <div class="ent-head">
+    <div><h2 class="ent-title">Permissões</h2><div class="ent-sub">Defina, por papel, o que cada um vê e pode fazer. O gestor sempre tem acesso total.</div></div>
+  </div>
+  <div id="permissoes-conteudo"></div>
 </div>
 <div id="painel-view">
   <div class="aviso-orfas" id="aviso-orfas"></div>
@@ -855,6 +952,7 @@ var GRUPOS=[
 function dispNome(g){var f=GRUPOS.find(function(x){return x.nome===g;});return(f&&f.display)?f.display:(g||'(sem grupo)');}
 // Apenas apresentação: fotografias dos equipamentos. Sem impacto nos cálculos ou banco.
 function imagemGrupoHtml(g){
+  return ''; // imagens das máquinas removidas do painel (a pedido do usuário)
   var imagens={
     'FLEXO 250':'flexo-250.webp',
     'FLEXO 350':'flexo-350.webp',
@@ -1180,6 +1278,7 @@ async function iniciar(){
   document.getElementById('usuario-info').textContent=PERFIL.nome+' ('+rotuloPapel(PERFIL.papel)+')';
 
   // 3) adaptar interface ao papel
+  await carregarPermissoes();
   aplicarPermissoesUI();
 
   // 4) carregar dados do banco e montar painel
@@ -1245,32 +1344,59 @@ function desligarRealtime(){
 }
 
 // Mostra/esconde recursos conforme o papel do usuario.
+// ===================== PERMISSÕES POR PAPEL (flags; gestor edita na aba Permissões) =====================
+var _PERMS={}; // papel -> {chave:bool}
+var PERM_GESTOR_TABS=['categorias','vendedores','maquinas','usuarios','historico','listas','permissoes'];
+function permDefault(papel,chave){
+  if(chave.indexOf('ver_')===0){ var aba=chave.slice(4); return PERM_GESTOR_TABS.indexOf(aba)<0; } // só gestor nas abas de cadastro; demais visíveis
+  if(chave==='acao_editar')return papel==='editor';
+  if(chave==='acao_upload')return false;
+  if(chave==='acao_apontar')return true;
+  return true;
+}
+function permDe(papel,chave){ var p=_PERMS[papel]; if(p&&Object.prototype.hasOwnProperty.call(p,chave))return !!p[chave]; return permDefault(papel,chave); }
+function perm(chave){ var papel=(PERFIL&&PERFIL.papel)||''; if(papel==='gestor')return true; return permDe(papel,chave); }
+async function carregarPermissoes(){
+  _PERMS={};
+  try{ var r=await supabaseClient.from('papel_permissoes').select('papel,chave,permitido');
+    if(!r.error){ (r.data||[]).forEach(function(x){ (_PERMS[x.papel]=_PERMS[x.papel]||{})[x.chave]=!!x.permitido; }); } }
+  catch(e){}
+}
+var PERM_PAPEIS=[['editor','Editor'],['visualizador','Visualizador'],['visualizador_maquina','Operador'],['representante','Representante']];
+var PERM_ABAS=[['ver_painel','Painel de produção'],['ver_entregas','Entregas por data'],['ver_pendencias','Pendências'],['ver_kpis','KPIs'],['ver_fichas','Fichas técnicas'],['ver_maquinas','Máquinas'],['ver_vendedores','Vendedores'],['ver_usuarios','Usuários'],['ver_historico','Histórico'],['ver_listas','Listas']];
+var PERM_ACOES=[['acao_editar','Editar programação / finalizar'],['acao_upload','Subir planilhas (upload)'],['acao_apontar','Apontar produção']];
+async function permSet(papel,chave,val){
+  try{ var r=await supabaseClient.from('papel_permissoes').upsert({papel:papel,chave:chave,permitido:!!val},{onConflict:'papel,chave'}); if(r.error)throw r.error;
+    (_PERMS[papel]=_PERMS[papel]||{})[chave]=!!val; }
+  catch(e){ alert('Não foi possível salvar a permissão.\n'+(e.message||e)); renderPermissoes(); }
+}
+function renderPermissoes(){
+  var el=document.getElementById('permissoes-conteudo'); if(!el)return;
+  function linha(def){
+    var chave=def[0];
+    var tds=PERM_PAPEIS.map(function(pp){ return '<td class="perm-c"><input type="checkbox"'+(permDe(pp[0],chave)?' checked':'')+' onchange="permSet(\''+pp[0]+'\',\''+chave+'\',this.checked)"></td>'; }).join('');
+    return '<tr><td class="perm-l">'+apEsc(def[1])+'</td>'+tds+'</tr>';
+  }
+  var cols=PERM_PAPEIS.length+1;
+  var head='<thead><tr><th class="perm-l"></th>'+PERM_PAPEIS.map(function(pp){return '<th class="perm-c">'+apEsc(pp[1])+'</th>';}).join('')+'</tr></thead>';
+  var body='<tr class="perm-sec"><td colspan="'+cols+'">Abas que o papel vê</td></tr>'+PERM_ABAS.map(linha).join('')+
+    '<tr class="perm-sec"><td colspan="'+cols+'">Ações</td></tr>'+PERM_ACOES.map(linha).join('');
+  el.innerHTML='<div class="perm-nota"><b>O gestor sempre tem acesso total</b> (por isso não aparece na tabela). As mudanças valem para cada papel no próximo carregamento do usuário. Os flags controlam o que a <b>interface</b> mostra/habilita — a proteção dos dados continua nas regras do banco (RLS); ampliar o que um papel <b>grava</b> além do permitido hoje exige também ajuste de RLS.</div>'+
+    '<div class="table-wrap"><table class="perm-tbl">'+head+'<tbody>'+body+'</tbody></table></div>';
+}
 function aplicarPermissoesUI(){
   var ehGestor = PERFIL.papel==='gestor';
-  var podeEditar = (PERFIL.papel==='gestor'||PERFIL.papel==='editor');
-  // Upload: so gestor
   var painelUpload=document.querySelector('.upload-panel');
-  if(painelUpload) painelUpload.style.display = ehGestor ? '' : 'none';
-  // Aba categorias e Usuarios: so gestor
-  var tabCat=document.getElementById('tab-categorias');
-  if(tabCat) tabCat.style.display = ehGestor ? '' : 'none';
-  var tabUsr=document.getElementById('tab-usuarios');
-  if(tabUsr) tabUsr.style.display = ehGestor ? '' : 'none';
-  var tabHist=document.getElementById('tab-historico');
-  if(tabHist) tabHist.style.display = ehGestor ? '' : 'none';
-  var tabVend=document.getElementById('tab-vendedores');
-  if(tabVend) tabVend.style.display = ehGestor ? '' : 'none';
-  var tabMaq=document.getElementById('tab-maquinas');
-  if(tabMaq) tabMaq.style.display = ehGestor ? '' : 'none';
-  // guarda flags globais para o render usar
-  window._podeEditar = podeEditar;
+  if(painelUpload) painelUpload.style.display = perm('acao_upload') ? '' : 'none';
+  // Abas legadas do topo (ocultas no layout atual) — mantém gating por gestor
+  ['tab-categorias','tab-usuarios','tab-historico','tab-vendedores','tab-maquinas'].forEach(function(id){ var t=document.getElementById(id); if(t)t.style.display=ehGestor?'':'none'; });
+  window._podeEditar = perm('acao_editar');
   window._ehOperador = (PERFIL.papel==='visualizador_maquina');
-  // Espelha o gating de papel nos itens da sidebar (mesmo critério das abas).
+  // Sidebar: cada item aparece conforme o flag ver_<aba> do papel (gestor vê tudo).
   try{
-    var gestorOnly=['categorias','vendedores','maquinas','usuarios','historico'];
     document.querySelectorAll('#side-nav .sb-i[data-aba]').forEach(function(el){
       var ab=el.getAttribute('data-aba');
-      el.style.display=(gestorOnly.indexOf(ab)>=0 && !ehGestor)?'none':'';
+      el.style.display = perm('ver_'+ab) ? '' : 'none';
     });
   }catch(e){}
 }
@@ -1390,6 +1516,8 @@ async function recarregarDoBanco(silencioso){
       var pr=await supabaseClient.from('ordem_pendencias').select('*').eq('status','aberta');
       if(!pr.error){ (pr.data||[]).forEach(function(p){ var pik=idToPik[p.ordem_id]; if(pik){ (PEND[pik]=PEND[pik]||[]).push(p); } }); }
     }catch(e){ PEND={}; }
+    // Tipos de pendencia editaveis (tabela 17_; mantem o default se ausente)
+    try{ var pt=await supabaseClient.from('pendencia_tipos').select('nome').eq('ativo',true).order('ordem'); if(!pt.error&&pt.data&&pt.data.length)PEND_TIPOS=pt.data.map(function(x){return x.nome;}); }catch(e){}
 
     if(msg&&!silencioso) msg.textContent='Dados carregados do banco.';
     processarTudo();
@@ -1957,31 +2085,36 @@ function renderEntregas(){
   var _tb=document.getElementById('ent-toggleall');
   if(_tb){ var _algum=chaves.some(function(k){return !entFechada[k];}); _tb.innerHTML='<i class="ti ti-chevrons-'+(_algum?'up':'down')+'"></i> '+(_algum?'Recolher tudo':'Expandir tudo'); }
   if(!chaves.length){ el.innerHTML='<div class="ent-vazio">Nenhum item a exibir com os filtros atuais.</div>'; return; }
-  el.innerHTML=chaves.map(function(k){
+  function entItemRow(r,alt){
+    var stTxt=statusLabel(r.status), cls=(r.status||'').toLowerCase();
+    if(r.status==='EM_PRODUCAO' && r.apEntry && r.apEntry.status){ var subm={em_setup:'Em setup',setup_ok:'Setup concluído',em_producao:'Em produção',parado:'Em espera'}; if(subm[r.apEntry.status]){ stTxt=subm[r.apEntry.status]; if(r.apEntry.status==='parado')cls='ent-espera'; } }
+    var maq=(r.status==='AGUARDANDO_FATURAMENTO'||!r.grupo)?'—':(apEsc(dispNome(r.grupo))+(r.sub?(' / '+apEsc(r.sub)):''));
+    var desc=(r.produtoDesc||'').split(' - ').slice(1).join(' - ');
+    var prodCell=apEsc(r.produto||'')+(desc?(' <span class="ent-desc">'+apEsc(desc)+'</span>'):'');
+    return '<tr class="ent-item'+(alt?' ent-odd':'')+'">'+
+      '<td class="qtd"><b>'+apEsc(''+r.pedido+'-'+r.item)+'</b></td>'+
+      '<td>'+apEsc(r.pedidoCliente||'—')+'</td>'+
+      '<td title="'+apEsc(r.clienteNome||'')+'">'+apEsc(r.clienteNome||'')+'</td>'+
+      '<td title="'+apEsc((r.produto||'')+(desc?(' — '+desc):''))+'">'+prodCell+'</td>'+
+      '<td class="qtd">'+((r.saldo!=null&&r.saldo!=='')?apEsc(fmtQtd(r.saldo)+' '+(r.um||'')):'—')+'</td>'+
+      '<td><span class="badge '+cls+'">'+apEsc(stTxt)+'</span></td>'+
+      '<td>'+maq+'</td>'+
+      '<td title="'+apEsc(r.obs||'')+'">'+apEsc(r.obs||'')+'</td></tr>';
+  }
+  var corpo=chaves.map(function(k){
     var lista=grupos[k], d=new Date(k+'T00:00:00'), fechada=!!entFechada[k];
-    var rows=lista.map(function(r){
-      var stTxt=statusLabel(r.status), cls=(r.status||'').toLowerCase();
-      if(r.status==='EM_PRODUCAO' && r.apEntry && r.apEntry.status){ var subm={em_setup:'Em setup',setup_ok:'Setup concluído',em_producao:'Em produção',parado:'Em espera'}; if(subm[r.apEntry.status]){ stTxt=subm[r.apEntry.status]; if(r.apEntry.status==='parado')cls='ent-espera'; } }
-      var maq=(r.status==='AGUARDANDO_FATURAMENTO'||!r.grupo)?'—':(apEsc(dispNome(r.grupo))+(r.sub?(' / '+apEsc(r.sub)):''));
-      var desc=(r.produtoDesc||'').split(' - ').slice(1).join(' - ');
-      return '<tr>'+
-        '<td class="qtd"><b>'+apEsc(''+r.pedido+'-'+r.item)+'</b></td>'+
-        '<td>'+apEsc(r.pedidoCliente||'—')+'</td>'+
-        '<td>'+apEsc(r.clienteNome||'')+'</td>'+
-        '<td>'+apEsc(r.produto||'')+(desc?('<div class="desc">'+apEsc(desc)+'</div>'):'')+'</td>'+
-        '<td class="qtd">'+((r.saldo!=null&&r.saldo!=='')?apEsc(fmtQtd(r.saldo)+' '+(r.um||'')):'—')+'</td>'+
-        '<td><span class="badge '+cls+'">'+apEsc(stTxt)+'</span></td>'+
-        '<td>'+maq+'</td>'+
-        '<td>'+apEsc(r.obs||'')+'</td></tr>';
-    }).join('');
-    var subt={}; lista.forEach(function(r){ if(r.saldo!=null&&r.saldo!==''){ var u=(r.um||'—'); subt[u]=(subt[u]||0)+Number(r.saldo); } });
-    var subtTxt=Object.keys(subt).sort().map(function(u){ return fmtQtd(subt[u])+' '+u; }).join(' · ')||'—';
-    var tfoot='<tfoot><tr><td colspan="4" class="ent-sub-l">Subtotal · '+lista.length+' item'+(lista.length>1?'s':'')+'</td><td class="qtd">'+apEsc(subtTxt)+'</td><td colspan="3"></td></tr></tfoot>';
-    return '<div class="ent-grp'+(fechada?' fechada':'')+'">'+
-      '<div class="ent-grp-h" onclick="entToggleData(\''+k+'\')"><span class="ent-chev"><i class="ti ti-chevron-down"></i></span><span class="ent-cal"><i class="ti ti-calendar-event"></i></span><span class="ent-data">'+entDataLonga(d)+'</span><span class="ent-cnt">'+lista.length+' item'+(lista.length>1?'s':'')+'</span></div>'+
-      '<div class="table-wrap"><table class="ent-tbl"><colgroup><col style="width:8%"><col style="width:11%"><col style="width:15%"><col style="width:23%"><col style="width:12%"><col style="width:11%"><col style="width:12%"><col style="width:8%"></colgroup><thead><tr><th>Pedido-Item</th><th>Pedido cliente</th><th>Cliente</th><th>Produto</th><th>Saldo a entregar</th><th>Status</th><th>Máquina</th><th>Observações</th></tr></thead><tbody>'+rows+'</tbody>'+tfoot+'</table></div>'+
-    '</div>';
+    var banda='<tr class="ent-band'+(fechada?' fechada':'')+'" onclick="entToggleData(\''+k+'\')"><td colspan="8">'+
+      '<span class="ent-chev"><i class="ti ti-chevron-'+(fechada?'right':'down')+'"></i></span>'+
+      '<span class="ent-data">'+entDataLonga(d)+'</span>'+
+      '<span class="ent-cnt">'+lista.length+' item'+(lista.length>1?'s':'')+'</span></td></tr>';
+    if(fechada)return banda;
+    var itens=lista.map(function(r,i){return entItemRow(r,i%2===1);}).join('');
+    return banda+itens;
   }).join('');
+  el.innerHTML='<div class="table-wrap"><table class="ent-tbl ent-tbl-unica">'+
+    '<colgroup><col style="width:7%"><col style="width:10%"><col style="width:16%"><col style="width:27%"><col style="width:10%"><col style="width:10%"><col style="width:13%"><col style="width:7%"></colgroup>'+
+    '<thead><tr><th>Pedido-Item</th><th>Pedido cliente</th><th>Cliente</th><th>Produto</th><th>Saldo a entregar</th><th>Status</th><th>Máquina</th><th>Observações</th></tr></thead>'+
+    '<tbody>'+corpo+'</tbody></table></div>';
 }
 
 function mudarAba(aba){
@@ -2026,6 +2159,15 @@ function mudarAba(aba){
   var ev=document.getElementById('entregas-view');
   if(ev)ev.style.display=aba==='entregas'?'block':'none';
   if(aba==='entregas'&&typeof renderEntregas==='function')renderEntregas();
+  var pv=document.getElementById('pendencias-view');
+  if(pv)pv.style.display=aba==='pendencias'?'block':'none';
+  if(aba==='pendencias'&&typeof renderPendencias==='function')renderPendencias();
+  var lv=document.getElementById('listas-view');
+  if(lv)lv.style.display=aba==='listas'?'block':'none';
+  if(aba==='listas'&&typeof renderListas==='function')renderListas();
+  var prv=document.getElementById('permissoes-view');
+  if(prv)prv.style.display=aba==='permissoes'?'block':'none';
+  if(aba==='permissoes'&&typeof renderPermissoes==='function')renderPermissoes();
   try{ document.querySelectorAll('#side-nav [data-aba]').forEach(function(el){ el.classList.toggle('ativo', el.getAttribute('data-aba')===aba); }); }catch(e){}
 }
 
@@ -2678,7 +2820,7 @@ function linhaHtml(r,draggable){
     var _reab=r.apFinalizado?('reabrirApontamento(\''+r.key+'\')'):('reabrirItem(\''+r.key+'\')');
     maquinaCell='<button class="btn-reabrir" onclick="'+_reab+'"><i class="ti ti-arrow-back-up"></i> Reabrir</button>';
   }
-  if(r.status==='EM_PRODUCAO'&&grupoApontamentoOn(r.grupo)){
+  if(r.status==='EM_PRODUCAO'&&grupoApontamentoOn(r.grupo)&&(typeof perm!=='function'||perm('acao_apontar'))){
     maquinaCell+='<button class="btn-apontar" onclick="abrirApontamento(\''+r.key+'\')"><i class="ti ti-stopwatch"></i> Apontamento</button>';
   }
   if(r.status==='EM_PRODUCAO'&&window._podeEditar&&r.opAtual&&r.opAtual.opId){
@@ -2749,7 +2891,7 @@ function renderPainel(){
   emProducao.forEach(function(r){var g=r.grupo||'(SEM GRUPO)';(porGrupo[g]=porGrupo[g]||[]).push(r);});
   porGrupoAtual=porGrupo;
 
-  var html=(window._ehOperador?'':pendPanelHtml());
+  var html='';
   var ordemGrupos=GRUPOS.map(function(g){return g.nome;});
   Object.keys(porGrupo).sort(function(a,b){
     var ia=ordemGrupos.indexOf(a),ib=ordemGrupos.indexOf(b);
@@ -3083,16 +3225,29 @@ function renderMaquinas(){
           '<button class="btn-sec" onclick="adicionarSubMaquina(\''+g.nome.replace(/\'/g,"")+'\')">+ máquina</button>'+
         '</div>'+
       '</div>';
-    return '<div class="grupo-card" style="margin-bottom:14px">'+
-      '<div class="grupo-header" style="cursor:default">'+
-        '<div class="grupo-nome"><div class="grupo-icon">'+apEsc(g.icon||'??')+'</div>'+apEsc(g.display||g.nome)+' &nbsp;'+modoSel+
-          '<label title="Liga o fluxo de apontamento neste grupo; desligado = programação manual" style="font-size:12px;margin-left:12px;font-weight:600;color:'+(g.apontamento_ativo?'var(--ok,#1a7f37)':'var(--text3)')+'"><input type="checkbox" '+(g.apontamento_ativo?'checked':'')+' onchange="toggleApontamentoGrupo('+gi+',this.checked)"> Apontamento ativo</label></div>'+
-        '<button class="btn-sec" onclick="removerGrupoMaquina(\''+g.nome.replace(/\'/g,"")+'\')">Remover grupo</button>'+
-      '</div>'+
-      '<div style="padding:12px 18px">'+params+subsHtml+'</div>'+
-    '</div>';
+    var aberto=!!_maqAberto[idBase];
+    var modoLabel=(MODO_OPTS_MAQ.filter(function(m){return m[0]===modo;})[0]||[null,modo])[1];
+    var velTxt=ehValid?'—':((g.velocidade!=null&&g.velocidade!=='')?(g.velocidade+' '+velunit):'—');
+    var cabecalho=
+      '<div class="maq-head" onclick="toggleMaqGrupo(\''+idBase+'\')">'+
+        '<i class="ti ti-chevron-'+(aberto?'down':'right')+' maq-chev"></i>'+
+        '<div class="grupo-icon">'+apEsc(g.icon||'??')+'</div>'+
+        '<span class="maq-nome">'+apEsc(g.display||g.nome)+'</span>'+
+        '<span class="maq-chip">'+apEsc(modoLabel)+'</span>'+
+        '<span class="maq-vel">'+apEsc(velTxt)+'</span>'+
+        '<span class="maq-apont '+(g.apontamento_ativo?'on':'')+'">'+(g.apontamento_ativo?'Apontamento ON':'Manual')+'</span>'+
+      '</div>';
+    var corpo=aberto?('<div class="maq-body">'+
+        '<div class="maq-topline"><span class="ap-hint">Modo</span>'+modoSel+
+          '<label class="maq-apont-lbl" title="Liga o fluxo de apontamento neste grupo; desligado = programação manual"><input type="checkbox" '+(g.apontamento_ativo?'checked':'')+' onchange="toggleApontamentoGrupo('+gi+',this.checked)"> Apontamento ativo</label>'+
+          '<button class="btn-sec" style="margin-left:auto" onclick="removerGrupoMaquina(\''+g.nome.replace(/\'/g,"")+'\')">Remover grupo</button></div>'+
+        params+subsHtml+
+      '</div>'):'';
+    return '<div class="maq-row'+(aberto?' aberto':'')+'">'+cabecalho+corpo+'</div>';
   }).join('');
 }
+var _maqAberto={};
+function toggleMaqGrupo(idBase){ _maqAberto[idBase]=!_maqAberto[idBase]; renderMaquinas(); }
 async function saveGrupoParam(nome,payload,reRender){
   try{ var r=await supabaseClient.from('maquinas_grupos').update(payload).eq('nome',nome); if(r.error)throw r.error; await recarregarConfigMaquinas(!reRender); }
   catch(e){ alert('Não foi possível salvar o parâmetro: '+(e.message||e)); }
@@ -3485,6 +3640,8 @@ function renderPendenciaPopup(){
     '<div class="carr-sub">'+apEsc((c.produto||'')+' · pedido '+c.pedido+'-'+c.item)+'</div>'+
     '<div class="pend-lista">'+abertas+'</div>'+
     '<div class="carr-row" style="margin-top:12px"><label for="pend-tipo">Nova pendência</label><select id="pend-tipo" class="pend-sel">'+opts+'</select></div>'+
+    '<div class="carr-row"><label for="pend-dsol">Data de solicitação</label><input type="date" id="pend-dsol" class="pend-sel"></div>'+
+    '<div class="carr-row"><label for="pend-dprev">Previsão de chegada</label><input type="date" id="pend-dprev" class="pend-sel"></div>'+
     '<textarea id="pend-obs" class="pend-ta" placeholder="Observação (opcional): nº da faca, material, etc."></textarea>'+
     '<div class="carr-actions"><button class="btn-sec" onclick="fecharPendencia()">Fechar</button><button class="btn-primary" onclick="salvarPendencia()">Adicionar pendência</button></div>'+
   '</div>';
@@ -3496,20 +3653,26 @@ async function salvarPendencia(){
     var c=PEND_CTX; if(!c.ordemId)return;
     var tipo=(document.getElementById('pend-tipo')||{}).value||'Outro';
     var obs=((document.getElementById('pend-obs')||{}).value||'').trim();
-    var r=await supabaseClient.from('ordem_pendencias').insert({ordem_id:c.ordemId,tipo:tipo,obs:obs||null});
+    var dsol=((document.getElementById('pend-dsol')||{}).value||'')||null;
+    var dprev=((document.getElementById('pend-dprev')||{}).value||'')||null;
+    var r=await supabaseClient.from('ordem_pendencias').insert({ordem_id:c.ordemId,tipo:tipo,obs:obs||null,data_solicitacao:dsol,previsao_chegada:dprev});
     if(r.error)throw r.error;
     fecharPendencia();
+    pendRefreshTab();
     recarregarDoBanco(true);
   }catch(e){ alert('Não foi possível salvar a pendência.\n'+(e.message||e)); }
 }
 async function resolverPendencia(id){
+  if(!confirm('Marcar esta pendência como RESOLVIDA?'))return;
   try{
     var r=await supabaseClient.from('ordem_pendencias').update({status:'resolvida',resolvido_em:new Date().toISOString(),resolvido_por:(window._meuUid||null)}).eq('id',id);
     if(r.error)throw r.error;
     fecharPendencia();
+    pendRefreshTab();
     recarregarDoBanco(true);
   }catch(e){ alert('Não foi possível resolver a pendência.\n'+(e.message||e)); }
 }
+function pendRefreshTab(){ var v=document.getElementById('pendencias-view'); if(v&&v.style.display!=='none'&&typeof renderPendencias==='function')renderPendencias(); }
 // ===================== CONFIGURAÇÕES DESTA OS (roteiro/carreiras pontuais) =====================
 // Abre uma mini-ficha SO desta OS, pre-preenchida com o padrao. Alteracoes valem so para esta
 // OS (reconstroi o ordem_operacoes dela) e marcam ordens.roteiro_custom=true p/ a materializacao
@@ -3611,6 +3774,119 @@ async function salvarConfigOS(){
     fecharConfigOS();
     recarregarDoBanco(true);
   }catch(e){ alert('Não foi possível salvar o roteiro desta OS.\n'+(e.message||e)); }
+}
+function pFmtData(v){ if(!v)return '—'; var s=''+v; var m=s.match(/^(\d{4})-(\d{2})-(\d{2})/); if(m)return m[3]+'/'+m[2]+'/'+m[1]; var d=new Date(s); return isNaN(d.getTime())?'—':(('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+d.getFullYear()); }
+var PEND_ROWS={};
+async function pendSetData(id,campo,val){
+  try{ var upd={}; upd[campo]=val||null; var r=await supabaseClient.from('ordem_pendencias').update(upd).eq('id',id); if(r.error)throw r.error; if(PEND_ROWS[id])PEND_ROWS[id][campo]=val||null; }
+  catch(e){ alert('Não foi possível salvar a data.\n'+(e.message||e)); renderPendencias(); }
+}
+function pendEditObs(id){
+  var p=PEND_ROWS[id]||{};
+  var o=document.getElementById('pendobs-modal');
+  if(!o){ o=document.createElement('div'); o.id='pendobs-modal'; o.className='carr-ov'; document.body.appendChild(o); }
+  o.innerHTML='<div class="carr-box"><div class="carr-h"><b>Observação da pendência</b><button class="carr-x" onclick="pendObsFechar()">✕</button></div>'+
+    '<textarea id="pendobs-ta" class="pend-ta" placeholder="Ex.: faca comprada, aguardando entrega da gráfica…">'+apEsc(p.obs||'')+'</textarea>'+
+    '<div class="carr-actions"><button class="btn-sec" onclick="pendObsFechar()">Cancelar</button><button class="btn-primary" onclick="pendObsSalvar(\''+id+'\')">Salvar</button></div></div>';
+  o.style.display='flex';
+}
+function pendObsFechar(){ var o=document.getElementById('pendobs-modal'); if(o)o.style.display='none'; }
+async function pendObsSalvar(id){
+  try{ var v=((document.getElementById('pendobs-ta')||{}).value||'').trim(); var r=await supabaseClient.from('ordem_pendencias').update({obs:v||null}).eq('id',id); if(r.error)throw r.error; pendObsFechar(); renderPendencias(); }
+  catch(e){ alert('Não foi possível salvar a observação.\n'+(e.message||e)); }
+}
+async function renderPendencias(){
+  var el=document.getElementById('pendencias-conteudo'); if(!el)return;
+  var selT=document.getElementById('pend-f-tipo');
+  if(selT&&selT.options.length<=1){ PEND_TIPOS.forEach(function(t){ var o=document.createElement('option'); o.value=t; o.textContent=t; selT.appendChild(o); }); }
+  var ftipo=(document.getElementById('pend-f-tipo')||{}).value||'';
+  var fstatus=(document.getElementById('pend-f-status')||{}).value; if(fstatus===undefined)fstatus='aberta';
+  var q=(((document.getElementById('pend-f-busca')||{}).value)||'').toLowerCase().trim();
+  el.innerHTML='<div class="ent-vazio">Carregando…</div>';
+  try{
+    var sel=supabaseClient.from('ordem_pendencias').select('*, ordens(pedido,item,produto_codigo,descricao_origem,entrega,cliente_nome)');
+    if(fstatus)sel=sel.eq('status',fstatus);
+    if(ftipo)sel=sel.eq('tipo',ftipo);
+    var rows=(await sel.order('criado_em',{ascending:false})).data||[];
+    rows=rows.filter(function(p){ var od=p.ordens||{}; if(!q)return true; return ((od.cliente_nome||'')+' '+(od.produto_codigo||'')+' '+(od.descricao_origem||'')+' '+(od.pedido||'')+'-'+(od.item||'')).toLowerCase().indexOf(q)>=0; });
+    PEND_ROWS={}; rows.forEach(function(p){ PEND_ROWS[p.id]=p; });
+    if(!rows.length){ el.innerHTML='<div class="ent-vazio">Nenhuma pendência com os filtros atuais.</div>'; return; }
+    var body=rows.map(function(p){
+      var od=p.ordens||{};
+      var desc=(od.descricao_origem||'').split(' - ').slice(1).join(' - ')||(od.descricao_origem||'');
+      var editavel=(p.status==='aberta'&&window._podeEditar);
+      function dataCell(campo){
+        if(editavel)return '<td class="qtd"><input type="date" class="pend-din" value="'+apEsc(p[campo]||'')+'" onchange="pendSetData(\''+p.id+'\',\''+campo+'\',this.value)"></td>';
+        return '<td class="qtd">'+apEsc(pFmtData(p[campo]))+'</td>';
+      }
+      var acoes=editavel
+        ? '<button class="btn-sec" onclick="pendEditObs(\''+p.id+'\')">Obs</button> <button class="btn-primary" onclick="resolverPendencia(\''+p.id+'\')">Resolver</button>'
+        : (p.status==='resolvida'?'<span style="color:var(--ok,#128a52)">resolvida</span>':'');
+      return '<tr>'+
+        '<td class="qtd"><b>'+apEsc((od.pedido||'')+'-'+(od.item||''))+'</b></td>'+
+        '<td class="qtd">'+apEsc(od.produto_codigo||'')+'</td>'+
+        '<td>'+apEsc(desc)+'</td>'+
+        '<td>'+apEsc(od.cliente_nome||'')+'</td>'+
+        '<td class="qtd">'+apEsc(pFmtData(od.entrega))+'</td>'+
+        '<td><span class="badge pend-badge">'+apEsc(p.tipo)+'</span>'+(p.obs?('<div class="desc">'+apEsc(p.obs)+'</div>'):'')+'</td>'+
+        '<td class="qtd">'+apEsc(pFmtData(p.criado_em))+'</td>'+
+        dataCell('data_solicitacao')+
+        dataCell('previsao_chegada')+
+        '<td class="pend-acoes">'+acoes+'</td>'+
+      '</tr>';
+    }).join('');
+    el.innerHTML='<div class="table-wrap"><table class="ent-tbl"><thead><tr><th>Pedido-Item</th><th>PA</th><th>Descrição</th><th>Cliente</th><th>Entrega</th><th>Pendência</th><th>Aberta em</th><th>Solicitação</th><th>Previsão</th><th></th></tr></thead><tbody>'+body+'</tbody></table></div>';
+  }catch(e){ el.innerHTML='<div class="ent-vazio">Erro ao carregar as pendências. O schema 15_ atualizado foi aplicado?<br>'+apEsc(e.message||e)+'</div>'; }
+}
+// ===================== ABA LISTAS (editar opções do sistema — só gestor) =====================
+var LISTAS_CFG=[
+  {tabela:'motivos_parada', titulo:'Motivos de parada', sub:'Opções que o operador escolhe ao registrar uma parada no apontamento.', temAtivo:true},
+  {tabela:'pendencia_tipos', titulo:'Tipos de pendência', sub:'Opções do botão de pendência e do filtro da aba Pendências.', temAtivo:true},
+  {tabela:'categorias_obs', titulo:'Categorias de observação', sub:'Opções de categoria usadas nas observações.', temAtivo:false}
+];
+var LISTAS_DADOS={};
+async function renderListas(){
+  var el=document.getElementById('listas-conteudo'); if(!el)return;
+  el.innerHTML='<div class="ent-vazio">Carregando…</div>';
+  try{
+    var html='';
+    for(var i=0;i<LISTAS_CFG.length;i++){
+      var cfg=LISTAS_CFG[i], rows=[];
+      try{ rows=(await supabaseClient.from(cfg.tabela).select('*').order('ordem')).data||[]; }catch(e){ rows=[]; }
+      LISTAS_DADOS[cfg.tabela]=rows;
+      var temAtivo=cfg.temAtivo;
+      var items=rows.map(function(r,idx){
+        var inativo=(temAtivo&&r.ativo===false);
+        return '<div class="lst-item'+(inativo?' off':'')+'"><span class="lst-nome">'+apEsc(r.nome)+(inativo?' <span class="lst-tag">inativo</span>':'')+'</span>'+
+          '<span class="lst-acts">'+(temAtivo?('<button class="btn-sec" onclick="listaToggle(\''+cfg.tabela+'\','+idx+')">'+(inativo?'Ativar':'Inativar')+'</button>'):'')+
+          '<button class="btn-sec" onclick="listaRemover(\''+cfg.tabela+'\','+idx+')" title="Excluir">✕</button></span></div>';
+      }).join('')||'<div class="ap-hint">Nenhum item cadastrado.</div>';
+      html+='<div class="lst-card"><h3>'+apEsc(cfg.titulo)+'</h3><div class="lst-sub">'+apEsc(cfg.sub)+'</div>'+
+        '<div class="lst-lista">'+items+'</div>'+
+        '<div class="lst-add"><input id="lst-new-'+cfg.tabela+'" placeholder="Novo item…" onkeydown="if(event.key===\'Enter\'){event.preventDefault();listaAdicionar(\''+cfg.tabela+'\');}"><button class="btn-primary" onclick="listaAdicionar(\''+cfg.tabela+'\')">Adicionar</button></div></div>';
+    }
+    el.innerHTML=html;
+  }catch(e){ el.innerHTML='<div class="ent-vazio">Erro ao carregar as listas.<br>'+apEsc(e.message||e)+'</div>'; }
+}
+async function listaAdicionar(tabela){
+  var inp=document.getElementById('lst-new-'+tabela); var val=((inp||{}).value||'').trim(); if(!val)return;
+  var rows=LISTAS_DADOS[tabela]||[];
+  if(rows.some(function(r){return (r.nome||'').toLowerCase()===val.toLowerCase();})){ alert('Esse item já existe.'); return; }
+  var cfg=LISTAS_CFG.filter(function(c){return c.tabela===tabela;})[0]||{};
+  var payload=(cfg.temAtivo!==false)?{nome:val,ordem:rows.length+1,ativo:true}:{nome:val,ordem:rows.length+1};
+  try{ var r=await supabaseClient.from(tabela).insert(payload); if(r.error)throw r.error; renderListas(); }
+  catch(e){ alert('Não foi possível adicionar.\n'+(e.message||e)); }
+}
+async function listaToggle(tabela,idx){
+  var r=(LISTAS_DADOS[tabela]||[])[idx]; if(!r)return;
+  try{ var u=await supabaseClient.from(tabela).update({ativo:(r.ativo===false)}).eq('nome',r.nome); if(u.error)throw u.error; renderListas(); }
+  catch(e){ alert('Não foi possível alterar.\n'+(e.message||e)); }
+}
+async function listaRemover(tabela,idx){
+  var r=(LISTAS_DADOS[tabela]||[])[idx]; if(!r)return;
+  if(!confirm('Excluir "'+r.nome+'"? (itens já lançados não são afetados)'))return;
+  try{ var d=await supabaseClient.from(tabela).delete().eq('nome',r.nome); if(d.error)throw d.error; renderListas(); }
+  catch(e){ alert('Não foi possível excluir.\n'+(e.message||e)); }
 }
 function pendPanelHtml(){
   var piks=Object.keys(PEND); if(!piks.length)return '';
@@ -4138,15 +4414,18 @@ async function renderFichas(){
     renderFichasLista();
   }catch(e){ el.innerHTML='<div style="color:var(--text3);padding:14px">Erro ao carregar as fichas. O schema 13_ foi aplicado?<br>'+apEsc(e.message||e)+'</div>'; }
 }
+function toggleSemFicha(){ window._semFichaAberto=!window._semFichaAberto; renderFichasLista(); }
 function renderFichasLista(){
   var el=document.getElementById('fichas-conteudo'); if(!el)return;
   var q=(document.getElementById('fichas-busca').value||'').toLowerCase().trim();
   var lista=FICHAS_LISTA.filter(function(f){ return !q||f.codigo.toLowerCase().indexOf(q)>=0||(f.descricao||'').toLowerCase().indexOf(q)>=0; });
   var html='';
   if(FICHAS_SEMFICHA.length){
-    html+='<div style="background:rgba(184,118,11,.08);border:1px solid var(--warn);border-radius:10px;padding:10px 12px;margin-bottom:12px">'+
-      '<b style="color:var(--warn)">Produtos em OS sem ficha ('+FICHAS_SEMFICHA.length+'):</b><br>'+
-      FICHAS_SEMFICHA.map(function(c){return '<button class="btn-sec" style="margin:4px 4px 0 0" onclick="abrirFicha(\''+apEsc(c)+'\')">Cadastrar '+apEsc(c)+'</button>';}).join('')+'</div>';
+    var ab=!!window._semFichaAberto;
+    html+='<div class="semficha-card'+(ab?' aberto':'')+'">'+
+      '<div class="semficha-h" onclick="toggleSemFicha()"><i class="ti ti-chevron-'+(ab?'down':'right')+'"></i><b>Produtos em OS sem ficha</b><span class="semficha-n">'+FICHAS_SEMFICHA.length+'</span></div>'+
+      (ab?('<div class="semficha-body">'+FICHAS_SEMFICHA.map(function(c){return '<button class="btn-sec" onclick="abrirFicha(\''+apEsc(c)+'\')">Cadastrar '+apEsc(c)+'</button>';}).join('')+'</div>'):'')+
+    '</div>';
   }
   var totalCad=FICHAS_LISTA.length;
   html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:13px;color:var(--text3)"><i class="ti ti-package" style="color:var(--accent);font-size:18px"></i><span><b style="color:var(--text);font-size:15px">'+totalCad+'</b> produto'+(totalCad!==1?'s':'')+' cadastrado'+(totalCad!==1?'s':'')+(q?(' · '+lista.length+' no filtro'):'')+'</span></div>';
