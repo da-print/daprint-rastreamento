@@ -283,7 +283,17 @@ apontamento (ver `aplicar_apontamento`).
 **`15_ordem_pendencias.sql`** (tabela `ordem_pendencias`; idempotente) →
 **`16_ordens_roteiro_custom.sql`** (coluna `ordens.roteiro_custom`; idempotente) →
 **`17_pendencia_tipos.sql`** (tabela `pendencia_tipos` + policies de gestor em `motivos_parada`; idempotente) →
-**`18_papel_permissoes.sql`** (tabela `papel_permissoes`; idempotente, SEM seed).
+**`18_papel_permissoes.sql`** (tabela `papel_permissoes`; idempotente, SEM seed) →
+**`19_pendencias_resp_obs.sql`** (coluna `ordem_pendencias.responsavel_id` + tabela `pendencia_observacoes`; idempotente).
+
+**Ajustes 2026-11-14:** (1) **Bug finalizar manual:** item com ficha em grupo manual continuava na fila com
+"finalizado manual". Corrigido no cálculo de status — `if(ae&&ae.temOps && !(ov&&ov.finalizado_em))`: a
+marcação manual VENCE a fila do apontamento → vai p/ aguardando faturamento. (2) **Pendências: responsável**
+(`responsavel_id`, select de `profiles` no cadastro e editável na lista; `PEND_USERS`/`carregarPendUsers`/
+`pendSetResp`). (3) **Observações = histórico** (tabela `pendencia_observacoes`, append-only c/ autor_id/criado_em):
+botão "Obs" (`pendEditObs`) mostra todas + adiciona nova (`pendObsSalvar` insere, não sobrescreve); `obs` da
+pendência vira "observação inicial". (4) **Hambúrguer mobile** = SVG inline de 3 traços (a fonte `ti ti-menu-2`
+saía como barra branca — mesmo problema da engrenagem; usar SVG inline nesses botões).
 
 **Aba Permissões** (sidebar, só gestor): matriz papéis (editor/visualizador/visualizador_maquina/representante;
 gestor sempre full, fora da matriz) × flags — `ver_<aba>` (painel/entregas/pendencias/kpis/fichas/maquinas/
