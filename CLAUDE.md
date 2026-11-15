@@ -1,7 +1,7 @@
 # PCP — Monitoramento de Produção (estado atual)
 
 Documento técnico/handoff do projeto PCP. Leia antes de continuar o trabalho.
-Última atualização: 2026-11-10.
+Última atualização: 2026-11-15.
 
 ## 1. Visão geral
 
@@ -284,7 +284,60 @@ apontamento (ver `aplicar_apontamento`).
 **`16_ordens_roteiro_custom.sql`** (coluna `ordens.roteiro_custom`; idempotente) →
 **`17_pendencia_tipos.sql`** (tabela `pendencia_tipos` + policies de gestor em `motivos_parada`; idempotente) →
 **`18_papel_permissoes.sql`** (tabela `papel_permissoes`; idempotente, SEM seed) →
-**`19_pendencias_resp_obs.sql`** (coluna `ordem_pendencias.responsavel_id` + tabela `pendencia_observacoes`; idempotente).
+**`19_pendencias_resp_obs.sql`** (coluna `ordem_pendencias.responsavel_id` + tabela `pendencia_observacoes`; idempotente) →
+**`20_materias_primas.sql`** (tabela `materias_primas` + coluna `produtos.materia_prima_id` + view `v_ordem_materia`; idempotente) →
+**`21_mp_fornecedor_snapshot.sql`** (coluna `fornecedor` em `materias_primas` + unicidade (nome,fornecedor); colunas de snapshot `mp_*` em `ordens`; `v_ordem_materia` lê snapshot c/ fallback; idempotente).
+
+## 12. Matérias-primas + m² nos KPIs (2026-11-15)
+
+Aba **Matérias-primas** (sidebar, só gestor/editor; cadastro em `PERM_GESTOR_TABS`/`PERM_ABAS` como
+`ver_materias`). Migration `20_`: tabela `materias_primas` (nome único, `largura_mm` [largura PADRÃO],
+`valor_m2` [BRUTO], `icms_pct`, `ipi_pct`, ativo) + coluna soft `produtos.materia_prima_id`
+(FK `on delete set null`) + view `v_ordem_materia` (security_invoker; por pedido+item: produto,
+`largura_mm` efetiva = `coalesce(larg_substrato, mp.largura_mm)`, mp_nome/valor/icms/ipi). RLS:
+select p/ authenticated, escrita `posso_editar()`.
+
+- **Cadastro** (`renderMaterias`/`mpNovo`/`mpEditar`/`mpSalvar`/`mpToggle`/`mpRemover`): lista + form
+  (nome, largura, valor/m², ICMS%, IPI%). `MATERIAS_PRIMAS` global carregado no `recarregarDoBanco`
+  (degrada se `20_` ausente); **`window._mpReady`** = tabela existe (⇒ coluna também) — gate p/ não
+  quebrar `salvarFicha` antes do `20_` (só envia `materia_prima_id` com `_mpReady`).
+- **Ficha**: select `f-mp` (`fichaMPOptions`/`fichaMPChange`) — ao escolher, puxa a largura padrão p/
+  `larg_substrato` (**editável**, largura efetiva fica no PRODUTO) e preenche o texto `substrato` se vazio.
+  Texto livre `substrato` mantido como fallback. Excel import/export NÃO mexe na MP (vínculo é só na UI).
+- **Conversão** linear→m²: `m² = metros_lineares × (largura_mm ÷ 1000)`.
+- **KPI "Por matéria-prima"** (`renderKpiTabelas`; `KPI_MAT` de `v_ordem_materia`; `kBRL`): por MP,
+  **m² estimado** (`kRodar(ref)`), **m² rodado** (`qtd_real(ref)`), **m² a produzir** (est−real),
+  **custo bruto** = m²_real × valor/m², **ICMS** = custo × icms%, **IPI** = custo × ipi% (impostos
+  "por fora" sobre o bruto). Usa a 1ª etapa que rodou (`kOsMetros`), só quando `unidade_est='m'`
+  (batida/validação em 'un' não convertem) e largura>0. **Independe** de máquina/operador/grupo
+  (substrato consumido 1×/OS); respeita período + cliente + OS. Degrada com aviso se `20_` ausente.
+- **Painel — botão "Ver ficha"** (ícone de documento, `btn-carr`, nos itens **EM_PRODUCAO** com
+  `r.produto`, **todos os papéis**): `verFichaItem(pa,pedido,item)` abre popup **só-leitura**
+  (`modal-verficha`, classes `modal-overlay`/`modal-box`; `fecharVerFicha`/`vfEsc`) com produto,
+  **matéria-prima** (nome; cai p/ `substrato` texto se sem vínculo), largura, dimensões (L×A, gap,
+  passo, cores), roteiro e conversões. **Valor/m², ICMS e IPI só para `window._podeEditar`**. Botão
+  "Editar ficha" (gestor/editor) chama `abrirFicha`. Sem ficha → oferece cadastrar. Não depende do
+  `20_` (só o nome da MP no popup depende). **Pendente do usuário:** depois de vincular as MPs em todas
+  as fichas, remover o campo "Substrato (texto livre)" da ficha (redundante) — a pedido dele.
+
+### 12.1 Fornecedor + ciclo fechado (snapshot de custo) — migration `21_` (2026-11-15)
+
+- **Fornecedor** no cadastro de MP (`materias_primas.fornecedor`; unicidade passa a ser (nome,fornecedor)).
+  Decisão: **uma linha por material+fornecedor** (cada um com seu valor/ICMS/IPI). Seletores (ficha, config
+  da OS, popup Ver ficha) mostram **"Material · Fornecedor"** (`fichaMPOptions`, `mp-forn` no form, coluna na lista).
+- **Ciclo fechado (snapshot na OS)**: `ordens` ganha `mp_id/mp_nome/mp_fornecedor/mp_valor_m2/mp_icms_pct/
+  mp_ipi_pct/mp_largura_mm`. Decisão: **congela ao DEFINIR a MP** — editar o cadastro depois só vale p/ OS
+  novas; **OS finalizada nunca muda** (nada re-copia). Captura: (1) `materializarProduto` grava o snapshot
+  do valor ATUAL do cadastro quando `o.mp_id` está vazio (não sobrescreve); (2) `salvarConfigOS` grava o
+  snapshot escolhido no popup. Ambos em try/catch (degrada se `21_` ausente). `window._mpReady` gate.
+- **Config da OS** (`abrirConfigOS`/`renderConfigOS`/`salvarConfigOS`; estado `OSR.mpId`/`OSR.mpLarg`):
+  bloco **"Matéria-prima desta OS"** = select de MP + **largura editável** (override por OS, ex.: item de 2
+  carreiras rodado em 1 com bobina diferente) + **indicativo do fornecedor** da MP escolhida (`osrSetMP`/
+  `osrSetLarg`). Grava snapshot só nessa OS; não toca na ficha nem em outras OS.
+- **`v_ordem_materia`** passa a ler o snapshot da OS com **fallback** (`coalesce(o.mp_*, ...cadastro ao vivo)`)
+  p/ OS antigas sem snapshot. **KPI "Por matéria-prima"** agrupa por **material·fornecedor** e soma
+  **custo/ICMS/IPI por OS** (cada OS usa o SEU snapshot de preço — `KPI_MAT[...].forn/valor/icms/ipi`).
+  Largura do m² = `mp_largura_mm` (snapshot) com fallback p/ `larg_substrato`. Degrada se `21_` ausente.
 
 **Ajustes 2026-11-14:** (1) **Bug finalizar manual:** item com ficha em grupo manual continuava na fila com
 "finalizado manual". Corrigido no cálculo de status — `if(ae&&ae.temOps && !(ov&&ov.finalizado_em))`: a
@@ -358,3 +411,40 @@ publicar o app.html** (os inserts de `produto_etapas` passam a enviar `repeticoe
 Fichas técnicas também ganharam: contador de produtos cadastrados, **Backup (baixar)** = Excel
 no formato do import (reimportável), e **overlay de progresso** no import (`mostrarProgresso`/
 `fecharProgresso`).
+
+## 11. UX / Layout / Pendências v2 / Performance (2026-11-14 a 15) — TUDO EM PRODUÇÃO
+
+- **Ícones = SVG inline.** A fonte Tabler (`ti ti-*`) NÃO carrega no ambiente (saía como caixa/barra
+  branca). Trocados por SVG inline: engrenagem do painel, hambúrguer mobile (`.tb-burger`), botão de
+  recolher da sidebar (`.sb-burger`) e os **11 ícones da sidebar** (um por aba, `currentColor` → herdam
+  cor e o vermelho do ativo). **Regra:** novos ícones nesses pontos = SVG inline, não a fonte.
+- **Sidebar/menu:** hambúrguer do topo (mobile) é botão pequeno à direita; no desktop/iPad o botão no topo
+  da sidebar recolhe/expande (`sb-collapsed`, estado em `localStorage`), alargando o conteúdo.
+- **Painel enxuto:** removidas as imagens das máquinas (`imagemGrupoHtml` retorna ''); densidade reduzida
+  via overrides em `#painel-view` (headers baixos, sem "caixa", linhas estreitas).
+- **Telas em lista:** **Máquinas** redesenhada como lista (1 linha/máquina + expandir p/ o editor que já
+  existia; `maq-row`/`toggleMaqGrupo`/`_maqAberto`). **Vendedores e Usuários** ganharam largura cheia
+  (`.cat-box` full-width à esquerda) mas AINDA no layout antigo por dentro — PENDENTE pô-los em lista
+  como as Máquinas.
+- **Entregas por data = tabela ÚNICA** (estilo ERP): cabeçalho fixo no topo, cada data é uma **faixa
+  full-width azul forte** dentro da tabela (`ent-band`), itens em **1 linha** (produto+desc inline,
+  ellipsis+title), **zebra azul suave** reiniciando por data. Sem subtotal. Coluna **Observações reflete a
+  pendência** (tipo da pendência aberta, ex. "Solicitar faca", ou "sem observação").
+- **Categorias → aba Listas** (3º card `categorias_obs`, `temAtivo:false`); a aba Categorias saiu da sidebar.
+  "Produtos em OS sem ficha" virou card **recolhível** (`toggleSemFicha`).
+- **Pendências v2 (migration `19_`):** **responsável** (`ordem_pendencias.responsavel_id`, select de
+  `profiles`, editável na lista; `PEND_USERS`/`carregarPendUsers`/`pendSetResp`); **histórico de
+  observações** com autor (`pendencia_observacoes` append-only; `pendEditObs` lista+adiciona, não
+  sobrescreve; RLS insert exige `autor_id = auth.uid()`). No **painel**, a pendência saiu do Status e a
+  coluna **Observações** virou fixa = pendência/"sem observação". Aba Pendências: **filtro por responsável**,
+  **badge vermelho** com contador na sidebar (`atualizarBadgePendencias`, pendências abertas do usuário) e
+  **toast** de aviso ao entrar (`notificarPendencias`, 1×/sessão). `window._meuUid` setado cedo.
+- **Finalizar manual (bug):** `if(ae&&ae.temOps && !(ov&&ov.finalizado_em))` — marcação manual vence a fila.
+- **Performance — recarga LEVE:** `recarregarDoBanco(silencioso, light)`. Com `light=true` (todas as ações
+  do dia a dia + realtime, via `recarregarDoBanco(true,true)`) PULA as 4 tabelas GRANDES
+  (clientes/pedidos_abertos/pcp/faturamento — só mudam no upload) e relê só o resto (overrides/categorias/
+  vendedores/máquinas) + camada de apontamento. Upload e botão "Recarregar do banco" seguem completos.
+  Próximo passo de escala (quando a base crescer): consultas por período + índices + retenção/arquivamento
+  dos `apontamentos`.
+
+**PENDENTE:** Vendedores e Usuários em lista (padrão das Máquinas); fase de escala (índices/retenção).

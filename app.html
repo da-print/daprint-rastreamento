@@ -596,6 +596,7 @@ body.sb-collapsed .sb-badge{ display:none !important }
     <a class="sb-i" data-aba="kpis" href="#" onclick="navAba('kpis');return false" title="KPIs"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="20" x2="4" y2="13"/><line x1="10" y1="20" x2="10" y2="5"/><line x1="16" y1="20" x2="16" y2="9"/><line x1="20" y1="20" x2="20" y2="15"/></svg><span>KPIs</span></a>
     <div class="sb-gt">Configurações</div>
     <a class="sb-i" data-aba="fichas" href="#" onclick="navAba('fichas');return false" title="Fichas técnicas"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><polyline points="14 3 14 8 19 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg><span>Fichas técnicas</span></a>
+    <a class="sb-i" data-aba="materias" href="#" onclick="navAba('materias');return false" title="Matérias-primas"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 4-9 4-9-4z"/><path d="M3 12l9 4 9-4"/><path d="M3 17l9 4 9-4"/></svg><span>Matérias-primas</span></a>
     <a class="sb-i" data-aba="maquinas" href="#" onclick="navAba('maquinas');return false" title="Máquinas"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><rect x="4" y="9" width="16" height="8" rx="2"/><rect x="7" y="14" width="10" height="6"/></svg><span>Máquinas</span></a>
     <a class="sb-i" data-aba="vendedores" href="#" onclick="navAba('vendedores');return false" title="Vendedores"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="3" y1="12" x2="21" y2="12"/></svg><span>Vendedores</span></a>
     <a class="sb-i" data-aba="usuarios" href="#" onclick="navAba('usuarios');return false" title="Usuários"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 5.5a3 3 0 0 1 0 5.8"/><path d="M21 20a6 6 0 0 0-4.5-5.8"/></svg><span>Usuários</span></a>
@@ -880,6 +881,46 @@ function setSidebarAtivo(key){ try{ document.querySelectorAll('#side-nav [data-a
     </div>
   </div>
   <div id="fichas-conteudo"></div>
+</div>
+
+<div id="materias-view" style="display:none">
+  <style>
+    #materias-view .mp-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+    #materias-view table{width:100%;border-collapse:collapse;font-size:13px}
+    #materias-view th,#materias-view td{padding:7px 9px;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap}
+    #materias-view th{color:var(--text3);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.03em}
+    #materias-view th.l,#materias-view td.l{text-align:left}
+    #materias-view tr.off td{opacity:.5}
+    #materias-view .mp-tag{font-size:10px;color:var(--text3);border:1px solid var(--border);border-radius:6px;padding:1px 5px;margin-left:6px}
+    #materias-view .mp-acts button{margin-left:6px}
+    #mp-form{display:none;margin-bottom:12px}
+    #mp-form .mp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+    #mp-form label{display:flex;flex-direction:column;font-size:12px;color:var(--text3);gap:3px}
+    #mp-form input{padding:7px 9px;border-radius:8px;border:1px solid var(--border);background:var(--bg,var(--card));color:var(--text);font-size:13px}
+  </style>
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+    <div>
+      <h2 style="font-size:16px;margin:0">Matérias-primas</h2>
+      <div style="font-size:12px;color:var(--text3)">Cadastro de substratos: largura, valor por m², ICMS e IPI. A ficha do produto seleciona a matéria-prima daqui.</div>
+    </div>
+    <button class="btn-primary" onclick="mpNovo()">+ Nova matéria-prima</button>
+  </div>
+  <div id="mp-form" class="mp-card">
+    <input type="hidden" id="mp-id">
+    <div class="mp-grid">
+      <label style="grid-column:1/-1">Nome / descrição<input id="mp-nome" placeholder="ex.: COUCHÊ ADESIVO 90g"></label>
+      <label>Fornecedor<input id="mp-forn" placeholder="ex.: Fornecedor X"></label>
+      <label>Largura padrão (mm)<input id="mp-larg" type="number" step="0.01" placeholder="ex.: 320"></label>
+      <label>Valor por m² (R$)<input id="mp-valor" type="number" step="0.0001" placeholder="valor bruto"></label>
+      <label>ICMS (%)<input id="mp-icms" type="number" step="0.01" placeholder="0"></label>
+      <label>IPI (%)<input id="mp-ipi" type="number" step="0.01" placeholder="0"></label>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn-primary" onclick="mpSalvar()">Salvar</button>
+      <button class="btn-sec" onclick="mpCancelar()">Cancelar</button>
+    </div>
+  </div>
+  <div id="materias-conteudo"></div>
 </div>
 
 <div id="kpis-view" style="display:none">
@@ -1363,7 +1404,7 @@ function desligarRealtime(){
 // Mostra/esconde recursos conforme o papel do usuario.
 // ===================== PERMISSÕES POR PAPEL (flags; gestor edita na aba Permissões) =====================
 var _PERMS={}; // papel -> {chave:bool}
-var PERM_GESTOR_TABS=['categorias','vendedores','maquinas','usuarios','historico','listas','permissoes'];
+var PERM_GESTOR_TABS=['categorias','vendedores','maquinas','materias','usuarios','historico','listas','permissoes'];
 function permDefault(papel,chave){
   if(chave.indexOf('ver_')===0){ var aba=chave.slice(4); return PERM_GESTOR_TABS.indexOf(aba)<0; } // só gestor nas abas de cadastro; demais visíveis
   if(chave==='acao_editar')return papel==='editor';
@@ -1380,7 +1421,7 @@ async function carregarPermissoes(){
   catch(e){}
 }
 var PERM_PAPEIS=[['editor','Editor'],['visualizador','Visualizador'],['visualizador_maquina','Operador'],['representante','Representante']];
-var PERM_ABAS=[['ver_painel','Painel de produção'],['ver_entregas','Entregas por data'],['ver_pendencias','Pendências'],['ver_kpis','KPIs'],['ver_fichas','Fichas técnicas'],['ver_maquinas','Máquinas'],['ver_vendedores','Vendedores'],['ver_usuarios','Usuários'],['ver_historico','Histórico'],['ver_listas','Listas']];
+var PERM_ABAS=[['ver_painel','Painel de produção'],['ver_entregas','Entregas por data'],['ver_pendencias','Pendências'],['ver_kpis','KPIs'],['ver_fichas','Fichas técnicas'],['ver_materias','Matérias-primas'],['ver_maquinas','Máquinas'],['ver_vendedores','Vendedores'],['ver_usuarios','Usuários'],['ver_historico','Histórico'],['ver_listas','Listas']];
 var PERM_ACOES=[['acao_editar','Editar programação / finalizar'],['acao_upload','Subir planilhas (upload)'],['acao_apontar','Apontar produção']];
 async function permSet(papel,chave,val){
   try{ var r=await supabaseClient.from('papel_permissoes').upsert({papel:papel,chave:chave,permitido:!!val},{onConflict:'papel,chave'}); if(r.error)throw r.error;
@@ -1435,6 +1476,7 @@ async function lerTabelaCompleta(tabela,colunas,ordenarPor){
   }
   return {data:todos,error:null};
 }
+var MATERIAS_PRIMAS=[];
 async function recarregarDoBanco(silencioso, light){
   var msg=document.getElementById('upload-msg');
   if(msg&&!silencioso) msg.textContent='Carregando dados do banco...';
@@ -1472,6 +1514,13 @@ async function recarregarDoBanco(silencioso, light){
     MAQUINAS_GRUPOS_DB=base[3].data||[];
     MAQUINAS_SUB_DB=base[4].data||[];
     reconstruirMaquinas();
+
+    // Materias-primas (degrada se o 20_ ainda nao foi aplicado).
+    // _mpReady=true so quando a tabela existe (= coluna produtos.materia_prima_id tambem,
+    // pois vem na mesma migration); gate p/ nao quebrar o salvar-ficha antes do 20_.
+    try{ var rmp=await supabaseClient.from('materias_primas').select('*').order('nome');
+      if(rmp&&!rmp.error){ MATERIAS_PRIMAS=rmp.data||[]; window._mpReady=true; }
+      else { MATERIAS_PRIMAS=[]; window._mpReady=false; } }catch(e){ MATERIAS_PRIMAS=[]; window._mpReady=false; }
 
     if(pBig){
       var big=await pBig;
@@ -2181,6 +2230,9 @@ function mudarAba(aba){
   var tk=document.getElementById('tab-kpis');
   if(tk)tk.classList.toggle('active',aba==='kpis');
   if(aba==='kpis')renderKPIs();
+  var matv=document.getElementById('materias-view');
+  if(matv)matv.style.display=aba==='materias'?'block':'none';
+  if(aba==='materias'&&typeof renderMaterias==='function')renderMaterias();
   if(aba==='usuarios'){uAtualizarCampos();carregarListaUsuarios();}
   var ha=document.getElementById('header-acoes');
   if(ha)ha.style.display=(aba==='painel')?'flex':'none';
@@ -2200,9 +2252,10 @@ function mudarAba(aba){
 }
 
 // ===================== RENDER: KPIs =====================
-var KPI_OPS=[], KPI_PARADAS=[], KPI_NOMES={}, KPI_BASE={};
+var KPI_OPS=[], KPI_PARADAS=[], KPI_NOMES={}, KPI_BASE={}, KPI_MAT={};
 function kNum(x){return Number(x)||0;}
 function kFmt(n){return (Math.round(n*100)/100).toString().replace('.',',');}
+function kBRL(n){ n=Math.round((Number(n)||0)*100)/100; return 'R$ '+n.toFixed(2).replace('.',','); }
 function kHM(min){min=Math.round(kNum(min));if(min<60)return min+' min';var h=Math.floor(min/60),m=min%60;return h+'h'+(m?(' '+m+'m'):'');}
 function kGnome(g){return (typeof dispNome==='function'&&dispNome(g))||g||'—';}
 function kCard(t,big,sub){return '<div style="flex:1;min-width:150px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px">'+
@@ -2225,6 +2278,9 @@ async function renderKPIs(){
     // um item só reaberto, que mantém os eventos, continua com seu histórico.
     KPI_OPS=(r1.data||[]).filter(function(o){return o.data_ref!=null;});
     try{ var r2=await supabaseClient.from('v_parada_detalhe').select('*'); KPI_PARADAS=(r2&&!r2.error&&r2.data)?r2.data:[]; }catch(e){ KPI_PARADAS=[]; }
+    // materia-prima por OS (p/ KPIs de m2); degrada se o 20_ ainda nao foi aplicado
+    try{ var r3=await supabaseClient.from('v_ordem_materia').select('*'); KPI_MAT={};
+      (r3&&!r3.error&&r3.data||[]).forEach(function(x){ KPI_MAT[x.pedido+'-'+x.item]={larg:Number(x.largura_mm)||0,nome:x.mp_nome||null,forn:x.mp_fornecedor||null,valor:Number(x.mp_valor_m2)||0,icms:Number(x.mp_icms_pct)||0,ipi:Number(x.mp_ipi_pct)||0}; }); }catch(e){ KPI_MAT={}; }
     KPI_NOMES={};
     var ids=KPI_OPS.map(function(o){return o.operador_id;}).filter(Boolean);
     ids=ids.filter(function(v,i){return ids.indexOf(v)===i;});
@@ -2415,9 +2471,46 @@ function renderKpiTabelas(){
   var pos={}; rows.forEach(function(o){ var k=o.pedido+'-'+o.item; var a=(pos[k]=pos[k]||{pedido:o.pedido,item:o.item,cliente:o.cliente_nome||'',desc:o.descricao||'',ops:[],despS:0,rodadoAll:0,kbaseAll:0,rodarAll:0,prod:0,prodEst:0,ref:0}); a.ops.push(o); a.despS+=kNum(o.desp_setup_real); a.rodadoAll+=kNum(o.qtd_real); a.kbaseAll+=kBase(o); a.rodarAll+=kRodar(o); a.prod+=kNum(o.prod_real_min); a.prodEst+=kNum(o.prod_est_min); var r=kpiDataRef(o)||0; if(r>a.ref)a.ref=r; });
   var osList=Object.keys(pos).map(function(k){ var a=pos[k], f=kOsMetros(a.ops)||{}; a.qtd=kNum(f.qtd_real); a.rodar=kRodar(f); a.base=kNum(f.qtd_est); a.dReal=a.rodadoAll-a.kbaseAll; a.dPrev=a.rodadoAll-a.rodarAll; return a; }).sort(function(a,b){return b.ref-a.ref;}).slice(0,200);
   var tDet=kOsTabela(osList);
+  // ---- por materia-prima (m2; substrato consumido na 1a etapa que rodou da OS) ----
+  // Independe de maquina/operador/grupo (substrato e consumido uma vez por OS);
+  // respeita periodo + cliente + OS. Converte metros->m2 pela largura do produto.
+  var matRowsOps=KPI_OPS.filter(function(o){
+    if(cli&&(o.cliente_nome||'')!==cli)return false;
+    if(os&&(''+o.pedido+'-'+o.item).toLowerCase().indexOf(os)<0)return false;
+    return kpiNoPeriodo(kpiDataRef(o),per);
+  });
+  var matByOs={}; matRowsOps.forEach(function(o){ var k=o.pedido+'-'+o.item; (matByOs[k]=matByOs[k]||[]).push(o); });
+  var matAgg={};
+  Object.keys(matByOs).forEach(function(k){
+    var ref=kOsMetros(matByOs[k]); if(!ref)return;
+    if((''+(ref.unidade_est||'m'))!=='m')return; // so etapas em metros convertem p/ m2
+    var info=KPI_MAT[k]||{}, larg=kNum(info.larg); if(larg<=0)return;
+    // agrupa por material + fornecedor (cada fornecedor = sua linha)
+    var nome=info.nome?(info.nome+(info.forn?(' · '+info.forn):'')):'(sem matéria-prima)';
+    var a=(matAgg[nome]=matAgg[nome]||{nome:nome,nOs:0,m2Est:0,m2Real:0,custo:0,icms:0,ipi:0});
+    // custo/impostos por OS (cada OS usa o SEU snapshot de preço) -> soma
+    var m2Est=kRodar(ref)*larg/1000, m2Real=kNum(ref.qtd_real)*larg/1000, custo=m2Real*kNum(info.valor);
+    a.nOs++; a.m2Est+=m2Est; a.m2Real+=m2Real; a.custo+=custo; a.icms+=custo*kNum(info.icms)/100; a.ipi+=custo*kNum(info.ipi)/100;
+  });
+  var matArr=Object.keys(matAgg).map(function(k){return matAgg[k];}).sort(function(a,b){return b.m2Real-a.m2Real;});
+  var tMat;
+  if(!matArr.length){ tMat='<div class="ap-hint">Sem m² no período/seleção. Requer matéria-prima com largura na ficha e o 20_materias_primas.sql aplicado.</div>'; }
+  else {
+    var tot={nOs:0,m2Est:0,m2Real:0,custo:0,icms:0,ipi:0};
+    var linhas=matArr.map(function(a){
+      var falta=Math.max(0,a.m2Est-a.m2Real);
+      tot.nOs+=a.nOs; tot.m2Est+=a.m2Est; tot.m2Real+=a.m2Real; tot.custo+=a.custo; tot.icms+=a.icms; tot.ipi+=a.ipi;
+      return '<tr><td class="l">'+apEsc(a.nome)+'</td><td>'+a.nOs+'</td>'+
+        '<td>'+kFmt(a.m2Est)+'</td><td>'+kFmt(a.m2Real)+'</td><td>'+kFmt(falta)+'</td>'+
+        '<td>'+kBRL(a.custo)+'</td><td>'+kBRL(a.icms)+'</td><td>'+kBRL(a.ipi)+'</td></tr>';
+    }).join('');
+    linhas+='<tr style="font-weight:700"><td class="l">Total</td><td>'+tot.nOs+'</td><td>'+kFmt(tot.m2Est)+'</td><td>'+kFmt(tot.m2Real)+'</td><td>'+kFmt(Math.max(0,tot.m2Est-tot.m2Real))+'</td><td>'+kBRL(tot.custo)+'</td><td>'+kBRL(tot.icms)+'</td><td>'+kBRL(tot.ipi)+'</td></tr>';
+    tMat='<table><thead><tr><th class="l">Matéria-prima</th><th>OS</th><th>m² estimado</th><th>m² rodado</th><th>m² a produzir</th><th>Custo bruto</th><th>ICMS</th><th>IPI</th></tr></thead><tbody>'+linhas+'</tbody></table>';
+  }
   document.getElementById('kpi-conteudo').innerHTML=
     '<h3>Por máquina</h3><div class="kpi-scroll">'+tMaq+'</div>'+
     '<h3>Por operador</h3><div class="kpi-scroll">'+tOp+'</div>'+
+    '<h3>Por matéria-prima <span style="font-weight:400;color:var(--text3);font-size:12px">(m² · custo/ICMS/IPI sobre o rodado · por OS, independe de máquina)</span></h3><div class="kpi-scroll">'+tMat+'</div>'+
     '<h3>Paradas por motivo</h3><div class="kpi-scroll">'+tPar+'</div>'+
     '<h3>Estimado × real por OS <span style="font-weight:400;color:var(--text3);font-size:12px">(clique na linha p/ detalhe · máx. 200)</span></h3><div class="kpi-scroll">'+tDet+'</div>';
 }
@@ -2853,6 +2946,9 @@ function linhaHtml(r,draggable){
   }
   if(r.status==='EM_PRODUCAO'&&window._podeEditar&&r.opAtual&&r.opAtual.opId){
     maquinaCell+='<button class="btn-carr" title="Configurações desta OS" onclick="abrirConfigOS(\''+r.pedido+'\',\''+r.item+'\')"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg></button>';
+  }
+  if(r.status==='EM_PRODUCAO'&&r.produto){
+    maquinaCell+='<button class="btn-carr" title="Ver ficha técnica" onclick="verFichaItem('+jsAttr(r.produto)+','+jsAttr(r.pedido)+','+jsAttr(r.item)+')"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><polyline points="14 3 14 8 19 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg></button>';
   }
   if((r.status==='EM_PRODUCAO'||r.status==='EM_CARTEIRA')&&window._podeEditar){
     maquinaCell+='<button class="btn-pend'+(pend.length?' on':'')+'" title="Pendência / impedimento" onclick="abrirPendencia(\''+r.pedido+'\',\''+r.item+'\')">⚠ '+(pend.length?'Pendência':'Pend.')+'</button>';
@@ -3537,6 +3633,9 @@ var AP_LABEL={aguardando:['Aguardando','ap-b-aguard'],em_setup:['Em setup','ap-b
   parado:['Parado','ap-b-parado'],finalizada:['Finalizada','ap-b-fim']};
 var AP_LABEL_MODO={por_cor:'Por cor',fixo:'Fixo',unidade:'Por unidade',validacao:'Validação'};
 function apEsc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+// Argumento seguro p/ handler inline (onclick="fn(...)"): JSON escapa \ " e controles;
+// apEsc escapa p/ o contexto HTML do atributo. Usar SEM aspas em volta: fn('+jsAttr(x)+').
+function jsAttr(s){return apEsc(JSON.stringify(String(s==null?'':s)));}
 function apNum(id){var el=document.getElementById(id);return el&&el.value!==''?parseFloat(el.value):null;}
 function apFmt(n){return n==null?'—':(Math.round(n*100)/100).toString().replace('.',',');}
 function apSubs(grupo){return MAQUINAS_SUB_DB.filter(function(s){return s.grupo===grupo;});}
@@ -3733,6 +3832,62 @@ function pendRefreshTab(){ var v=document.getElementById('pendencias-view'); if(
 var OSR={ordemId:null,pedido:null,item:null,produto:'',o:{},prod:{},conv:[],ops:[],started:false,roteiro:[]};
 function osrGmap(){ var m={}; (MAQUINAS_GRUPOS_DB||[]).forEach(function(g){m[g.nome]=g;}); return m; }
 function osrGrupoCfg(nome){ return osrGmap()[nome]||{}; }
+// ===================== VER FICHA (popup só-leitura a partir do painel) =====================
+function fecharVerFicha(){ var o=document.getElementById('modal-verficha'); if(o)o.style.display='none'; }
+function vfEsc(x){ return (x==null||x==='')?'—':apEsc(x); }
+async function verFichaItem(pa,pedido,item){
+  pa=(pa||'').trim();
+  var o=document.getElementById('modal-verficha');
+  if(!o){ o=document.createElement('div'); o.id='modal-verficha'; o.className='modal-overlay'; o.style.display='none';
+    o.onclick=function(ev){ if(ev.target===o)fecharVerFicha(); }; document.body.appendChild(o); }
+  o.innerHTML='<div class="modal-box" style="max-width:560px"><div class="ap-hint">Carregando…</div></div>';
+  o.style.display='flex';
+  try{
+    var prod=(await supabaseClient.from('produtos').select('*').eq('codigo_pa',pa).maybeSingle()).data;
+    var pode=!!window._podeEditar;
+    var head='<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px">'+
+      '<div><h3 style="margin:0;font-size:16px">Ficha técnica</h3>'+
+      '<div style="font-size:12px;color:var(--text3)">'+vfEsc(pa)+' · OS '+apEsc(pedido+'-'+item)+'</div></div>'+
+      '<button class="carr-x" onclick="fecharVerFicha()">✕</button></div>';
+    if(!prod){
+      o.querySelector('.modal-box').innerHTML=head+'<div class="ap-hint">Este produto ainda não tem ficha técnica cadastrada.</div>'+
+        (pode?'<div style="margin-top:14px"><button class="btn-primary" onclick="fecharVerFicha();abrirFicha('+jsAttr(pa)+')">Cadastrar ficha</button></div>':'');
+      return;
+    }
+    var etapas=(await supabaseClient.from('produto_etapas').select('*').eq('produto_codigo',pa).order('ordem')).data||[];
+    var convs=(await supabaseClient.from('produto_conversoes').select('*').eq('produto_codigo',pa)).data||[];
+    // matéria-prima vinculada (se o 20_ aplicado e houver vínculo)
+    var mp=null;
+    if(prod.materia_prima_id!=null){ mp=(MATERIAS_PRIMAS||[]).filter(function(m){return String(m.id)===String(prod.materia_prima_id);})[0]||null; }
+    var passo=(Number(prod.alt_etiqueta)||0)+(Number(prod.gap_etiqueta)||0);
+    function row(k,v){ return '<div style="display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text3)">'+k+'</span><b style="text-align:right">'+v+'</b></div>'; }
+    var mpNome=mp?(apEsc(mp.nome)+(mp.fornecedor?(' · '+apEsc(mp.fornecedor)):'')):vfEsc(prod.substrato);
+    var bloco='<div style="margin:6px 0 2px;font-weight:600">'+apEsc(prod.descricao||pa)+'</div>';
+    bloco+=row('Matéria-prima', mpNome);
+    bloco+=row('Largura substrato', (prod.larg_substrato!=null?apFmt(prod.larg_substrato)+' mm':'—'));
+    if(pode&&mp){
+      bloco+=row('Valor/m²', kBRL(mp.valor_m2));
+      bloco+=row('ICMS', vfEsc(mp.icms_pct)+'%');
+      bloco+=row('IPI', vfEsc(mp.ipi_pct)+'%');
+    }
+    bloco+=row('Etiqueta (L × A)', (prod.larg_etiqueta!=null?apFmt(prod.larg_etiqueta):'—')+' × '+(prod.alt_etiqueta!=null?apFmt(prod.alt_etiqueta):'—')+' mm');
+    bloco+=row('Gap / passo', apFmt(Number(prod.gap_etiqueta)||0)+' / '+apFmt(passo)+' mm');
+    bloco+=row('Cores', vfEsc(prod.cores));
+    // roteiro
+    var rot=etapas.length?('<div style="margin-top:12px;font-weight:600">Roteiro</div>'+etapas.map(function(e,i){
+      var ac=[]; if(e.acab_verniz)ac.push('verniz'); if(e.acab_laminacao)ac.push('laminação');
+      var extra=' · carr '+(e.carreiras||1)+((e.repeticoes&&e.repeticoes>1)?(' · rep '+e.repeticoes):'')+(ac.length?(' · '+ac.join('+')):'');
+      var gnome=(typeof dispNome==='function'&&dispNome(e.grupo))||e.grupo;
+      return '<div style="padding:4px 0;border-bottom:1px solid var(--border)">'+(i+1)+'. <b>'+apEsc(gnome)+'</b><span style="color:var(--text3)">'+apEsc(extra)+'</span></div>';
+    }).join('')):'<div class="ap-hint" style="margin-top:12px">Sem roteiro cadastrado.</div>';
+    // conversões
+    var cv=convs.length?('<div style="margin-top:12px;font-weight:600">Conversões</div>'+convs.map(function(c){return '<div style="padding:3px 0;color:var(--text3)">1 '+apEsc(c.um)+' = <b style="color:var(--text)">'+apFmt(c.fator)+'</b> etiquetas</div>';}).join('')):'';
+    var footer=pode?('<div style="margin-top:16px;display:flex;gap:8px"><button class="btn-sec" onclick="fecharVerFicha();abrirFicha('+jsAttr(pa)+')">Editar ficha</button><button class="btn-sec" onclick="fecharVerFicha()">Fechar</button></div>'):'<div style="margin-top:16px"><button class="btn-sec" onclick="fecharVerFicha()">Fechar</button></div>';
+    o.querySelector('.modal-box').innerHTML=head+bloco+rot+cv+footer;
+  }catch(e){
+    var box=o.querySelector('.modal-box'); if(box)box.innerHTML='<div class="ap-hint" style="white-space:pre-wrap">Não foi possível carregar a ficha.\n'+apEsc(e.message||e)+'</div><div style="margin-top:12px"><button class="btn-sec" onclick="fecharVerFicha()">Fechar</button></div>';
+  }
+}
 async function abrirConfigOS(pedido,item){
   try{
     var od=(await supabaseClient.from('ordens').select('*').eq('pedido',pedido).eq('item',item).maybeSingle()).data;
@@ -3748,7 +3903,10 @@ async function abrirConfigOS(pedido,item){
       var fe=fichaByGrupo[o.grupo]||{};
       return {grupo:o.grupo,carreiras:o.carreiras||1,repeticoes:fe.repeticoes||1,acab_verniz:!!o.acab_verniz,acab_laminacao:!!o.acab_laminacao,status:o.status,opId:o.id};
     });
-    OSR={ordemId:od.id,pedido:pedido,item:item,produto:pa,o:od,prod:prod,conv:conv,ops:ops,started:started,roteiro:roteiro};
+    // snapshot de MP da OS (fallback p/ a MP do produto se a OS ainda nao tem snapshot)
+    var mpId=(od.mp_id!=null)?od.mp_id:((prod.materia_prima_id!=null)?prod.materia_prima_id:null);
+    var mpLarg=(od.mp_largura_mm!=null)?od.mp_largura_mm:((prod.larg_substrato!=null)?prod.larg_substrato:null);
+    OSR={ordemId:od.id,pedido:pedido,item:item,produto:pa,o:od,prod:prod,conv:conv,ops:ops,started:started,roteiro:roteiro,mpId:mpId,mpLarg:mpLarg};
     renderConfigOS();
   }catch(e){ alert('Não foi possível abrir as configurações da OS.\n'+(e.message||e)); }
 }
@@ -3789,16 +3947,29 @@ function renderConfigOS(){
   var banner=started
     ?'<div class="carr-note" style="color:#b5770a">OS já iniciada — o roteiro está travado; dá para ajustar só as carreiras/repetições das etapas ainda não iniciadas.</div>'
     :'<div class="carr-note">Edite o roteiro só desta OS (ex.: rodar numa máquina fora da ficha). A ficha do produto não muda.</div>';
+  // Matéria-prima desta OS (snapshot congelado). Trocar aqui vale SÓ p/ esta OS.
+  var mpBlock='';
+  if(window._mpReady){
+    var mpSel=(MATERIAS_PRIMAS||[]).filter(function(m){return String(m.id)===String(OSR.mpId);})[0];
+    var fornTxt=mpSel?(mpSel.fornecedor?('<span class="ap-hint">Fornecedor:</span> <b>'+apEsc(mpSel.fornecedor)+'</b>'):'<span class="ap-hint">sem fornecedor cadastrado</span>'):'<span class="ap-hint">sem matéria-prima selecionada</span>';
+    mpBlock='<div class="f-et"><div class="f-row"><b>Matéria-prima desta OS</b></div>'+
+      '<div class="f-row" style="margin-top:4px"><select class="ap-input" style="min-width:210px" onchange="osrSetMP(this.value)">'+fichaMPOptions(OSR.mpId)+'</select>'+
+      '<span class="ap-hint">Largura (mm)</span><input class="ap-input" type="number" step="0.01" style="width:94px" value="'+(OSR.mpLarg!=null?apEsc(OSR.mpLarg):'')+'" onchange="osrSetLarg(this.value)"></div>'+
+      '<div class="f-row" style="margin-top:4px">'+fornTxt+'</div>'+
+      '<div class="carr-note" style="margin-top:4px">Congela o custo (valor/ICMS/IPI) nesta OS. Mudar o cadastro depois não altera esta OS.</div></div>';
+  }
   o.innerHTML='<div class="carr-box carr-box-wide">'+
     '<div class="carr-h"><b>Configurações desta OS</b><button class="carr-x" onclick="fecharConfigOS()">✕</button></div>'+
     '<div class="carr-sub">'+apEsc((OSR.produto||'')+' · pedido '+OSR.pedido+'-'+OSR.item)+'</div>'+
-    banner+'<div class="osr-lista">'+rows+'</div>'+addCtrl+
+    banner+mpBlock+'<div class="osr-lista">'+rows+'</div>'+addCtrl+
     '<div class="carr-actions"><button class="btn-sec" onclick="fecharConfigOS()">Cancelar</button><button class="btn-primary" onclick="salvarConfigOS()">Salvar roteiro desta OS</button></div>'+
   '</div>';
   o.style.display='flex';
 }
 function fecharConfigOS(){ var o=document.getElementById('osr-modal'); if(o)o.style.display='none'; }
 function osrSetGrupo(i,v){ OSR.roteiro[i].grupo=v; renderConfigOS(); }
+function osrSetMP(v){ OSR.mpId=v?Number(v):null; var mp=(MATERIAS_PRIMAS||[]).filter(function(m){return String(m.id)===String(OSR.mpId);})[0]; if(mp&&mp.largura_mm!=null)OSR.mpLarg=mp.largura_mm; renderConfigOS(); }
+function osrSetLarg(v){ var n=parseFloat(v); OSR.mpLarg=isNaN(n)?null:n; }
 function osrSetCarr(i,v){ OSR.roteiro[i].carreiras=Math.max(1,parseInt(v,10)||1); }
 function osrSetRep(i,v){ OSR.roteiro[i].repeticoes=Math.max(1,parseInt(v,10)||1); }
 function osrSetAcab(i,f,c){ if(f==='v')OSR.roteiro[i].acab_verniz=c; else OSR.roteiro[i].acab_laminacao=c; }
@@ -3824,6 +3995,14 @@ async function salvarConfigOS(){
     }
     var ur=await supabaseClient.from('ordens').update({roteiro_custom:true}).eq('id',OSR.ordemId);
     if(ur.error)throw ur.error;
+    // snapshot de MP desta OS (congela custo); try/catch degrada se o 21_ nao aplicado
+    if(window._mpReady){
+      var _mp=(MATERIAS_PRIMAS||[]).filter(function(m){return String(m.id)===String(OSR.mpId);})[0];
+      var snap=_mp
+        ?{mp_id:_mp.id,mp_nome:_mp.nome,mp_fornecedor:_mp.fornecedor||null,mp_valor_m2:_mp.valor_m2,mp_icms_pct:_mp.icms_pct,mp_ipi_pct:_mp.ipi_pct,mp_largura_mm:(OSR.mpLarg!=null?OSR.mpLarg:_mp.largura_mm)}
+        :{mp_id:null,mp_nome:null,mp_fornecedor:null,mp_valor_m2:null,mp_icms_pct:null,mp_ipi_pct:null,mp_largura_mm:(OSR.mpLarg!=null?OSR.mpLarg:null)};
+      try{ await supabaseClient.from('ordens').update(snap).eq('id',OSR.ordemId); }catch(e){}
+    }
     fecharConfigOS();
     recarregarDoBanco(true,true);
   }catch(e){ alert('Não foi possível salvar o roteiro desta OS.\n'+(e.message||e)); }
@@ -3964,6 +4143,83 @@ async function listaRemover(tabela,idx){
   try{ var d=await supabaseClient.from(tabela).delete().eq('nome',r.nome); if(d.error)throw d.error; renderListas(); }
   catch(e){ alert('Não foi possível excluir.\n'+(e.message||e)); }
 }
+// ===================== ABA MATÉRIAS-PRIMAS (cadastro) =====================
+function mpNum(x){ return (x===''||x==null||isNaN(Number(x)))?null:Number(x); }
+function mpFmt(n){ return (n==null||n==='')?'—':(Math.round(Number(n)*10000)/10000).toString().replace('.',','); }
+async function renderMaterias(){
+  var el=document.getElementById('materias-conteudo'); if(!el)return;
+  mpCancelar();
+  el.innerHTML='<div class="ap-hint">Carregando…</div>';
+  try{
+    var r=await supabaseClient.from('materias_primas').select('*').order('nome');
+    if(r.error)throw r.error;
+    MATERIAS_PRIMAS=r.data||[];
+    var pode=!!window._podeEditar;
+    if(!MATERIAS_PRIMAS.length){ el.innerHTML='<div class="ap-hint">Nenhuma matéria-prima cadastrada ainda.'+(pode?' Use “+ Nova matéria-prima”.':'')+'</div>'; return; }
+    var body=MATERIAS_PRIMAS.map(function(mp){
+      var inativo=(mp.ativo===false);
+      var acts=pode?('<span class="mp-acts">'+
+        '<button class="btn-sec" onclick="mpEditar('+mp.id+')">Editar</button>'+
+        '<button class="btn-sec" onclick="mpToggle('+mp.id+')">'+(inativo?'Ativar':'Inativar')+'</button>'+
+        '<button class="btn-sec" onclick="mpRemover('+mp.id+')" title="Excluir">✕</button></span>'):'';
+      return '<tr'+(inativo?' class="off"':'')+'>'+
+        '<td class="l">'+apEsc(mp.nome)+(inativo?'<span class="mp-tag">inativo</span>':'')+'</td>'+
+        '<td class="l">'+vfEsc(mp.fornecedor)+'</td>'+
+        '<td>'+mpFmt(mp.largura_mm)+'</td>'+
+        '<td>'+mpFmt(mp.valor_m2)+'</td>'+
+        '<td>'+mpFmt(mp.icms_pct)+'</td>'+
+        '<td>'+mpFmt(mp.ipi_pct)+'</td>'+
+        '<td class="l">'+acts+'</td></tr>';
+    }).join('');
+    el.innerHTML='<div class="mp-card" style="padding:0;overflow-x:auto"><table><thead><tr>'+
+      '<th class="l">Matéria-prima</th><th class="l">Fornecedor</th><th>Largura (mm)</th><th>Valor/m² (R$)</th><th>ICMS (%)</th><th>IPI (%)</th><th class="l"></th>'+
+      '</tr></thead><tbody>'+body+'</tbody></table></div>';
+  }catch(e){ el.innerHTML='<div class="ap-hint" style="white-space:pre-wrap">Não foi possível carregar as matérias-primas.\n\nProvavelmente o 20_materias_primas.sql ainda não foi aplicado no banco.\n\nDetalhe: '+apEsc(e.message||e)+'</div>'; }
+}
+function mpPreencher(mp){
+  mp=mp||{};
+  document.getElementById('mp-id').value=mp.id!=null?mp.id:'';
+  document.getElementById('mp-nome').value=mp.nome||'';
+  document.getElementById('mp-forn').value=mp.fornecedor||'';
+  document.getElementById('mp-larg').value=mp.largura_mm!=null?mp.largura_mm:'';
+  document.getElementById('mp-valor').value=mp.valor_m2!=null?mp.valor_m2:'';
+  document.getElementById('mp-icms').value=mp.icms_pct!=null?mp.icms_pct:'';
+  document.getElementById('mp-ipi').value=mp.ipi_pct!=null?mp.ipi_pct:'';
+  document.getElementById('mp-form').style.display='block';
+}
+function mpNovo(){ if(!window._podeEditar){alert('Sem permissão para editar.');return;} mpPreencher({}); document.getElementById('mp-nome').focus(); }
+function mpEditar(id){ var mp=(MATERIAS_PRIMAS||[]).filter(function(m){return String(m.id)===String(id);})[0]; if(mp)mpPreencher(mp); }
+function mpCancelar(){ var f=document.getElementById('mp-form'); if(f)f.style.display='none'; }
+async function mpSalvar(){
+  if(!window._podeEditar){alert('Sem permissão para editar.');return;}
+  var nome=(document.getElementById('mp-nome').value||'').trim();
+  if(!nome){ alert('Informe o nome da matéria-prima.'); return; }
+  var id=document.getElementById('mp-id').value;
+  var payload={nome:nome,fornecedor:(document.getElementById('mp-forn').value||'').trim()||null,largura_mm:mpNum(document.getElementById('mp-larg').value),
+    valor_m2:mpNum(document.getElementById('mp-valor').value)||0,
+    icms_pct:mpNum(document.getElementById('mp-icms').value)||0,
+    ipi_pct:mpNum(document.getElementById('mp-ipi').value)||0,
+    atualizado_em:new Date().toISOString()};
+  try{
+    var r;
+    if(id){ r=await supabaseClient.from('materias_primas').update(payload).eq('id',Number(id)); }
+    else { r=await supabaseClient.from('materias_primas').insert(payload); }
+    if(r.error)throw r.error;
+    renderMaterias();
+  }catch(e){ alert('Não foi possível salvar.\n'+(e.message||e)); }
+}
+async function mpToggle(id){
+  var mp=(MATERIAS_PRIMAS||[]).filter(function(m){return String(m.id)===String(id);})[0]; if(!mp)return;
+  try{ var u=await supabaseClient.from('materias_primas').update({ativo:(mp.ativo===false),atualizado_em:new Date().toISOString()}).eq('id',Number(id)); if(u.error)throw u.error; renderMaterias(); }
+  catch(e){ alert('Não foi possível alterar.\n'+(e.message||e)); }
+}
+async function mpRemover(id){
+  var mp=(MATERIAS_PRIMAS||[]).filter(function(m){return String(m.id)===String(id);})[0]; if(!mp)return;
+  if(!confirm('Excluir "'+mp.nome+'"?\nOs produtos vinculados apenas ficam sem matéria-prima (não são apagados).'))return;
+  try{ var d=await supabaseClient.from('materias_primas').delete().eq('id',Number(id)); if(d.error)throw d.error; renderMaterias(); }
+  catch(e){ alert('Não foi possível excluir.\n'+(e.message||e)); }
+}
+
 function pendPanelHtml(){
   var piks=Object.keys(PEND); if(!piks.length)return '';
   var info={}; (ITENS||[]).forEach(function(r){ var k=r.pedido+'|'+r.item; if(!info[k])info[k]={cliente:r.clienteNome||'',produto:r.produto||''}; });
@@ -4299,8 +4555,9 @@ function renderFicha(p){
   var html='<div class="f-grid">'+
     '<label class="f-fld">Código (PA)<input id="f-pa" value="'+apEsc(FICHA_PA)+'" placeholder="PA000000000000"'+(FICHA_PA?' readonly':'')+'></label>'+
     '<label class="f-fld" style="grid-column:1/-1">Descrição<input id="f-desc" value="'+apEsc(p.descricao||'')+'"></label>'+
-    '<label class="f-fld">Substrato<input id="f-subs" value="'+apEsc(p.substrato||'')+'"></label>'+
-    '<label class="f-fld">Largura substrato (mm)<input id="f-lsub" type="number" value="'+apEsc(p.larg_substrato!=null?p.larg_substrato:'')+'"></label>'+
+    '<label class="f-fld">Matéria-prima<select id="f-mp" onchange="fichaMPChange()">'+fichaMPOptions(p.materia_prima_id)+'</select></label>'+
+    '<label class="f-fld">Substrato (texto livre)<input id="f-subs" value="'+apEsc(p.substrato||'')+'"></label>'+
+    '<label class="f-fld">Largura substrato (mm) <span class="ap-hint" style="font-weight:400">p/ conversão m²</span><input id="f-lsub" type="number" value="'+apEsc(p.larg_substrato!=null?p.larg_substrato:'')+'"></label>'+
     '<label class="f-fld">Largura etiqueta (mm)<input id="f-let" type="number" value="'+apEsc(p.larg_etiqueta!=null?p.larg_etiqueta:'')+'"></label>'+
     '<label class="f-fld">Altura etiqueta (mm)<input id="f-aet" type="number" value="'+apEsc(p.alt_etiqueta!=null?p.alt_etiqueta:'')+'" oninput="renderFichaRoteiro()"></label>'+
     '<label class="f-fld">Gap (mm)<input id="f-gap" type="number" value="'+apEsc(p.gap_etiqueta!=null?p.gap_etiqueta:0)+'" oninput="renderFichaRoteiro()"></label>'+
@@ -4426,6 +4683,13 @@ async function materializarProduto(pa){
     });
     var ins=await supabaseClient.from('ordem_operacoes').insert(rows);
     if(ins.error)throw ins.error; n++;
+    // SNAPSHOT de materia-prima na OS (congela ao definir; nao sobrescreve o que ja tem).
+    // Usa o valor ATUAL do cadastro; largura efetiva = larg_substrato do produto.
+    // try/catch: degrada se o 21_ (colunas mp_* em ordens) ainda nao foi aplicado.
+    if((o.mp_id==null)&&prod.materia_prima_id!=null){
+      var _mp=(MATERIAS_PRIMAS||[]).filter(function(m){return String(m.id)===String(prod.materia_prima_id);})[0];
+      if(_mp){ try{ await supabaseClient.from('ordens').update({mp_id:_mp.id,mp_nome:_mp.nome,mp_fornecedor:_mp.fornecedor||null,mp_valor_m2:_mp.valor_m2,mp_icms_pct:_mp.icms_pct,mp_ipi_pct:_mp.ipi_pct,mp_largura_mm:(prod.larg_substrato!=null?prod.larg_substrato:_mp.largura_mm)}).eq('id',o.id); }catch(e){} }
+    }
   }
   return n;
 }
@@ -4450,14 +4714,36 @@ async function materializarPendentes(){
     return {prods:pas.length,mat:mat};
   }catch(e){ console.warn('materializarPendentes',e); return {prods:0,mat:0}; }
 }
+// Opcoes do select de materia-prima na ficha (so ativas + a atual, mesmo inativa).
+function fichaMPOptions(sel){
+  var cur=(sel!=null?String(sel):'');
+  var opts='<option value="">— sem matéria-prima —</option>';
+  (MATERIAS_PRIMAS||[]).forEach(function(mp){
+    if(mp.ativo===false && String(mp.id)!==cur)return;
+    opts+='<option value="'+apEsc(mp.id)+'"'+(String(mp.id)===cur?' selected':'')+'>'+apEsc(mp.nome)+(mp.fornecedor?(' · '+apEsc(mp.fornecedor)):'')+(mp.ativo===false?' (inativo)':'')+'</option>';
+  });
+  return opts;
+}
+// Ao escolher uma MP: puxa a largura padrao dela (editavel) e, se o texto de
+// substrato estiver vazio, preenche com o nome da MP. Largura fica no PRODUTO.
+function fichaMPChange(){
+  var sel=document.getElementById('f-mp'); if(!sel)return;
+  var mp=(MATERIAS_PRIMAS||[]).filter(function(m){return String(m.id)===String(sel.value);})[0];
+  if(!mp)return;
+  if(mp.largura_mm!=null){ var l=document.getElementById('f-lsub'); if(l)l.value=mp.largura_mm; }
+  var s=document.getElementById('f-subs'); if(s&&!(s.value||'').trim())s.value=mp.nome||'';
+}
 async function salvarFicha(){
   try{
     var pa=FICHA_PA||((fval('f-pa')||'').trim().toUpperCase());
     if(!pa){ alert('Informe o código (PA) do produto.'); return; }
     FICHA_PA=pa;
+    var mpSel=document.getElementById('f-mp'), mpId=(mpSel&&mpSel.value)?Number(mpSel.value):null;
     var prod={codigo_pa:pa,descricao:fval('f-desc').trim(),substrato:fval('f-subs').trim(),
       larg_substrato:fnum('f-lsub'),larg_etiqueta:fnum('f-let'),alt_etiqueta:fnum('f-aet'),
       gap_etiqueta:fnum('f-gap'),cores:fnum('f-cores'),atualizado_em:new Date().toISOString()};
+    // so envia materia_prima_id quando o 20_ ja foi aplicado (senao a coluna nao existe)
+    if(window._mpReady)prod.materia_prima_id=mpId;
     var up=await supabaseClient.from('produtos').upsert(prod); if(up.error)throw up.error;
     await supabaseClient.from('produto_conversoes').delete().eq('produto_codigo',pa);
     if(FICHA_CONV.length){ var ic=await supabaseClient.from('produto_conversoes').insert(FICHA_CONV.filter(function(c){return c.um;}).map(function(c){return {produto_codigo:pa,um:c.um,fator:c.fator};})); if(ic.error)throw ic.error; }
