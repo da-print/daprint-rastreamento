@@ -4548,6 +4548,26 @@ async function abrirFicha(codigoPa){
   }catch(e){ document.getElementById('ficha-conteudo').innerHTML='<div class="ap-op"><div class="ap-hint">Erro ao carregar a ficha. O schema 13_ foi aplicado?\n'+apEsc(e.message||e)+'</div></div>'; }
 }
 function fecharFicha(){document.getElementById('modal-ficha').style.display='none';}
+// Espelho: abre uma NOVA ficha pre-preenchida com os parametros de outra (codigo em
+// branco p/ voce digitar o novo). Copia dimensoes, MP, conversoes e roteiro.
+async function espelharFicha(pa){
+  pa=(pa||'').toUpperCase();
+  FICHA_PA=null;
+  document.getElementById('ficha-titulo').textContent='Nova ficha · espelho de '+pa;
+  document.getElementById('ficha-conteudo').innerHTML='<div class="ap-op"><div class="ap-hint">Carregando…</div></div>';
+  document.getElementById('modal-ficha').style.display='flex';
+  try{
+    FICHA_GRUPOS=(await supabaseClient.from('maquinas_grupos').select('*')).data||[];
+    var src=(await supabaseClient.from('produtos').select('*').eq('codigo_pa',pa).maybeSingle()).data||{};
+    FICHA_CONV=((await supabaseClient.from('produto_conversoes').select('*').eq('produto_codigo',pa)).data||[]).map(function(c){return {um:c.um,fator:c.fator};});
+    FICHA_ROTEIRO=((await supabaseClient.from('produto_etapas').select('*').eq('produto_codigo',pa).order('ordem')).data||[]).map(function(e){return {grupo:e.grupo,carreiras:e.carreiras||1,repeticoes:e.repeticoes||1,acab_verniz:!!e.acab_verniz,acab_laminacao:!!e.acab_laminacao};});
+    if(!FICHA_CONV.length)FICHA_CONV=[{um:'MI',fator:1000}];
+    // produto "novo" sem codigo_pa (campo fica editavel); demais parametros copiados
+    var novo={descricao:src.descricao||'',materia_prima_id:src.materia_prima_id,larg_substrato:src.larg_substrato,
+      larg_etiqueta:src.larg_etiqueta,alt_etiqueta:src.alt_etiqueta,gap_etiqueta:src.gap_etiqueta,cores:src.cores};
+    renderFicha(novo);
+  }catch(e){ document.getElementById('ficha-conteudo').innerHTML='<div class="ap-op"><div class="ap-hint">Erro ao espelhar a ficha.\n'+apEsc(e.message||e)+'</div></div>'; }
+}
 
 function renderFicha(p){
   var grupos=FICHA_GRUPOS.slice().sort(function(a,b){return (a.ordem_exibicao||0)-(b.ordem_exibicao||0);});
@@ -4556,7 +4576,6 @@ function renderFicha(p){
     '<label class="f-fld">Código (PA)<input id="f-pa" value="'+apEsc(FICHA_PA)+'" placeholder="PA000000000000"'+(FICHA_PA?' readonly':'')+'></label>'+
     '<label class="f-fld" style="grid-column:1/-1">Descrição<input id="f-desc" value="'+apEsc(p.descricao||'')+'"></label>'+
     '<label class="f-fld">Matéria-prima<select id="f-mp" onchange="fichaMPChange()">'+fichaMPOptions(p.materia_prima_id)+'</select></label>'+
-    '<label class="f-fld">Substrato (texto livre)<input id="f-subs" value="'+apEsc(p.substrato||'')+'"></label>'+
     '<label class="f-fld">Largura substrato (mm) <span class="ap-hint" style="font-weight:400">p/ conversão m²</span><input id="f-lsub" type="number" value="'+apEsc(p.larg_substrato!=null?p.larg_substrato:'')+'"></label>'+
     '<label class="f-fld">Largura etiqueta (mm)<input id="f-let" type="number" value="'+apEsc(p.larg_etiqueta!=null?p.larg_etiqueta:'')+'"></label>'+
     '<label class="f-fld">Altura etiqueta (mm)<input id="f-aet" type="number" value="'+apEsc(p.alt_etiqueta!=null?p.alt_etiqueta:'')+'" oninput="renderFichaRoteiro()"></label>'+
@@ -4731,7 +4750,6 @@ function fichaMPChange(){
   var mp=(MATERIAS_PRIMAS||[]).filter(function(m){return String(m.id)===String(sel.value);})[0];
   if(!mp)return;
   if(mp.largura_mm!=null){ var l=document.getElementById('f-lsub'); if(l)l.value=mp.largura_mm; }
-  var s=document.getElementById('f-subs'); if(s&&!(s.value||'').trim())s.value=mp.nome||'';
 }
 async function salvarFicha(){
   try{
@@ -4739,7 +4757,9 @@ async function salvarFicha(){
     if(!pa){ alert('Informe o código (PA) do produto.'); return; }
     FICHA_PA=pa;
     var mpSel=document.getElementById('f-mp'), mpId=(mpSel&&mpSel.value)?Number(mpSel.value):null;
-    var prod={codigo_pa:pa,descricao:fval('f-desc').trim(),substrato:fval('f-subs').trim(),
+    // substrato (texto) deixou de ser campo editavel: deriva do nome da MP selecionada
+    var _mpObj=(MATERIAS_PRIMAS||[]).filter(function(m){return String(m.id)===String(mpId);})[0];
+    var prod={codigo_pa:pa,descricao:fval('f-desc').trim(),substrato:(_mpObj?_mpObj.nome:''),
       larg_substrato:fnum('f-lsub'),larg_etiqueta:fnum('f-let'),alt_etiqueta:fnum('f-aet'),
       gap_etiqueta:fnum('f-gap'),cores:fnum('f-cores'),atualizado_em:new Date().toISOString()};
     // so envia materia_prima_id quando o 20_ ja foi aplicado (senao a coluna nao existe)
@@ -4764,11 +4784,12 @@ async function renderFichas(){
   var el=document.getElementById('fichas-conteudo'); if(!el)return;
   el.innerHTML='<div style="color:var(--text3);padding:14px">Carregando…</div>';
   try{
-    var prods=(await supabaseClient.from('produtos').select('codigo_pa,descricao,cores').order('codigo_pa')).data||[];
+    var prods=(await supabaseClient.from('produtos').select('codigo_pa,descricao,cores,materia_prima_id,substrato').order('codigo_pa')).data||[];
     var etapas=(await supabaseClient.from('produto_etapas').select('produto_codigo,grupo,ordem').order('ordem')).data||[];
     var ords=(await supabaseClient.from('ordens').select('produto_codigo')).data||[];
     var rot={}; etapas.forEach(function(e){(rot[e.produto_codigo]=rot[e.produto_codigo]||[]).push(e.grupo);});
-    FICHAS_LISTA=prods.map(function(p){return {codigo:p.codigo_pa,descricao:p.descricao||'',cores:p.cores||0,roteiro:rot[p.codigo_pa]||[]};});
+    var mpMap={}; (MATERIAS_PRIMAS||[]).forEach(function(m){ mpMap[m.id]=m.nome+(m.fornecedor?(' · '+m.fornecedor):''); });
+    FICHAS_LISTA=prods.map(function(p){return {codigo:p.codigo_pa,descricao:p.descricao||'',cores:p.cores||0,roteiro:rot[p.codigo_pa]||[],materia:(p.materia_prima_id!=null?(mpMap[p.materia_prima_id]||'(MP inativa)'):(p.substrato||''))};});
     var tem={}; prods.forEach(function(p){tem[p.codigo_pa]=true;});
     var seen={}; FICHAS_SEMFICHA=[];
     // PR (revenda) e SE (serviço) nao sao fichas de produto: ficam de fora.
@@ -4780,7 +4801,7 @@ function toggleSemFicha(){ window._semFichaAberto=!window._semFichaAberto; rende
 function renderFichasLista(){
   var el=document.getElementById('fichas-conteudo'); if(!el)return;
   var q=(document.getElementById('fichas-busca').value||'').toLowerCase().trim();
-  var lista=FICHAS_LISTA.filter(function(f){ return !q||f.codigo.toLowerCase().indexOf(q)>=0||(f.descricao||'').toLowerCase().indexOf(q)>=0; });
+  var lista=FICHAS_LISTA.filter(function(f){ return !q||f.codigo.toLowerCase().indexOf(q)>=0||(f.descricao||'').toLowerCase().indexOf(q)>=0||(f.materia||'').toLowerCase().indexOf(q)>=0; });
   var html='';
   if(FICHAS_SEMFICHA.length){
     var ab=!!window._semFichaAberto;
@@ -4792,11 +4813,12 @@ function renderFichasLista(){
   var totalCad=FICHAS_LISTA.length;
   html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:13px;color:var(--text3)"><i class="ti ti-package" style="color:var(--accent);font-size:18px"></i><span><b style="color:var(--text);font-size:15px">'+totalCad+'</b> produto'+(totalCad!==1?'s':'')+' cadastrado'+(totalCad!==1?'s':'')+(q?(' · '+lista.length+' no filtro'):'')+'</span></div>';
   if(!lista.length){ html+='<div style="color:var(--text3);padding:14px">Nenhuma ficha cadastrada ainda.</div>'; el.innerHTML=html; return; }
-  html+='<div class="table-wrap"><table><thead><tr><th>Código</th><th>Descrição</th><th>Cores</th><th>Roteiro</th><th></th></tr></thead><tbody>'+
+  html+='<div class="table-wrap"><table><thead><tr><th>Código</th><th>Descrição</th><th>Matéria-prima</th><th>Cores</th><th>Roteiro</th><th></th></tr></thead><tbody>'+
     lista.map(function(f){
       var rotTxt=f.roteiro.map(function(g){return '<span class="ap-chip">'+apEsc(dispNome(g)||g)+'</span>';}).join(' ')||'<span style="color:var(--text3)">sem roteiro</span>';
-      return '<tr><td style="font-weight:700">'+apEsc(f.codigo)+'</td><td>'+apEsc(f.descricao)+'</td><td>'+f.cores+'</td><td>'+rotTxt+'</td>'+
-        '<td><button class="btn-sec" onclick="abrirFicha(\''+apEsc(f.codigo)+'\')">Editar</button></td></tr>';
+      var matTxt=f.materia?apEsc(f.materia):'<span style="color:var(--text3)">—</span>';
+      return '<tr><td style="font-weight:700">'+apEsc(f.codigo)+'</td><td>'+apEsc(f.descricao)+'</td><td>'+matTxt+'</td><td>'+f.cores+'</td><td>'+rotTxt+'</td>'+
+        '<td style="white-space:nowrap"><button class="btn-sec" onclick="abrirFicha('+jsAttr(f.codigo)+')">Editar</button> <button class="btn-sec" title="Criar nova ficha a partir desta" onclick="espelharFicha('+jsAttr(f.codigo)+')">Espelhar</button></td></tr>';
     }).join('')+'</tbody></table></div>';
   el.innerHTML=html;
 }

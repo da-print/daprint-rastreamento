@@ -339,6 +339,18 @@ select p/ authenticated, escrita `posso_editar()`.
   **custo/ICMS/IPI por OS** (cada OS usa o SEU snapshot de preço — `KPI_MAT[...].forn/valor/icms/ipi`).
   Largura do m² = `mp_largura_mm` (snapshot) com fallback p/ `larg_substrato`. Degrada se `21_` ausente.
 
+### 12.2 Fichas: substrato removido, coluna MP e espelho (2026-11-15; só frontend)
+
+- **Campo "Substrato (texto livre)" REMOVIDO** da ficha (a MP virou a fonte única). `salvarFicha` agora
+  grava `produtos.substrato` derivado do **nome da MP selecionada** (coluna mantida no banco p/ compat).
+  `fichaMPChange` não mexe mais em substrato (só puxa a largura).
+- **Lista de fichas** (`renderFichas`/`renderFichasLista`) ganhou coluna **Matéria-prima** (de
+  `materia_prima_id` via `MATERIAS_PRIMAS`, cai p/ `substrato`; rótulo "nome · fornecedor"); busca também
+  filtra por MP. Ações da linha: **Editar** + **Espelhar**.
+- **Espelhar** (`espelharFicha(pa)`): abre uma NOVA ficha (código em branco/editável) pré-preenchida com
+  dimensões, cores, MP, conversões e roteiro do item de origem — p/ cadastrar produto parecido e ajustar.
+  Onclicks de Editar/Espelhar usam `jsAttr()`.
+
 **Ajustes 2026-11-14:** (1) **Bug finalizar manual:** item com ficha em grupo manual continuava na fila com
 "finalizado manual". Corrigido no cálculo de status — `if(ae&&ae.temOps && !(ov&&ov.finalizado_em))`: a
 marcação manual VENCE a fila do apontamento → vai p/ aguardando faturamento. (2) **Pendências: responsável**
