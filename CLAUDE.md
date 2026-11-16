@@ -1,7 +1,7 @@
 # PCP — Monitoramento de Produção (estado atual)
 
 Documento técnico/handoff do projeto PCP. Leia antes de continuar o trabalho.
-Última atualização: 2026-11-15.
+Última atualização: 2026-11-16.
 
 ## 1. Visão geral
 
@@ -137,10 +137,18 @@ visualizador, visualizador_maquina (operador), representante.
   → `window._meuUid`): cards (horas produtivas, setup, paradas, metros, nº OS) + tabela "Minhas ordens".
   Os filtros de gestor (grupo/máquina/operador/cliente/OS) ficam ocultos; período continua. Sem mudança
   no banco — o RLS já restringe o operador às máquinas dele (lê ordens/ordem_operacoes/apontamentos do grupo).
+  **Ordenar a fila (2026-11-16, `#painel-ordenar`/`ordComparePainel`):** seletor na barra de filtros ordena os
+  itens DENTRO de cada máquina/sub-máquina por Prioridade (arrastar, padrão = `ordCompare`), Data de entrega,
+  **Matéria-prima** (mapa `MP_NOME_POR_PA` produto→MP carregado no `recarregarDoBanco`, degrada se o 20_ ausente),
+  Cliente, Produto ou Saldo. O **arrastar continua sempre ativo**; ao soltar, grava a ordem (`ordCompare` →
+  `ordens.ordem`) e volta o seletor p/ "Prioridade" (fixa a ordem manual). Só visual/por sessão; nada no banco
+  além do drag.
 - **Máquinas**: config completa editável (modo, velocidade, % desperdício, setup/desperdício
   por modo, acabamento verniz/laminação + custo, velocidade por sub-máquina). Grava direto.
-- **Fichas técnicas**: lista de produtos (busca, editar), "Novo produto" (código editável),
-  "Produtos em OS sem ficha" (ignora PR/SE), **import por Excel** (botão Modelo + Importar).
+- **Fichas técnicas**: lista de produtos com coluna **Matéria-prima** (busca filtra código/descrição/MP),
+  ações **Editar** e **Espelhar** (duplica a ficha num cadastro novo), "Novo produto" (código editável),
+  "Produtos em OS sem ficha" (ignora PR/SE), **import por Excel** (botão Modelo + Importar). A ficha
+  seleciona a **matéria-prima** (cadastro próprio; sem mais substrato texto livre) — ver §12.
 - **KPIs**: aba (`renderKPIs`/`renderKpiTabelas`). Lê `v_operacao_kpi` + `v_parada_detalhe` e
   **agrega no cliente** com filtros de **período** (hoje/7d/30d/tudo/custom) + grupo/máquina/
   operador + **cliente** + **OS** (texto ped-item). Cards com **comparativos em %** (tempo rodando;
@@ -195,11 +203,25 @@ Conversa com ordens/ordem_operacoes/apontamentos. Estados e ações: Iniciar set
 (metragem) / Parada (com motivo) / Retomar → Finalizar. Validação (pré-impressão): só
 "Validar e finalizar". Reabrir em etapas finalizadas (soma apontamentos). Mostra
 total produzido, desperdício de setup e **cronômetro ao vivo** (ancorado no relógio do cliente).
+A linha de **estimado** inclui (2026-11-16) o **setup em metros** (`desp_setup_est`), além de setup/produção
+em min, rodar (cheio/líquido) e velocidade.
+**Máquina no modal (2026-11-16):** escolher a sub-máquina no select da etapa `aguardando`
+(`apAtribuirMaquina` → `atribuirMaquina`) já **move o item p/ a fila daquela máquina** no painel e re-snapshota
+velocidade/tempo — igual ao painel; só gestor/editor (operador define ao iniciar o setup, por RLS). Antes o
+select só era lido ao iniciar o setup.
+**Trava de metragem zerada (2026-11-16, `apFinalizarProducao`/`apFinalizarSetup`):** Finalizar produção/setup
+**aproveita a metragem ainda digitada no campo** (sem precisar clicar Lançar) e, se o total ficar **zerado**,
+pede **confirmação** antes de gravar (caso legítimo: produção atendida a partir de estoque). Lançar e Parada já
+consumiam/validavam o campo.
 
-**Histórico de apontamentos** (por etapa, `apHistoricoHtml`): uma **linha por bloco** em
-ordem cronológica — Setup / Produção / Parada (`dd/mm hh:mm → hh:mm` + duração + metros/motivo),
-Validação / Reabertura / **Observação** — com o **nome do operador** (de `profiles.nome`, carregado em
-`apCarregar` → `AP_OPERADORES`; degrada p/ "—" se a RLS não liberar). Em `<details>` recolhível.
+**Histórico de apontamentos** (por etapa, `apHistorico`/`apHistoricoHtml`; e no popup de KPI `kpiHistHtml`):
+**hierárquico** (2026-11-16) — **Setup**, depois **Produção** (bloco com o **total** dos lançamentos + nº de
+trechos) e **cada Lançamento aninhado** (indentado) como subgrupo da produção; Parada / Validação / Reabertura /
+**Observação** como blocos próprios, em ordem cronológica (`dd/mm hh:mm → hh:mm` + duração + metros/motivo). O
+bloco de produção é criado no `prod_inicio` (posição cronológica certa) e os lançamentos entram em `prod.lancs`
+— antes eram linhas soltas ordenadas por horário e o 1º trecho empatava com o início da produção, caindo perto
+do setup. Traz o **nome do operador** (de `profiles.nome` via `AP_OPERADORES`; degrada p/ "—" se a RLS não
+liberar); no popup de KPI cada lançamento mostra a **velocidade por trecho**. Em `<details>` recolhível.
 
 **Observação por etapa** (`apObservar` → apontamento `tipo='observacao'`, texto em `motivo`): campo de
 texto em cada etapa p/ o impressor relatar ocorrência (ex.: "máquina patinando"). Aparece no histórico
@@ -290,6 +312,9 @@ apontamento (ver `aplicar_apontamento`).
 
 ## 12. Matérias-primas + m² nos KPIs (2026-11-15)
 
+**Status: TUDO EM PRODUÇÃO** — `20_` e `21_` aplicados no banco e `app.html` publicado (2026-11-16).
+Usuário já cadastrou as matérias-primas e vinculou em todas as fichas.
+
 Aba **Matérias-primas** (sidebar, só gestor/editor; cadastro em `PERM_GESTOR_TABS`/`PERM_ABAS` como
 `ver_materias`). Migration `20_`: tabela `materias_primas` (nome único, `largura_mm` [largura PADRÃO],
 `valor_m2` [BRUTO], `icms_pct`, `ipi_pct`, ativo) + coluna soft `produtos.materia_prima_id`
@@ -302,8 +327,9 @@ select p/ authenticated, escrita `posso_editar()`.
   (degrada se `20_` ausente); **`window._mpReady`** = tabela existe (⇒ coluna também) — gate p/ não
   quebrar `salvarFicha` antes do `20_` (só envia `materia_prima_id` com `_mpReady`).
 - **Ficha**: select `f-mp` (`fichaMPOptions`/`fichaMPChange`) — ao escolher, puxa a largura padrão p/
-  `larg_substrato` (**editável**, largura efetiva fica no PRODUTO) e preenche o texto `substrato` se vazio.
-  Texto livre `substrato` mantido como fallback. Excel import/export NÃO mexe na MP (vínculo é só na UI).
+  `larg_substrato` (**editável**, largura efetiva fica no PRODUTO). O campo de substrato texto livre foi
+  REMOVIDO (ver §12.2); `substrato` (coluna do banco) agora deriva do nome da MP no save. Excel
+  import/export NÃO mexe na MP (vínculo é só na UI).
 - **Conversão** linear→m²: `m² = metros_lineares × (largura_mm ÷ 1000)`.
 - **KPI "Por matéria-prima"** (`renderKpiTabelas`; `KPI_MAT` de `v_ordem_materia`; `kBRL`): por MP,
   **m² estimado** (`kRodar(ref)`), **m² rodado** (`qtd_real(ref)`), **m² a produzir** (est−real),
@@ -317,8 +343,7 @@ select p/ authenticated, escrita `posso_editar()`.
   **matéria-prima** (nome; cai p/ `substrato` texto se sem vínculo), largura, dimensões (L×A, gap,
   passo, cores), roteiro e conversões. **Valor/m², ICMS e IPI só para `window._podeEditar`**. Botão
   "Editar ficha" (gestor/editor) chama `abrirFicha`. Sem ficha → oferece cadastrar. Não depende do
-  `20_` (só o nome da MP no popup depende). **Pendente do usuário:** depois de vincular as MPs em todas
-  as fichas, remover o campo "Substrato (texto livre)" da ficha (redundante) — a pedido dele.
+  `20_` (só o nome da MP no popup depende). O campo "Substrato (texto livre)" já foi removido da ficha (§12.2).
 
 ### 12.1 Fornecedor + ciclo fechado (snapshot de custo) — migration `21_` (2026-11-15)
 

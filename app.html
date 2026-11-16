@@ -738,6 +738,14 @@ function setSidebarAtivo(key){ try{ document.querySelectorAll('#side-nav [data-a
     <select id="filtro-vendedor" onchange="renderPainel()">
       <option value="">Todos os vendedores</option>
     </select>
+    <select id="painel-ordenar" onchange="renderPainel()" title="Ordenar a fila dentro de cada máquina">
+      <option value="manual">Ordenar: Prioridade (arrastar)</option>
+      <option value="entrega">Ordenar: Data de entrega</option>
+      <option value="materia">Ordenar: Matéria-prima</option>
+      <option value="cliente">Ordenar: Cliente</option>
+      <option value="produto">Ordenar: Produto</option>
+      <option value="saldo">Ordenar: Saldo (qtd)</option>
+    </select>
     <input type="date" id="filtro-data-de" onchange="renderPainel()" title="Entrega a partir de">
     <input type="date" id="filtro-data-ate" onchange="renderPainel()" title="Entrega até">
     <button class="btn-sec" onclick="limparPeriodo()">Limpar período</button>
@@ -1477,6 +1485,7 @@ async function lerTabelaCompleta(tabela,colunas,ordenarPor){
   return {data:todos,error:null};
 }
 var MATERIAS_PRIMAS=[];
+var MP_NOME_POR_PA={}; // codigo_pa -> nome da materia-prima (p/ ordenacao do painel)
 async function recarregarDoBanco(silencioso, light){
   var msg=document.getElementById('upload-msg');
   if(msg&&!silencioso) msg.textContent='Carregando dados do banco...';
@@ -1521,6 +1530,14 @@ async function recarregarDoBanco(silencioso, light){
     try{ var rmp=await supabaseClient.from('materias_primas').select('*').order('nome');
       if(rmp&&!rmp.error){ MATERIAS_PRIMAS=rmp.data||[]; window._mpReady=true; }
       else { MATERIAS_PRIMAS=[]; window._mpReady=false; } }catch(e){ MATERIAS_PRIMAS=[]; window._mpReady=false; }
+    // Mapa leve produto -> nome da materia-prima (p/ ordenar a fila do painel por MP).
+    // Degrada em silencio: se nao der, a ordenacao por MP so fica vazia.
+    try{ var mpById={}; (MATERIAS_PRIMAS||[]).forEach(function(m){mpById[String(m.id)]=m.nome;});
+      var rpp=await supabaseClient.from('produtos').select('codigo_pa,materia_prima_id,substrato');
+      MP_NOME_POR_PA={};
+      if(rpp&&!rpp.error){ (rpp.data||[]).forEach(function(p){
+        MP_NOME_POR_PA[p.codigo_pa]=(p.materia_prima_id!=null&&mpById[String(p.materia_prima_id)])||p.substrato||''; }); }
+    }catch(e){ MP_NOME_POR_PA={}; }
 
     if(pBig){
       var big=await pBig;
@@ -2599,7 +2616,7 @@ function kpiHistHtml(ev,unit){
   var u=apEsc(unit||'m');
   var IC={setup:'🔧',prod:'▶️',parada:'⏸️',validada:'✅',reabertura:'🔓',lanc:'➕',obs:'📝'};
   var LB={setup:'Setup',prod:'Produção',parada:'Parada',validada:'Validação',reabertura:'Reabertura',lanc:'Lançamento',obs:'Observação'};
-  return rows.map(function(r){
+  function lineHtml(r,child){
     var ponto=(r.k==='validada'||r.k==='reabertura'||r.k==='obs'||(r.k==='lanc'&&!r.fim));
     var dur=(r.fim?(r.fim-r.ini):0);
     var per=ponto?apDT(r.ini):(r.fim?(apDT(r.ini)+' → '+apDT(r.fim)+' · '+apClock(dur)):(apDT(r.ini)+' · <i>em andamento</i>'));
@@ -2609,11 +2626,16 @@ function kpiHistHtml(ev,unit){
     else if(r.k==='lanc'){ var h2=dur/3600000; extra=' · '+kFmt(r.qtd)+' '+u+((h2>0&&r.qtd>0)?(' · '+kFmt(r.qtd/h2)+' '+u+'/h'):''); }
     else if(r.k==='parada')extra=(r.motivo?(' · '+apEsc(r.motivo)):'');
     else if(r.k==='obs')extra=' · <i>'+apEsc(r.motivo||'')+'</i>';
-    return '<div style="display:flex;gap:8px;align-items:baseline;font-size:12px;padding:3px 0;border-top:1px solid var(--border)'+(r.k==='lanc'?';padding-left:18px;opacity:.9':'')+'">'+
+    return '<div style="display:flex;gap:8px;align-items:baseline;font-size:12px;padding:3px 0;border-top:1px solid var(--border)'+(child?';padding-left:30px;opacity:.9':'')+'">'+
       '<span style="width:18px;flex:none;text-align:center">'+IC[r.k]+'</span>'+
       '<span style="width:78px;flex:none;font-weight:600">'+LB[r.k]+'</span>'+
       '<span style="flex:1">'+per+extra+'</span>'+
       '<span style="color:var(--text3);white-space:nowrap">'+apEsc(kpiNome(r.op))+(r.fimOp&&r.fimOp!==r.op?(' / '+apEsc(kpiNome(r.fimOp))):'')+'</span></div>';
+  }
+  return rows.map(function(r){
+    var out=lineHtml(r,false);
+    if(r.k==='prod'&&r.lancs&&r.lancs.length){ out+=r.lancs.map(function(l){return lineHtml(l,true);}).join(''); }
+    return out;
   }).join('');
 }
 function kpiOcorrenciasHtml(ops,evByOp){
@@ -2872,6 +2894,37 @@ function ordCompare(a,b){
   return da-db;
 }
 
+// Ordenacao da fila DENTRO de cada maquina/sub conforme o seletor "Ordenar por".
+// Padrao 'manual' = prioridade por arrastar (ordCompare). Os demais sao ordenacoes
+// rapidas, so-visuais; o arrastar continua disponivel e "fixa" a ordem manual (ver onDrop).
+function painelOrdenarModo(){
+  var el=document.getElementById('painel-ordenar');
+  return el?el.value:'manual';
+}
+function ordComparePainel(a,b){
+  var modo=painelOrdenarModo();
+  if(modo==='manual')return ordCompare(a,b);
+  var r=0;
+  if(modo==='entrega'){
+    var da=a.entrega instanceof Date?a.entrega.getTime():9e15;
+    var db=b.entrega instanceof Date?b.entrega.getTime():9e15;
+    r=da-db;
+  }else if(modo==='saldo'){
+    var sa=parseNum(a.saldo); var sb=parseNum(b.saldo);
+    if(isNaN(sa))sa=Infinity; if(isNaN(sb))sb=Infinity;
+    r=sa-sb;
+  }else{
+    var va='',vb='';
+    if(modo==='materia'){ va=MP_NOME_POR_PA[a.produto]||''; vb=MP_NOME_POR_PA[b.produto]||''; }
+    else if(modo==='cliente'){ va=a.clienteNome||''; vb=b.clienteNome||''; }
+    else if(modo==='produto'){ va=a.produto||''; vb=b.produto||''; }
+    var ea=va?0:1, eb=vb?0:1; // vazios por ultimo
+    if(ea!==eb)return ea-eb;
+    r=va.localeCompare(vb,'pt',{sensitivity:'base',numeric:true});
+  }
+  return r!==0?r:ordCompare(a,b); // desempate estavel pela prioridade manual/entrega
+}
+
 function opcoesGrupoHtml(r){
   var op=GRUPOS.map(function(g){return'<option value="'+g.nome+'"'+(r.grupo===g.nome?' selected':'')+'>'+(g.display||g.nome)+'</option>';}).join('');
   return '<option value="">'+(r.grupo?'- selecionar -':'Definir máquina')+'</option>'+op;
@@ -3046,7 +3099,7 @@ function renderPainel(){
       });
       html+=barraCargaHtml(horasTotal,mlTotalGrupo,' · '+gInfo.subs.length+' máquinas no grupo');
       chavesSub.forEach(function(s){
-        var lista=porSub[s].slice().sort(ordCompare);
+        var lista=porSub[s].slice().sort(ordComparePainel);
         var hs=lista.reduce(function(a,r){return a+(tempoHoras(r)||0);},0);
         var mls=lista.reduce(function(a,r){return a+metrosReais(r);},0);
         html+='<div class="sub-bloco"><div class="sub-header">'+s+' <span style="color:var(--text3);font-weight:400">('+lista.length+' itens)</span></div>'+
@@ -3054,7 +3107,7 @@ function renderPainel(){
           '<div class="table-wrap">'+tabelaHtml(lista,true)+'</div></div>';
       });
     }else{
-      var lista=itens.slice().sort(ordCompare);
+      var lista=itens.slice().sort(ordComparePainel);
       html+=barraCargaHtml(horasTotal,mlTotalGrupo)+'<div class="table-wrap">'+tabelaHtml(lista,true)+'</div>';
     }
     html+='</div>';
@@ -3175,7 +3228,8 @@ function onDrop(e){
     alert('Só é possível reordenar itens dentro da mesma máquina/fila.');
     return;
   }
-  var lista=ITENS.filter(function(r){return r.grupo===dst.grupo&&(r.sub||'')===(dst.sub||'');}).sort(ordCompare);
+  // usa a ordem EXIBIDA no momento (seletor "Ordenar por") como ponto de partida do arraste
+  var lista=ITENS.filter(function(r){return r.grupo===dst.grupo&&(r.sub||'')===(dst.sub||'');}).sort(ordComparePainel);
   var si=lista.findIndex(function(r){return r.key===srcKey;});
   var di=lista.findIndex(function(r){return r.key===dstKey;});
   if(si<0||di<0)return;
@@ -3186,6 +3240,8 @@ function onDrop(e){
   var itensComOrdem=lista.map(function(r,idx){return{key:r.key,ordem:(idx+1)*10};});
   (async function(){
     await salvarOrdensEmLote(itensComOrdem);
+    // arrastar "fixa" a ordem manual: volta o seletor p/ Prioridade e mostra a nova fila
+    var selOrd=document.getElementById('painel-ordenar'); if(selOrd)selOrd.value='manual';
     processarTudo();
   })();
 }
@@ -3673,6 +3729,15 @@ async function atribuirMaquina(opId,maquina){
     if(r.error)throw r.error;
     recarregarDoBanco(true,true);
   }catch(e){ alert('Não foi possível atribuir a máquina.\n'+(e.message||e)); }
+}
+// Selecao da maquina DENTRO do modal de apontamento (etapa aguardando): persiste a
+// maquina igual ao painel, para o item ja migrar para a fila da sub-maquina. So p/
+// gestor/editor; para o operador a maquina e definida ao iniciar o setup (RLS).
+async function apAtribuirMaquina(opId,maq){
+  if(!window._podeEditar)return;
+  await atribuirMaquina(opId,maq);
+  var r=ITENS.find(function(x){return x.key===AP_KEY;});
+  if(r)await apCarregar(r); // re-renderiza o modal (velocidade/tempo estimado atualizados)
 }
 // ===================== AJUSTE DE CARREIRAS DESTA RODADA (gestor/editor) =====================
 // Override pontual de carreiras numa OS (ex.: material mais estreito). NAO altera a ficha do
@@ -4309,14 +4374,22 @@ function apRender(r){
 function apNomeOp(id){return (id&&AP_OPERADORES[id])||'—';}
 function apDT(ts){var d=new Date(ts);function z(n){return(n<10?'0':'')+n;}return z(d.getDate())+'/'+z(d.getMonth()+1)+' '+z(d.getHours())+':'+z(d.getMinutes());}
 function apHistorico(ev){
-  var rows=[],openS=null,openP=null,openPar=null,lanc=[],prevTs=null;
+  // Hierarquia: Setup, depois Produção (total dos lançamentos) com cada lançamento
+  // como SUBGRUPO (filho) da produção. O bloco de produção é criado no prod_inicio e
+  // fica na posição cronológica certa; os lançamentos não viram linhas de topo.
+  var rows=[],openS=null,openP=null,openPar=null,prevTs=null;
   ev.forEach(function(x){
     var ts=apTs(x);
     if(x.tipo==='setup_inicio'){openS=x;}
     else if(x.tipo==='setup_fim'){rows.push({k:'setup',ini:openS?apTs(openS):ts,fim:ts,qtd:Number(x.qtd)||0,op:(openS||x).operador_id,fimOp:x.operador_id});openS=null;}
-    else if(x.tipo==='prod_inicio'){openP=x;lanc=[];}
-    else if(x.tipo==='lancamento'){var li=(openP&&prevTs!=null)?prevTs:ts;rows.push({k:'lanc',ini:li,fim:(openP?ts:null),qtd:Number(x.qtd)||0,op:x.operador_id});if(openP){lanc.push(x);}}
-    else if(x.tipo==='prod_fim'){var tot=lanc.reduce(function(a,l){return a+(Number(l.qtd)||0);},0);rows.push({k:'prod',ini:openP?apTs(openP):ts,fim:ts,qtd:tot,trechos:lanc.length,op:(openP||x).operador_id,fimOp:x.operador_id});openP=null;lanc=[];}
+    else if(x.tipo==='prod_inicio'){openP={k:'prod',ini:ts,fim:null,qtd:0,trechos:0,lancs:[],op:x.operador_id,aberto:true};rows.push(openP);}
+    else if(x.tipo==='lancamento'){
+      var li=(openP&&prevTs!=null)?prevTs:ts;
+      var lrow={k:'lanc',ini:li,fim:ts,qtd:Number(x.qtd)||0,op:x.operador_id};
+      if(openP){openP.lancs.push(lrow);openP.qtd+=lrow.qtd;openP.trechos++;}
+      else{lrow.fim=null;rows.push(lrow);} // lançamento fora de produção (raro): fica avulso
+    }
+    else if(x.tipo==='prod_fim'){if(openP){openP.fim=ts;openP.fimOp=x.operador_id;openP.aberto=false;}openP=null;}
     else if(x.tipo==='parada_inicio'){openPar=x;}
     else if(x.tipo==='parada_fim'){rows.push({k:'parada',ini:openPar?apTs(openPar):ts,fim:ts,motivo:openPar?openPar.motivo:'',op:(openPar||x).operador_id});openPar=null;}
     else if(x.tipo==='validada'){rows.push({k:'validada',ini:ts,fim:null,op:x.operador_id});}
@@ -4325,7 +4398,7 @@ function apHistorico(ev){
     prevTs=ts;
   });
   if(openS)rows.push({k:'setup',ini:apTs(openS),fim:null,qtd:null,op:openS.operador_id,aberto:true});
-  if(openP){var t2=lanc.reduce(function(a,l){return a+(Number(l.qtd)||0);},0);rows.push({k:'prod',ini:apTs(openP),fim:null,qtd:t2,trechos:lanc.length,op:openP.operador_id,aberto:true});}
+  // produção ainda aberta já está em rows (push no prod_inicio), com aberto:true e qtd acumulado
   if(openPar)rows.push({k:'parada',ini:apTs(openPar),fim:null,motivo:openPar.motivo,op:openPar.operador_id,aberto:true});
   rows.sort(function(a,b){return a.ini-b.ini;});
   return rows;
@@ -4334,7 +4407,7 @@ function apHistoricoHtml(ev,unit,opId,ehGestor){
   var rows=apHistorico(ev); if(!rows.length)return '';
   var IC={setup:'🔧',prod:'▶️',parada:'⏸️',validada:'✅',reabertura:'🔓',lanc:'➕',obs:'📝'};
   var LB={setup:'Setup',prod:'Produção',parada:'Parada',validada:'Validação',reabertura:'Reabertura',lanc:'Lançamento',obs:'Observação'};
-  var li=rows.map(function(r){
+  function lineHtml(r,child){
     var ponto=(r.k==='validada'||r.k==='reabertura'||r.k==='obs'||(r.k==='lanc'&&!r.fim));
     var per=ponto?apDT(r.ini):(r.fim?(apDT(r.ini)+' → '+apDT(r.fim)+' · '+apClock(r.fim-r.ini)):(apDT(r.ini)+' · <i>em andamento</i>'));
     var extra='';
@@ -4345,11 +4418,16 @@ function apHistoricoHtml(ev,unit,opId,ehGestor){
     else if(r.k==='obs')extra=' · <i>'+apEsc(r.motivo||'')+'</i>';
     var nome=apEsc(apNomeOp(r.op))+(r.fimOp&&r.fimOp!==r.op?(' / '+apEsc(apNomeOp(r.fimOp))):'');
     var del=(r.k==='obs'&&ehGestor&&r.id)?' <a href="#" title="Excluir observação" onclick="apExcluirObs(\''+r.id+'\',\''+(opId||'')+'\');return false" style="color:#b23;text-decoration:none">✕</a>':'';
-    return '<div style="display:flex;gap:8px;align-items:baseline;font-size:12px;padding:4px 0;border-top:1px solid #eceef1;'+(r.k==='lanc'?'padding-left:18px;opacity:.88':'')+'">'+
+    return '<div style="display:flex;gap:8px;align-items:baseline;font-size:12px;padding:4px 0;border-top:1px solid #eceef1;'+(child?'padding-left:30px;opacity:.85':'')+'">'+
       '<span style="width:18px;flex:none;text-align:center">'+IC[r.k]+'</span>'+
       '<span style="width:78px;flex:none;font-weight:600;color:#333">'+LB[r.k]+'</span>'+
       '<span style="flex:1;color:#444">'+per+extra+'</span>'+
       '<span style="color:#777;white-space:nowrap">'+nome+del+'</span></div>';
+  }
+  var li=rows.map(function(r){
+    var out=lineHtml(r,false);
+    if(r.k==='prod'&&r.lancs&&r.lancs.length){ out+=r.lancs.map(function(l){return lineHtml(l,true);}).join(''); }
+    return out;
   }).join('');
   return '<details class="ap-hist" style="margin-top:8px"'+(rows.length<=6?' open':'')+'>'+
     '<summary style="cursor:pointer;font-size:12px;font-weight:600;color:#555">Histórico de apontamentos ('+rows.length+')</summary>'+li+'</details>';
@@ -4427,11 +4505,11 @@ function apRenderOp(r,op,estado){
     fb=op.status==='finalizada'?'<div class="ap-est ap-hint">Validada.</div>':'<div class="ap-est ap-hint">Etapa de validação — sem tempo/metragem. Valide para avançar.</div>';
   } else if(op.status==='aguardando'){
     var subs=apSubs(op.grupo);
-    var sel = subs.length ? '<select class="ap-sel" id="ap-maq-'+op.id+'"><option value="">— máquina —</option>'+subs.map(function(s){return '<option value="'+apEsc(s.nome)+'"'+(op.maquina===s.nome?' selected':'')+'>'+apEsc(s.nome)+'</option>';}).join('')+'</select>' : '';
+    var sel = subs.length ? '<select class="ap-sel" id="ap-maq-'+op.id+'" onchange="apAtribuirMaquina(\''+op.id+'\',this.value)"><option value="">— máquina —</option>'+subs.map(function(s){return '<option value="'+apEsc(s.nome)+'"'+(op.maquina===s.nome?' selected':'')+'>'+apEsc(s.nome)+'</option>';}).join('')+'</select>' : '';
     acoes = sel+'<button class="ap-btn" onclick="apIniciarSetup(\''+op.id+'\')"><i class="ti ti-player-play"></i> Iniciar setup</button>';
   } else if(op.status==='em_setup'){
     fb='<div class="ap-est">Setup em andamento: '+apTimerSpan(apUltTs(ev,'setup_inicio'),0)+'</div>';
-    acoes = '<input class="ap-input" id="ap-qs-'+op.id+'" type="number" min="0" placeholder="metros de setup"><button class="ap-btn" onclick="apAcao(\''+op.id+'\',\'setup_fim\',{qtd:apNum(\'ap-qs-'+op.id+'\')})"><i class="ti ti-player-stop"></i> Finalizar setup</button>';
+    acoes = '<input class="ap-input" id="ap-qs-'+op.id+'" type="number" min="0" placeholder="metros de setup"><button class="ap-btn" onclick="apFinalizarSetup(\''+op.id+'\')"><i class="ti ti-player-stop"></i> Finalizar setup</button>';
   } else if(op.status==='setup_ok'){
     fb='<div class="ap-est">Setup concluído: <b>'+apFmt(apMsMin(setupMs))+' min</b> · desperdício <b>'+apFmt(setupMet)+' '+apEsc(unit||'m')+'</b></div>';
     acoes = '<button class="ap-btn" onclick="apAcao(\''+op.id+'\',\'prod_inicio\')"><i class="ti ti-player-play"></i> Iniciar produção</button>';
@@ -4441,7 +4519,7 @@ function apRenderOp(r,op,estado){
     var mot = '<select class="ap-sel" id="ap-mot-'+op.id+'">'+AP_MOTIVOS.map(function(m){return '<option>'+apEsc(m)+'</option>';}).join('')+'</select>';
     acoes = '<input class="ap-input" id="ap-lq-'+op.id+'" type="number" min="0" placeholder="metragem deste trecho"><button class="ap-btn-sec" onclick="apLancar(\''+op.id+'\')"><i class="ti ti-plus"></i> Lançar</button>'+
       mot+'<button class="ap-btn-sec" onclick="apParada(\''+op.id+'\')"><i class="ti ti-player-pause"></i> Parada</button>'+
-      '<button class="ap-btn" onclick="apAcao(\''+op.id+'\',\'prod_fim\')"><i class="ti ti-player-stop"></i> Finalizar</button>';
+      '<button class="ap-btn" onclick="apFinalizarProducao(\''+op.id+'\')"><i class="ti ti-player-stop"></i> Finalizar</button>';
   } else if(op.status==='parado'){
     var ultPar=ev.filter(function(x){return x.tipo==='parada_inicio';}).slice(-1)[0];
     fb='<div class="ap-est">Parado — '+apEsc(ultPar?ultPar.motivo:'')+' há '+apTimerSpan(ultPar?apTs(ultPar):0,0)+' · Produzido: <b>'+apFmt(somaL)+' '+apEsc(unit)+'</b></div>';
@@ -4452,7 +4530,7 @@ function apRenderOp(r,op,estado){
     acoes = '<button class="ap-btn-sec" onclick="apAcao(\''+op.id+'\',\'reabertura\')"><i class="ti ti-lock-open"></i> Reabrir</button>';
   }
   var est = (op.setup_est_min!=null||op.prod_est_min!=null)
-    ? '<div class="ap-est ap-hint"><span>estim.: setup '+apFmt(op.setup_est_min)+' min</span><span>produção '+apFmt(op.prod_est_min)+' min</span>'+
+    ? '<div class="ap-est ap-hint"><span>estim.: setup '+apFmt(op.setup_est_min)+' min'+(op.desp_setup_est!=null?(' · '+apFmt(op.desp_setup_est)+' '+apEsc(op.unidade_est||'m')):'')+'</span><span>produção '+apFmt(op.prod_est_min)+' min</span>'+
       (op.qtd_rodar_est!=null
         ? '<span>rodar <b>'+apFmt(op.qtd_rodar_est)+' '+apEsc(op.unidade_est||'')+'</b> <span style="opacity:.7">(líq. '+apFmt(op.qtd_est)+')</span></span>'
         : '<span>qtd '+apFmt(op.qtd_est)+' '+apEsc(op.unidade_est||'')+'</span>')+
@@ -4490,6 +4568,27 @@ async function apParada(opId){
   var el=document.getElementById('ap-mot-'+opId); var motivo=el?el.value:'';
   var q=apNum('ap-lq-'+opId); if(q&&q>0){ await apAcao(opId,'lancamento',{qtd:q},true); }
   await apAcao(opId,'parada_inicio',{motivo:motivo});
+}
+// Finalizar PRODUCAO: aproveita a metragem ainda digitada no campo (sem precisar clicar
+// "Lancar") e trava a producao ZERADA — so segue com confirmacao (caso de estoque).
+async function apFinalizarProducao(opId){
+  var q=apNum('ap-lq-'+opId);
+  var jaProd=apSomaLanc(apEventos(opId));
+  var total=jaProd+((q&&q>0)?q:0);
+  if(!(total>0)){
+    if(!confirm('A metragem produzida não foi lançada — a produção ficará ZERADA.\n\nFinalizar mesmo assim? (use apenas quando a produção foi atendida sem metragem, ex.: a partir de estoque.)'))return;
+  }
+  if(q&&q>0){ await apAcao(opId,'lancamento',{qtd:q},true); }
+  await apAcao(opId,'prod_fim');
+}
+// Finalizar SETUP: mesma lógica da trava — se o desperdício de setup não foi informado,
+// pede confirmação antes de gravar setup zerado.
+async function apFinalizarSetup(opId){
+  var q=apNum('ap-qs-'+opId);
+  if(!(q&&q>0)){
+    if(!confirm('A metragem de setup não foi informada — o desperdício de setup ficará ZERADO.\n\nFinalizar o setup mesmo assim?'))return;
+  }
+  await apAcao(opId,'setup_fim',{qtd:q});
 }
 async function apAcao(opId,tipo,extra,silencioso){
   try{
