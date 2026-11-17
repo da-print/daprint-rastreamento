@@ -2082,14 +2082,19 @@ function processarTudo(){
       }else if(ae.manual){
         // etapa atual num grupo com apontamento DESLIGADO -> programacao manual:
         // mostra em producao; grupo = override do gestor OU o grupo da etapa atual.
-        // Porem IGNORA override "preso" numa etapa JA FINALIZADA (ex.: item que avancou
-        // por apontamento e deixou um override antigo apontando p/ tras — senao o item
-        // "voltava" p/ a etapa anterior em vez de ir p/ a proxima manual).
         apManual=true;
         calc.status='EM_PRODUCAO';
-        var ovGrupoValido=(ov&&ov.grupo!==undefined&&ov.grupo!==null&&ov.grupo!=='')
-          && !((ae.gruposFinalizados||[]).indexOf(ov.grupo)>=0);
-        if(!ovGrupoValido){ grupoFinal=ae.grupoManual; subFinal=''; }
+        var ovTemGrupo=(ov&&ov.grupo!==undefined&&ov.grupo!==null&&ov.grupo!=='');
+        // So IGNORA (e limpa a sub) o override "preso" numa etapa JA FINALIZADA — item que
+        // avancou por apontamento e deixou um override antigo apontando p/ tras.
+        if(ovTemGrupo && (ae.gruposFinalizados||[]).indexOf(ov.grupo)>=0){
+          grupoFinal=ae.grupoManual; subFinal='';
+        } else if(!ovTemGrupo){
+          // sem override de grupo: usa a etapa atual, mas PRESERVA a sub-maquina atribuida
+          // (override so de sub). Antes isto limpava a sub e a atribuicao "nao fixava".
+          grupoFinal=ae.grupoManual;
+        }
+        // senao (override de grupo valido): mantem grupoFinal=ov.grupo e subFinal=ov.sub
       }
     }
     resultado.push(Object.assign({},it,calc,{
