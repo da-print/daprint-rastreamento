@@ -3463,6 +3463,8 @@ function renderMaquinas(){
             '<span style="flex:0 0 200px;font-weight:600">'+apEsc(s.nome)+'</span>'+
             '<span style="font-size:12px;color:var(--text3)">Velocidade:</span>'+
             '<input class="obs-input" style="width:110px" type="number" value="'+(s.velocidade!=null?s.velocidade:'')+'" placeholder="usa grupo" onchange="atualizarVelocidadeSub('+s.id+',this.value)">'+
+            '<label style="font-size:12px;color:var(--text);display:inline-flex;align-items:center;gap:4px" title="Calcula por página (carreiras × repetições), como a batida. Ex.: VOREY."><input type="checkbox" '+(s.por_pagina?'checked':'')+' onchange="atualizarPorPaginaSub('+s.id+',this.checked)"> por página</label>'+
+            (s.por_pagina?('<span style="font-size:12px;color:var(--text3)">Págs/h:</span><input class="obs-input" style="width:100px" type="number" value="'+(s.velocidade_pagina!=null?s.velocidade_pagina:'')+'" placeholder="páginas/h" onchange="atualizarVelocidadePaginaSub('+s.id+',this.value)">'):'')+
             '<button class="btn-sec" onclick="removerSubMaquina('+s.id+')">Remover</button>'+
           '</div>';
         }).join(''):'<div style="font-size:12px;color:var(--text3);margin-bottom:8px">Sem máquinas físicas.</div>')+
@@ -3554,6 +3556,22 @@ async function atualizarVelocidadeSub(id,val){
   var vel=parseInt(val);
   try{
     var r=await supabaseClient.from('maquinas_sub').update({velocidade:isNaN(vel)?null:vel}).eq('id',id);
+    if(r.error)throw r.error;
+    await recarregarConfigMaquinas(true);
+  }catch(e){ alert('Não foi possível salvar: '+(e.message||e)); }
+}
+// VOREY: marca a sub-maquina como "por pagina" (carreiras x repeticoes, como a batida).
+async function atualizarPorPaginaSub(id,val){
+  try{
+    var r=await supabaseClient.from('maquinas_sub').update({por_pagina:!!val}).eq('id',id);
+    if(r.error)throw r.error;
+    await recarregarConfigMaquinas();
+  }catch(e){ alert('Não foi possível salvar. A migration 26_ foi aplicada?\n'+(e.message||e)); }
+}
+async function atualizarVelocidadePaginaSub(id,val){
+  var v=parseFloat(val);
+  try{
+    var r=await supabaseClient.from('maquinas_sub').update({velocidade_pagina:isNaN(v)?null:v}).eq('id',id);
     if(r.error)throw r.error;
     await recarregarConfigMaquinas(true);
   }catch(e){ alert('Não foi possível salvar: '+(e.message||e)); }
@@ -3762,6 +3780,9 @@ function jsAttr(s){return apEsc(JSON.stringify(String(s==null?'':s)));}
 function apNum(id){var el=document.getElementById(id);return el&&el.value!==''?parseFloat(el.value):null;}
 function apFmt(n){return n==null?'—':(Math.round(n*100)/100).toString().replace('.',',');}
 function apSubs(grupo){return MAQUINAS_SUB_DB.filter(function(s){return s.grupo===grupo;});}
+// VOREY: sub-maquina que calcula por pagina (carreiras x repeticoes).
+function subEhPagina(grupo,nome){return (MAQUINAS_SUB_DB||[]).some(function(s){return s.grupo===grupo&&s.nome===nome&&s.por_pagina;});}
+function grupoTemPagina(grupo){return (MAQUINAS_SUB_DB||[]).some(function(s){return s.grupo===grupo&&s.por_pagina;});}
 
 function abrirApontamento(key){
   var r=ITENS.find(function(x){return x.key===key;}); if(!r)return;
@@ -4573,7 +4594,14 @@ function apRenderOp(r,op,estado){
   } else if(op.status==='aguardando'){
     var subs=apSubs(op.grupo);
     var sel = subs.length ? '<select class="ap-sel" id="ap-maq-'+op.id+'" onchange="apAtribuirMaquina(\''+op.id+'\',this.value)"><option value="">— máquina —</option>'+subs.map(function(s){return '<option value="'+apEsc(s.nome)+'"'+(op.maquina===s.nome?' selected':'')+'>'+apEsc(s.nome)+'</option>';}).join('')+'</select>' : '';
-    acoes = sel+'<button class="ap-btn" onclick="apIniciarSetup(\''+op.id+'\')"><i class="ti ti-player-play"></i> Iniciar setup</button>';
+    // Grupo com sub por pagina (ex.: VOREY): operador informa carreiras x repeticoes
+    // no setup (carreira pre-preenchida da ficha, editavel; repeticao digitada).
+    var pagIn = grupoTemPagina(op.grupo)
+      ? '<span class="ap-hint" style="margin-left:4px">Por página (VOREY):</span>'+
+        '<input class="ap-input" id="ap-carr-'+op.id+'" type="number" min="1" style="width:84px" title="Carreiras" value="'+apEsc(op.carreiras||1)+'" placeholder="carreiras">'+
+        '<input class="ap-input" id="ap-rep-'+op.id+'" type="number" min="1" style="width:84px" title="Repetições" value="'+apEsc(op.repeticoes||1)+'" placeholder="repetições">'
+      : '';
+    acoes = sel+pagIn+'<button class="ap-btn" onclick="apIniciarSetup(\''+op.id+'\')"><i class="ti ti-player-play"></i> Iniciar setup</button>';
   } else if(op.status==='em_setup'){
     fb='<div class="ap-est">Setup em andamento: '+apTimerSpan(apUltTs(ev,'setup_inicio'),0)+'</div>';
     acoes = '<input class="ap-input" id="ap-qs-'+op.id+'" type="number" min="0" placeholder="metros de setup"><button class="ap-btn" onclick="apFinalizarSetup(\''+op.id+'\')"><i class="ti ti-player-stop"></i> Finalizar setup</button>';
@@ -4625,6 +4653,18 @@ async function apIniciarSetup(opId){
   var op=AP_OPS.find(function(o){return o.id===opId;}); if(!op)return;
   var subs=apSubs(op.grupo), maq=null;
   if(subs.length){ var el=document.getElementById('ap-maq-'+opId); maq=el?el.value:''; if(!maq){alert('Selecione a máquina física.');return;} }
+  // Sub por pagina (VOREY): recalcula a etapa em PAGINAS via RPC (o operador nao faz
+  // UPDATE direto na op; a RPC valida e insere o setup_inicio).
+  if(maq && subEhPagina(op.grupo, maq)){
+    var carr=parseInt(apNum('ap-carr-'+opId))||0, rep=parseInt(apNum('ap-rep-'+opId))||0;
+    if(carr<=0||rep<=0){ alert('Informe carreiras e repetições (maiores que zero) para a VOREY.'); return; }
+    try{
+      var res=await supabaseClient.rpc('iniciar_setup_pagina',{p_operacao:opId,p_maquina:maq,p_carreiras:carr,p_repeticoes:rep});
+      if(res&&res.error)throw res.error;
+      var r=ITENS.find(function(x){return x.key===AP_KEY;}); await apCarregar(r);
+    }catch(e){ var m=(e.message||e)+''; if(/iniciar_setup_pagina|PGRST202|function|does not exist/i.test(m)) alert('Precisa aplicar a migration 26_ (função iniciar_setup_pagina).'); else alert('Não foi possível iniciar o setup por página.\n'+m); }
+    return;
+  }
   await apAcao(opId,'setup_inicio',{maquina:maq});
 }
 async function apLancar(opId){
