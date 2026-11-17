@@ -738,6 +738,14 @@ function setSidebarAtivo(key){ try{ document.querySelectorAll('#side-nav [data-a
     <select id="filtro-vendedor" onchange="renderPainel()">
       <option value="">Todos os vendedores</option>
     </select>
+    <select id="filtro-situacao" onchange="renderPainel()" title="Situação do apontamento">
+      <option value="">Todas as situações</option>
+      <option value="aguardando">Aguardando (na fila)</option>
+      <option value="setup">Em setup</option>
+      <option value="producao">Em produção</option>
+      <option value="parado">Parado</option>
+      <option value="material">Falta de material</option>
+    </select>
     <select id="painel-ordenar" onchange="renderPainel()" title="Ordenar a fila dentro de cada máquina">
       <option value="manual">Ordenar: Prioridade (arrastar)</option>
       <option value="entrega">Ordenar: Data de entrega</option>
@@ -1579,7 +1587,12 @@ async function recarregarDoBanco(silencioso, light){
         (aOrd.data||[]).forEach(function(od){
           var ops=(opsPorOrdem[od.id]||[]).slice().sort(function(a,b){return a.etapa_idx-b.etapa_idx;});
           if(!ops.length)return;
-          var startIdx=-1; for(var k=0;k<ops.length;k++){ if(ops[k].status!=='finalizada'){startIdx=k;break;} }
+          // Etapa ATUAL = 1a nao-finalizada APOS a etapa finalizada mais avancada.
+          // Assim, finalizar uma etapa (ex. CORTE) encaminha p/ a SEGUINTE (REVISORA)
+          // mesmo que uma etapa anterior nao tenha sido formalmente finalizada (fluxo
+          // por cadeia no hibrido). Evita "voltar" p/ uma etapa de tras ja ultrapassada.
+          var lastFin=-1; for(var kf=0;kf<ops.length;kf++){ if(ops[kf].status==='finalizada')lastFin=kf; }
+          var startIdx=-1; for(var k=(lastFin+1);k<ops.length;k++){ if(ops[k].status!=='finalizada'){startIdx=k;break;} }
           // Hibrido: a etapa atual so dirige a fila (apontamento) se o grupo dela
           // estiver ON. Se estiver OFF -> modo manual (gestor programa a maquina).
           var curOn=(startIdx>=0)&&grupoApontamentoOn(ops[startIdx].grupo);
@@ -2671,12 +2684,29 @@ function renderStats(){
 function statusLabel(s){
   return{EM_PRODUCAO:'Em produção',AGUARDANDO_FATURAMENTO:'Aguard. faturamento',FATURADO:'Faturado',EM_CARTEIRA:'Em carteira'}[s]||s;
 }
-function itemPassaFiltro(r,busca,fStatus,fTipo,fMaquina,dataDe,dataAte,fVendedor,fSub){
+// Situacao (apontamento): setup / producao / parado / aguardando / falta de material.
+function situacaoMatch(r,fSit){
+  if(!fSit)return true;
+  var ent=r.apEntry||null, st=ent?ent.status:null;
+  if(fSit==='setup')return st==='em_setup'||st==='setup_ok';
+  if(fSit==='producao')return st==='em_producao';
+  if(fSit==='parado')return st==='parado';
+  if(fSit==='aguardando')return st==='aguardando'||(r.status==='EM_PRODUCAO'&&!ent);
+  if(fSit==='material'){
+    var pend=(PEND[r.pedido+'|'+r.item]||[]);
+    var pendMat=pend.some(function(p){return /material/i.test(p.tipo||'');});
+    var paradoMat=(st==='parado'&&/material/i.test((ent&&ent.paradaMotivo)||''));
+    return pendMat||paradoMat;
+  }
+  return true;
+}
+function itemPassaFiltro(r,busca,fStatus,fTipo,fMaquina,dataDe,dataAte,fVendedor,fSub,fSituacao){
   if(fStatus&&r.status!==fStatus)return false;
   if(fTipo==='PA'&&(r.produto||'').substring(0,2)!=='PA')return false;
   if(fTipo==='NAO_PA'&&(r.produto||'').substring(0,2)==='PA')return false;
   if(fMaquina&&r.grupo!==fMaquina)return false;
   if(fSub&&r.sub!==fSub)return false;
+  if(fSituacao&&!situacaoMatch(r,fSituacao))return false;
   if(fVendedor&&r.vendedor!==fVendedor)return false;
   if((dataDe||dataAte)&&!(r.entrega instanceof Date))return false;
   if(dataDe&&r.entrega<dataDe)return false;
@@ -2843,7 +2873,7 @@ function imprimirFiltro(){
   var dataDe=vDe?new Date(vDe+'T00:00:00'):null;
   var dataAte=vAte?new Date(vAte+'T23:59:59'):null;
   var filtrados=ITENS.filter(function(r){
-    return itemPassaFiltro(r,busca,fStatus,fTipo,fMaquina,dataDe,dataAte,fVendedor,fSub)&&r.status==='EM_PRODUCAO';
+    return itemPassaFiltro(r,busca,fStatus,fTipo,fMaquina,dataDe,dataAte,fVendedor,fSub,(document.getElementById('filtro-situacao')||{}).value)&&r.status==='EM_PRODUCAO';
   });
   if(!filtrados.length){alert('Nenhum item em producao para os filtros atuais.');return;}
   var porGrupo={};
@@ -3064,7 +3094,7 @@ function renderPainel(){
   var vAte=document.getElementById('filtro-data-ate').value;
   var dataDe=vDe?new Date(vDe+'T00:00:00'):null;
   var dataAte=vAte?new Date(vAte+'T23:59:59'):null;
-  var filtrados=ITENS.filter(function(r){return itemPassaFiltro(r,busca,fStatus,fTipo,fMaquina,dataDe,dataAte,fVendedor,fSub);});
+  var filtrados=ITENS.filter(function(r){return itemPassaFiltro(r,busca,fStatus,fTipo,fMaquina,dataDe,dataAte,fVendedor,fSub,(document.getElementById('filtro-situacao')||{}).value);});
 
   var emProducao=filtrados.filter(function(r){return r.status==='EM_PRODUCAO';});
   var porGrupo={};
