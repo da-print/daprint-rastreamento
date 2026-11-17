@@ -2107,6 +2107,7 @@ function processarTudo(){
       finalizadoManual:!!(ov&&ov.finalizado_em),
       apEntry:apEntryMain,
       apManual:apManual,
+      temApontFin:!!(ae&&ae.gruposFinalizados&&ae.gruposFinalizados.length),
       apFinalizado:!!(ae&&ae.temOps&&ae.todasFinalizadas),
       opAtual:(apEntryMain?{opId:apEntryMain.opId,carreiras:apEntryMain.carreiras,unidadeEst:apEntryMain.unidadeEst,status:apEntryMain.status}:((ae&&ae.opAtual)||null)),
       pedidoCliente:calc.pedidoCliente||it.pedidoClienteAberto||null
@@ -3021,6 +3022,9 @@ function linhaHtml(r,draggable){
         maquinaCell+='<div class="imgs-wrap">Imgs faca:<input type="number" min="1" step="1" class="imgs-input" value="'+(r.imagens||'')+'" placeholder="1" onchange="mudarImagensManual(\''+r.key+'\',this.value)"></div>';
       }
       maquinaCell+='<button class="btn-finalizar" onclick="finalizarItem(\''+r.key+'\')"><i class="ti ti-check"></i> Finalizar</button>';
+      // Item em programacao manual (etapa OFF) que tem etapas de apontamento ja
+      // finalizadas: permite REABRIR a ultima etapa finalizada (ex. CORTE) p/ retrabalho.
+      if(r.apManual&&r.temApontFin){ maquinaCell+='<button class="btn-reabrir" onclick="reabrirEtapaAnterior(\''+r.key+'\')"><i class="ti ti-arrow-back-up"></i> Reabrir etapa</button>'; }
     }else{
       var nomeMaq=r.grupo?dispNome(r.grupo):null;
       var subTxt=r.sub?(' / '+r.sub):'';
@@ -3246,6 +3250,23 @@ async function reabrirApontamento(key){
     if(ins.error)throw ins.error;
     await recarregarDoBanco(true,true);
   }catch(e){ alert('Não foi possível reabrir: '+(e.message||e)); }
+}
+// Reabre a ETAPA FINALIZADA MAIS AVANCADA (ex.: CORTE) de um item que esta em
+// programacao manual numa etapa OFF (ex.: REVISORA). Insere 'reabertura' nessa op
+// -> ela volta p/ producao e o item retorna p/ aquela etapa (apontamento). Clicar
+// de novo sobe mais uma etapa p/ tras. So gestor/editor.
+async function reabrirEtapaAnterior(key){
+  var r=ITENS.find(function(x){return x.key===key;}); if(!r)return;
+  if(!confirm('Reabrir a última etapa finalizada (ex.: Corte) para retrabalho? Ela volta para produção.'))return;
+  try{
+    var ro=await supabaseClient.from('ordens').select('id').eq('pedido',r.pedido).eq('item',r.item).maybeSingle();
+    if(ro.error||!ro.data)throw (ro.error||new Error('OS não encontrada na camada de apontamento.'));
+    var rop=await supabaseClient.from('ordem_operacoes').select('id,etapa_idx,grupo').eq('ordem_id',ro.data.id).eq('status','finalizada').order('etapa_idx',{ascending:false}).limit(1);
+    if(rop.error||!rop.data||!rop.data.length)throw (rop.error||new Error('Nenhuma etapa finalizada para reabrir.'));
+    var ins=await supabaseClient.from('apontamentos').insert({operacao_id:rop.data[0].id,tipo:'reabertura'});
+    if(ins.error)throw ins.error;
+    await recarregarDoBanco(true,true);
+  }catch(e){ alert('Não foi possível reabrir a etapa: '+(e.message||e)); }
 }
 
 // ===================== ARRASTAR E SOLTAR (prioridade na fila) =====================
