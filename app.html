@@ -2783,8 +2783,10 @@ function linhaImpressaoHtml(r){
   partes.push('<tr>');
   partes.push('<td>'+r.pedido+'</td>');
   partes.push('<td>'+padItem3(r.item)+'</td>');
+  partes.push('<td>'+apEsc(r.produto||'')+'</td>');
   partes.push('<td class="cli-trunc" title="'+cli+'">'+cli+'</td>');
   partes.push('<td>'+desc+'</td>');
+  partes.push('<td>'+apEsc(MP_NOME_POR_PA[r.produto]||'')+'</td>');
   partes.push('<td style="text-align:right">'+fmtQtd(r.saldo)+'</td>');
   partes.push('<td>'+(r.um||'')+'</td>');
   partes.push('<td>'+fmtData(r.entrega)+'</td>');
@@ -2800,7 +2802,7 @@ function blocoGrupoImpressaoHtml(g,itensGrupo,gInfo){
   out.push('<div class="cab-impressao"><h1>'+dispNome(g)+'</h1>');
   out.push('<div class="cab-info">Programacao de Producao | Emissao: '+dataEmissao+' | '+itensGrupo.length+' pedido(s)</div></div>');
   out.push('<table class="tb-impressao"><thead><tr>');
-  out.push('<th>Pedido</th><th>It</th><th>Cliente</th><th>Descricao</th><th>Qtd</th><th>Un.</th><th>Entrega</th><th>Observacao</th>');
+  out.push('<th>Pedido</th><th>It</th><th>PA</th><th>Cliente</th><th>Descricao</th><th>Materia-prima</th><th>Qtd</th><th>Un.</th><th>Entrega</th><th>Observacao</th>');
   out.push('</tr></thead><tbody>');
   if(gInfo&&gInfo.subs&&gInfo.subs.length){
     var porSub={};
@@ -2815,7 +2817,7 @@ function blocoGrupoImpressaoHtml(g,itensGrupo,gInfo){
     });
     chaves.forEach(function(s){
       var lista=porSub[s].slice().sort(ordCompare);
-      out.push('<tr class="sub-row"><td colspan="8">&gt; '+s+' - '+lista.length+' pedido(s)</td></tr>');
+      out.push('<tr class="sub-row"><td colspan="10">&gt; '+s+' - '+lista.length+' pedido(s)</td></tr>');
       out.push(lista.map(linhaImpressaoHtml).join(''));
     });
   }else{
@@ -3028,6 +3030,7 @@ function linhaHtml(r,draggable){
     '<td>'+handle+r.pedido+'-'+r.item+'</td>'+
     '<td>'+(r.clienteNome||'')+'</td>'+
     '<td>'+(r.produto||'')+'<div class="desc">'+(r.produtoDesc||'').split(' - ').slice(1).join(' - ')+'</div></td>'+
+    '<td>'+apEsc(MP_NOME_POR_PA[r.produto]||'')+'</td>'+
     '<td>'+fmtData(r.entrega)+'</td>'+
     '<td>'+(r.saldo!==null&&r.saldo!==undefined?fmtQtd(r.saldo)+' '+(r.um||''):'')+'</td>'+
     '<td>'+mlCell+'</td>'+
@@ -3042,7 +3045,7 @@ function linhaHtml(r,draggable){
 function tabelaHtml(itens,draggable){
   if(!itens.length)return'<div class="vazio">Nenhum item nesta categoria.</div>';
   return '<table><thead><tr>'+
-    '<th>Pedido-Item</th><th>Cliente</th><th>Produto</th><th>Entrega</th><th>Saldo</th><th>M/L</th><th>M/L rest.</th><th>Tempo rest.</th><th>Status</th><th>Máquina</th><th>Obs</th>'+
+    '<th>Pedido-Item</th><th>Cliente</th><th>Produto</th><th>Matéria-prima</th><th>Entrega</th><th>Saldo</th><th>M/L</th><th>M/L rest.</th><th>Tempo rest.</th><th>Status</th><th>Máquina</th><th>Obs</th>'+
     '</tr></thead><tbody>'+itens.map(function(r){return linhaHtml(r,draggable);}).join('')+'</tbody></table>';
 }
 
@@ -3066,6 +3069,13 @@ function renderPainel(){
   var emProducao=filtrados.filter(function(r){return r.status==='EM_PRODUCAO';});
   var porGrupo={};
   emProducao.forEach(function(r){var g=r.grupo||'(SEM GRUPO)';(porGrupo[g]=porGrupo[g]||[]).push(r);});
+  // Operador: mostra só as filas das máquinas (grupos) atribuídas a ele. Com o 23_
+  // aplicado ele passa a ler o roteiro inteiro das OS que tocam a máquina dele; este
+  // filtro garante que o painel exiba apenas os grupos dele (os demais ficam ocultos).
+  if(window._ehOperador && PERFIL && Array.isArray(PERFIL.maquinas_permitidas) && PERFIL.maquinas_permitidas.length){
+    var _permit={}; PERFIL.maquinas_permitidas.forEach(function(g){_permit[g]=true;});
+    Object.keys(porGrupo).forEach(function(g){ if(!_permit[g]) delete porGrupo[g]; });
+  }
   porGrupoAtual=porGrupo;
 
   var html='';
