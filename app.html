@@ -1607,6 +1607,7 @@ async function recarregarDoBanco(silencioso, light){
           }
           APONT_ESTADO[od.pedido+'|'+od.item]={temOps:true,todasFinalizadas:startIdx<0,filas:filas,
             manual:(startIdx>=0&&!curOn),grupoManual:(startIdx>=0?ops[startIdx].grupo:null),
+            gruposFinalizados:ops.filter(function(o){return o.status==='finalizada';}).map(function(o){return o.grupo;}),
             opAtual:(startIdx>=0?{opId:ops[startIdx].id,carreiras:ops[startIdx].carreiras,unidadeEst:ops[startIdx].unidade_est,status:ops[startIdx].status,grupo:ops[startIdx].grupo}:null)};
         });
       }
@@ -2080,10 +2081,15 @@ function processarTudo(){
         apEntryMain=ae.filas[0];
       }else if(ae.manual){
         // etapa atual num grupo com apontamento DESLIGADO -> programacao manual:
-        // mostra em producao; grupo = override do gestor ou o grupo da etapa atual.
+        // mostra em producao; grupo = override do gestor OU o grupo da etapa atual.
+        // Porem IGNORA override "preso" numa etapa JA FINALIZADA (ex.: item que avancou
+        // por apontamento e deixou um override antigo apontando p/ tras — senao o item
+        // "voltava" p/ a etapa anterior em vez de ir p/ a proxima manual).
         apManual=true;
         calc.status='EM_PRODUCAO';
-        if(!(ov&&ov.grupo!==undefined&&ov.grupo!==null&&ov.grupo!==''))grupoFinal=ae.grupoManual;
+        var ovGrupoValido=(ov&&ov.grupo!==undefined&&ov.grupo!==null&&ov.grupo!=='')
+          && !((ae.gruposFinalizados||[]).indexOf(ov.grupo)>=0);
+        if(!ovGrupoValido){ grupoFinal=ae.grupoManual; subFinal=''; }
       }
     }
     resultado.push(Object.assign({},it,calc,{
