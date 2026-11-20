@@ -1523,7 +1523,7 @@ async function recarregarDoBanco(silencioso, light){
     // overrides -> mapa por pedido|item
     OVERRIDES={};
     base[0].data.forEach(function(o){
-      OVERRIDES[o.pedido+'|'+o.item+'|'+(o.entrega_key||'SEM-DATA')]={grupo:o.grupo,sub:o.sub,ordem:o.ordem,obs:o.obs,imagens:o.imagens,finalizado_em:o.finalizado_em};
+      OVERRIDES[o.pedido+'|'+o.item+'|'+(o.entrega_key||'SEM-DATA')]={grupo:o.grupo,sub:o.sub,ordem:o.ordem,obs:o.obs,imagens:o.imagens,finalizado_em:o.finalizado_em,prioridade:o.prioridade};
     });
     CATEGORIAS=base[1].data.map(function(c){return c.nome;});
     VENDEDORES_DEPARA={};
@@ -1580,7 +1580,7 @@ async function recarregarDoBanco(silencioso, light){
           else if(op.status==='parado'){ var up=ev.filter(function(e){return e.tipo==='parada_inicio';}).slice(-1)[0]; since=up?apTs(up):0; motivo=up?up.motivo:null; }
           var produzido=ev.filter(function(e){return e.tipo==='lancamento';}).reduce(function(s,e){return s+(Number(e.qtd)||0);},0);
           return {opId:op.id,grupo:op.grupo,maquina:op.maquina||null,status:op.status,carreiras:op.carreiras,
-            qtdEst:op.qtd_est,qtdRodar:op.qtd_rodar_est,unidadeEst:op.unidade_est,setupEst:op.setup_est_min,prodEst:op.prod_est_min,produzido:produzido,
+            qtdEst:op.qtd_est,qtdRodar:op.qtd_rodar_est,unidadeEst:op.unidade_est,setupEst:op.setup_est_min,setupDesp:op.desp_setup_est,prodEst:op.prod_est_min,produzido:produzido,
             timerSince:since,timerSub:sub,paradaMotivo:motivo,parcial:!!parcial};
         }
         function nLancOp(id){ return (evByOp[id]||[]).filter(function(e){return e.tipo==='lancamento';}).length; }
@@ -2106,6 +2106,7 @@ function processarTudo(){
       grupoOriginal:calc.grupo,
       sub:subFinal,
       ordem:(ov&&ov.ordem!==undefined&&ov.ordem!==null)?ov.ordem:null,
+      prioridade:!!(ov&&ov.prioridade),
       imagens:(ov&&ov.imagens)?ov.imagens:null,
       hasOverride:!!ov,
       obs:(ov&&ov.obs)?ov.obs:'',
@@ -2126,7 +2127,7 @@ function processarTudo(){
           clienteNome:cli.nomeReduzido||it.clienteNomeOrigem,
           clienteCnpj:cli.cnpj||null, vendedor:cli.vendedor||null,
           status:'EM_PRODUCAO', grupo:pe.grupo, grupoOriginal:pe.grupo, sub:pe.maquina||'',
-          ordem:null, imagens:null, hasOverride:false, obs:'', finalizadoManual:false,
+          ordem:null, prioridade:!!(ov&&ov.prioridade), imagens:null, hasOverride:false, obs:'', finalizadoManual:false,
           apEntry:pe, opAtual:{opId:pe.opId,carreiras:pe.carreiras,unidadeEst:pe.unidadeEst,status:pe.status},
           pedidoCliente:calc.pedidoCliente||it.pedidoClienteAberto||null
         }));
@@ -2639,16 +2640,17 @@ function kpiNome(id){ return (id&&KPI_NOMES[id])||'—'; }
 function kpiHistHtml(ev,unit){
   var rows=apHistorico(ev); if(!rows.length)return '<div class="ap-hint" style="padding:4px 0">Sem apontamentos.</div>';
   var u=apEsc(unit||'m');
-  var IC={setup:'🔧',prod:'▶️',parada:'⏸️',validada:'✅',reabertura:'🔓',lanc:'➕',obs:'📝'};
-  var LB={setup:'Setup',prod:'Produção',parada:'Parada',validada:'Validação',reabertura:'Reabertura',lanc:'Lançamento',obs:'Observação'};
+  var IC={setup:'🔧',prod:'▶️',parada:'⏸️',validada:'✅',reabertura:'🔓',lanc:'➕',slanc:'➕',obs:'📝'};
+  var LB={setup:'Setup',prod:'Produção',parada:'Parada',validada:'Validação',reabertura:'Reabertura',lanc:'Lançamento',slanc:'Trecho',obs:'Observação'};
   function lineHtml(r,child){
-    var ponto=(r.k==='validada'||r.k==='reabertura'||r.k==='obs'||(r.k==='lanc'&&!r.fim));
+    var ponto=(r.k==='validada'||r.k==='reabertura'||r.k==='obs'||((r.k==='lanc'||r.k==='slanc')&&!r.fim));
     var dur=(r.fim?(r.fim-r.ini):0);
     var per=ponto?apDT(r.ini):(r.fim?(apDT(r.ini)+' → '+apDT(r.fim)+' · '+apClock(dur)):(apDT(r.ini)+' · <i>em andamento</i>'));
     var extra='';
-    if(r.k==='setup')extra=(r.qtd!=null?(' · desp. '+kFmt(r.qtd)+' '+u):'');
+    if(r.k==='setup')extra=(r.qtd!=null?(' · desp. '+kFmt(r.qtd)+' '+u):'')+(r.trechos>1?(' ('+r.trechos+' trechos)'):'');
     else if(r.k==='prod'){ var h=dur/3600000; extra=' · total '+kFmt(r.qtd)+' '+u+(r.trechos>1?(' ('+r.trechos+' trechos)'):'')+((h>0&&r.qtd>0)?(' · <b>'+kFmt(r.qtd/h)+' '+u+'/h</b>'):''); }
     else if(r.k==='lanc'){ var h2=dur/3600000; extra=' · '+kFmt(r.qtd)+' '+u+((h2>0&&r.qtd>0)?(' · '+kFmt(r.qtd/h2)+' '+u+'/h'):''); }
+    else if(r.k==='slanc'){ extra=' · '+kFmt(r.qtd)+' '+u; }
     else if(r.k==='parada')extra=(r.motivo?(' · '+apEsc(r.motivo)):'');
     else if(r.k==='obs')extra=' · <i>'+apEsc(r.motivo||'')+'</i>';
     return '<div style="display:flex;gap:8px;align-items:baseline;font-size:12px;padding:3px 0;border-top:1px solid var(--border)'+(child?';padding-left:30px;opacity:.9':'')+'">'+
@@ -2659,7 +2661,7 @@ function kpiHistHtml(ev,unit){
   }
   return rows.map(function(r){
     var out=lineHtml(r,false);
-    if(r.k==='prod'&&r.lancs&&r.lancs.length){ out+=r.lancs.map(function(l){return lineHtml(l,true);}).join(''); }
+    if((r.k==='prod'||r.k==='setup')&&r.lancs&&r.lancs.length){ out+=r.lancs.map(function(l){return lineHtml(l,true);}).join(''); }
     return out;
   }).join('');
 }
@@ -2928,6 +2930,8 @@ function imprimirFiltro(){
 }
 
 function ordCompare(a,b){
+  // itens com PRIORIDADE vao para o topo da fila (entre eles, a ordem do arraste vale)
+  var pr=(a.prioridade?0:1)-(b.prioridade?0:1); if(pr)return pr;
   var oa=(a.ordem===undefined||a.ordem===null)?null:a.ordem;
   var ob=(b.ordem===undefined||b.ordem===null)?null:b.ordem;
   if(oa!==null&&ob!==null)return oa-ob;
@@ -2946,6 +2950,8 @@ function painelOrdenarModo(){
   return el?el.value:'manual';
 }
 function ordComparePainel(a,b){
+  // prioridade sempre no topo, em qualquer modo de ordenacao
+  var pr=(a.prioridade?0:1)-(b.prioridade?0:1); if(pr)return pr;
   var modo=painelOrdenarModo();
   if(modo==='manual')return ordCompare(a,b);
   var r=0;
@@ -3044,35 +3050,39 @@ function linhaHtml(r,draggable){
   if(r.status==='EM_PRODUCAO'&&grupoApontamentoOn(r.grupo)&&(typeof perm!=='function'||perm('acao_apontar'))){
     maquinaCell+='<button class="btn-apontar" onclick="abrirApontamento(\''+r.key+'\')"><i class="ti ti-stopwatch"></i> Apontamento</button>';
   }
-  if(r.status==='EM_PRODUCAO'&&window._podeEditar&&r.opAtual&&r.opAtual.opId){
-    maquinaCell+='<button class="btn-carr" title="Configurações desta OS" onclick="abrirConfigOS(\''+r.pedido+'\',\''+r.item+'\')"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg></button>';
-  }
-  if(r.status==='EM_PRODUCAO'&&r.produto){
-    maquinaCell+='<button class="btn-carr" title="Ver ficha técnica" onclick="verFichaItem('+jsAttr(r.produto)+','+jsAttr(r.pedido)+','+jsAttr(r.item)+')"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><polyline points="14 3 14 8 19 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg></button>';
-  }
-  if((r.status==='EM_PRODUCAO'||r.status==='EM_CARTEIRA')&&window._podeEditar){
-    maquinaCell+='<button class="btn-pend'+(pend.length?' on':'')+'" title="Pendência / impedimento" onclick="abrirPendencia(\''+r.pedido+'\',\''+r.item+'\')">⚠ '+(pend.length?'Pendência':'Pend.')+'</button>';
+  // Botao unico "Ações": junta Ver ficha, Configurações da OS, Pendência e Prioridade
+  // (o Apontamento fica a parte). Mostra para EM_PRODUCAO/EM_CARTEIRA quando ha alguma
+  // acao disponivel (gestor/editor, ou ficha p/ qualquer papel). Sino = tem pendencia.
+  if((r.status==='EM_PRODUCAO'||r.status==='EM_CARTEIRA')&&(window._podeEditar||r.produto)){
+    maquinaCell+='<button class="btn-carr'+(pend.length?' pend-on':'')+'" title="Ações" onclick="abrirAcoes(\''+r.key+'\')" style="width:auto;gap:5px;padding:6px 10px">'+
+      '<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>'+
+      '<span style="font-size:12px">Ações</span>'+(pend.length?' <span style="color:var(--warn)">⚠</span>':'')+'</button>';
   }
   var tempo=r.status==='EM_PRODUCAO'?formatarTempo(tempoHoras(r)):null;
   var tempoCell=tempo?'<span class="tempo-tag">'+tempo+'</span>':'<span style="color:var(--text3);font-size:10px">—</span>';
   // M/L e Tempo estimado dirigidos pelo apontamento (etapa atual), quando houver
   // M/L total + restante e TEMPO RESTANTE (desconta setup feito e produção proporcional ao lançado)
   var mlUnit=(temApont&&ent.unidadeEst==='un')?'un':'m/l';
-  var mlProd=temApont?(ent.produzido||0):0;
-  var mlTotal=temApont?((ent.qtdRodar!=null)?ent.qtdRodar:(ent.qtdEst!=null?ent.qtdEst:null)):null;
-  var mlRest=(mlTotal!=null)?Math.max(0,mlTotal-mlProd):null;
+  // M/L TOTAL = acerto (setup) + produção a rodar (com desperdício). M/L rest. desconta
+  // o acerto já feito (quando o setup foi finalizado) e a produção já lançada.
+  var setupDesp=temApont?(ent.setupDesp||0):0;
+  var prodRodar=temApont?((ent.qtdRodar!=null)?ent.qtdRodar:(ent.qtdEst!=null?ent.qtdEst:0)):0;
+  var produzido=temApont?(ent.produzido||0):0;
+  var setupOk=temApont&&['setup_ok','em_producao','parado','finalizada'].indexOf(ent.status)>=0;
+  var mlTotal=temApont?(setupDesp+prodRodar):null;
+  var prodRest=Math.max(0,prodRodar-produzido);
+  var mlRest=(mlTotal!=null)?((setupOk?0:setupDesp)+prodRest):null;
   var mlCell=(mlTotal!=null)?(fmtQtd(mlTotal)+' '+mlUnit):(r.ml?fmtQtd(r.ml)+' m/l':'');
   var mlRestCell=(mlRest!=null)?'<span class="tempo-tag">'+fmtQtd(mlRest)+' '+mlUnit+'</span>':'<span style="color:var(--text3);font-size:10px">—</span>';
   var tempoCell2=tempoCell;
   if(temApont&&(ent.setupEst!=null||ent.prodEst!=null)){
-    var setupFeito=['setup_ok','em_producao','parado'].indexOf(ent.status)>=0;
-    var frac=(mlTotal&&mlTotal>0&&mlRest!=null)?(mlRest/mlTotal):1;
-    var tempoRestMin=(setupFeito?0:(ent.setupEst||0))+(ent.prodEst||0)*frac;
+    var frac=(prodRodar>0)?(prodRest/prodRodar):1;   // fração da PRODUÇÃO que falta
+    var tempoRestMin=(setupOk?0:(ent.setupEst||0))+(ent.prodEst||0)*frac;
     tempoCell2='<span class="tempo-tag">'+formatarTempo(tempoRestMin/60)+'</span>';
   }
   var handle=draggable?'<i class="ti ti-grip-vertical drag-handle"></i>':'';
   return '<tr'+(draggable?' draggable="true" data-key="'+r.key+'" ondragstart="onDragStart(event)" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)" ondragend="onDragEnd(event)"':'')+'>'+
-    '<td>'+handle+r.pedido+'-'+r.item+'</td>'+
+    '<td>'+handle+(r.prioridade?'<span title="Prioridade" style="color:var(--accent);font-weight:800;margin-right:3px">❗</span>':'')+r.pedido+'-'+r.item+'</td>'+
     '<td>'+(r.clienteNome||'')+'</td>'+
     '<td>'+(r.produto||'')+'<div class="desc">'+(r.produtoDesc||'').split(' - ').slice(1).join(' - ')+'</div></td>'+
     '<td>'+apEsc(MP_NOME_POR_PA[r.produto]||'')+'</td>'+
@@ -3316,6 +3326,57 @@ function onDrop(e){
     var selOrd=document.getElementById('painel-ordenar'); if(selOrd)selOrd.value='manual';
     processarTudo();
   })();
+}
+
+// ===================== BOTÃO "AÇÕES" (popup por item do painel) =====================
+// Junta num so lugar: Prioridade (gestor/editor), Ver ficha, Configurações da OS e
+// Pendencia. O Apontamento fica fora (botao proprio). Reusa as funcoes existentes.
+var ACOES_KEY=null;
+function abrirAcoes(key){
+  var r=ITENS.find(function(x){return x.key===key;}); if(!r)return;
+  ACOES_KEY=key;
+  var pode=!!window._podeEditar, btns=[];
+  if(pode){
+    btns.push('<button class="'+(r.prioridade?'ap-btn':'ap-btn-sec')+'" onclick="acaoPrioridade()">'+(r.prioridade?'❗ Remover prioridade':'❗ Marcar prioridade')+'</button>');
+  }
+  if(r.produto){
+    btns.push('<button class="ap-btn-sec" onclick="acaoVerFicha()">📄 Ver ficha técnica</button>');
+  }
+  if(pode && r.status==='EM_PRODUCAO' && r.opAtual && r.opAtual.opId){
+    btns.push('<button class="ap-btn-sec" onclick="acaoConfigOS()">⚙ Configurações desta OS</button>');
+  }
+  if(pode && (r.status==='EM_PRODUCAO'||r.status==='EM_CARTEIRA')){
+    var pend=(PEND[r.pedido+'|'+r.item]||[]);
+    btns.push('<button class="ap-btn-sec" onclick="acaoPendencia()">⚠ Pendência / impedimento'+(pend.length?(' ('+pend.length+')'):'')+'</button>');
+  }
+  var desc=(r.produtoDesc||'').split(' - ').slice(1).join(' - ');
+  var html='<div class="modal-overlay" id="modal-acoes" onclick="if(event.target===this)fecharAcoes()">'+
+    '<div class="modal-box" style="max-width:420px">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><b>Ações · '+apEsc(r.pedido+'-'+r.item)+(r.prioridade?' ❗':'')+'</b><button class="ap-btn-sec" onclick="fecharAcoes()">Fechar</button></div>'+
+      '<div style="font-size:12px;color:var(--text3);margin-bottom:12px">'+apEsc(r.produto||'')+(desc?(' · '+apEsc(desc)):'')+'</div>'+
+      '<div style="display:flex;flex-direction:column;gap:8px">'+(btns.join('')||'<span class="ap-hint">Sem ações disponíveis.</span>')+'</div>'+
+    '</div></div>';
+  var old=document.getElementById('modal-acoes'); if(old)old.parentNode.removeChild(old);
+  document.body.insertAdjacentHTML('beforeend',html);
+}
+function fecharAcoes(){ var el=document.getElementById('modal-acoes'); if(el)el.parentNode.removeChild(el); }
+function acaoItem(){ return ITENS.find(function(x){return x.key===ACOES_KEY;}); }
+function acaoVerFicha(){ var r=acaoItem(); if(!r)return; fecharAcoes(); verFichaItem(r.produto,r.pedido,r.item); }
+function acaoConfigOS(){ var r=acaoItem(); if(!r)return; fecharAcoes(); abrirConfigOS(r.pedido,r.item); }
+function acaoPendencia(){ var r=acaoItem(); if(!r)return; fecharAcoes(); abrirPendencia(r.pedido,r.item); }
+async function acaoPrioridade(){ var r=acaoItem(); if(!r)return; var novo=!r.prioridade; fecharAcoes(); await togglePrioridade(r.pedido,r.item,r.entregaKey,novo); }
+// Marca/desmarca prioridade do item (overrides.prioridade). Gestor/editor.
+async function togglePrioridade(pedido,item,entregaKey,val){
+  var bk=pedido+'|'+item+'|'+(entregaKey||'SEM-DATA');
+  try{
+    var uid=(await supabaseClient.auth.getUser()).data.user.id;
+    OVERRIDES[bk]=Object.assign({},OVERRIDES[bk]||{},{prioridade:!!val});
+    var reg={pedido:parseInt(pedido),item:parseInt(item),entrega_key:entregaKey||'SEM-DATA',
+      prioridade:!!val,atualizado_por:uid,atualizado_em:new Date().toISOString(),ausente_desde:null};
+    var r=await supabaseClient.from('overrides').upsert(reg,{onConflict:'pedido,item,entrega_key'});
+    if(r.error)throw r.error;
+    processarTudo();
+  }catch(e){ alert('Não foi possível alterar a prioridade. A migration 27_ foi aplicada?\n'+(e.message||e)); }
 }
 
 // ===================== CATEGORIAS DE OBSERVAÇÃO =====================
@@ -3752,7 +3813,7 @@ function statusClienteLabel(s){
 // Conversa com as tabelas de 13_producao_apontamentos.sql (ordens,
 // ordem_operacoes, apontamentos, motivos_parada). Enquanto o schema nao
 // estiver aplicado no banco, mostra um aviso amigavel (degradacao graciosa).
-var AP_KEY=null, AP_ORDEM=null, AP_OPS=[], AP_MODOS={}, AP_MOTIVOS=[], AP_EVENTOS={}, _apTick=null;
+var AP_KEY=null, AP_ORDEM=null, AP_OPS=[], AP_MODOS={}, AP_MOTIVOS=[], AP_EVENTOS={}, _apTick=null, AP_PASSO=0;
 var AP_OPERADORES={}, AP_USERS=[];
 function apEventos(id){return AP_EVENTOS[id]||[];}
 function apTs(x){return new Date(x.ts).getTime();}
@@ -3761,6 +3822,9 @@ function apSomaPares(ev,ini,fim){var t=0,st=null;ev.forEach(function(x){if(x.tip
 function apParadasRodada(ev){var pi=apUltTs(ev,'prod_inicio');if(pi==null)return 0;var t=0,st=null;ev.forEach(function(x){var ts=apTs(x);if(x.tipo==='parada_inicio'&&ts>=pi)st=ts;else if(x.tipo==='parada_fim'&&st!=null){t+=ts-st;st=null;}});return t;}
 function apSomaLanc(ev){var q=0;ev.forEach(function(x){if(x.tipo==='lancamento')q+=Number(x.qtd)||0;});return q;}
 function apSetupMetros(ev){var q=0;ev.forEach(function(x){if(x.tipo==='setup_fim')q+=Number(x.qtd)||0;});return q;}
+// Trechos de setup (setup_lancamento) e se a producao ja comecou (p/ fase da parada).
+function apSomaSetupLanc(ev){var q=0;ev.forEach(function(x){if(x.tipo==='setup_lancamento')q+=Number(x.qtd)||0;});return q;}
+function apTemProdInicio(ev){return ev.some(function(x){return x.tipo==='prod_inicio';});}
 function apMsMin(ms){return ms/60000;}
 function apClock(ms){if(ms<0)ms=0;var s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor((s%3600)/60),ss=s%60;function z(n){return(n<10?'0':'')+n;}return (h>0?h+':':'')+z(m)+':'+z(ss);}
 // Cronometro ancorado no relogio do CLIENTE (evita travar em 0 por diferenca
@@ -3788,6 +3852,41 @@ function apSubs(grupo){return MAQUINAS_SUB_DB.filter(function(s){return s.grupo=
 // VOREY: sub-maquina que calcula por pagina (carreiras x repeticoes).
 function subEhPagina(grupo,nome){return (MAQUINAS_SUB_DB||[]).some(function(s){return s.grupo===grupo&&s.nome===nome&&s.por_pagina;});}
 function grupoTemPagina(grupo){return (MAQUINAS_SUB_DB||[]).some(function(s){return s.grupo===grupo&&s.por_pagina;});}
+// BATIDA (ou outro grupo em modo 'unidade'): tambem informa carreiras x repeticoes no setup.
+function grupoEhUnidade(grupo){var g=(MAQUINAS_GRUPOS_DB||[]).filter(function(x){return x.nome===grupo;})[0];return !!(g&&g.modo==='unidade');}
+// Precisa informar carreiras x repeticoes no setup? (VOREY por pagina OU grupo unidade)
+function setupPorImagens(grupo){return grupoTemPagina(grupo)||grupoEhUnidade(grupo);}
+// Rotulo da unidade de uma operacao p/ os campos (metros / paginas / batidas).
+function apUnidadeLabel(op){
+  if(op&&op.unidade_est==='un') return grupoEhUnidade(op&&op.grupo)?'batidas':'páginas';
+  return 'metros';
+}
+// Previa (cliente) da etapa por imagens ao mexer em carreiras/repeticoes, ANTES de
+// iniciar o setup. Mesma conta do servidor: etiquetas / (carreiras x repeticoes).
+function apPreviaCalc(op,carr,rep){
+  if(!op)return '';
+  carr=Math.max(1,parseInt(carr)||1); rep=Math.max(1,parseInt(rep)||1);
+  var img=carr*rep;
+  var etiq = (op.unidade_est==='un')
+    ? (Number(op.qtd_est)||0)*(Number(op.carreiras)||1)*(Number(op.repeticoes)||1)
+    : (AP_PASSO>0 ? (Number(op.qtd_est)||0)*(Number(op.carreiras)||1)*1000/AP_PASSO : 0);
+  if(!(etiq>0)) return '<span style="opacity:.7">= '+img+' img/golpe</span>';
+  var liq=etiq/img;
+  var ratio=(Number(op.qtd_est)>0)?(Number(op.qtd_rodar_est)/Number(op.qtd_est)):1;
+  var rodar=liq*ratio;
+  var lbl=grupoEhUnidade(op.grupo)?'batidas':'páginas';
+  var maq=(document.getElementById('ap-maq-'+op.id)||{}).value||op.maquina||'';
+  var sub=(MAQUINAS_SUB_DB||[]).filter(function(s){return s.grupo===op.grupo&&s.nome===maq;})[0];
+  var vel=sub?(sub.por_pagina?(Number(sub.velocidade_pagina)||0):(Number(sub.velocidade)||0)):0;
+  if(!(vel>0)){ var g=(MAQUINAS_GRUPOS_DB||[]).filter(function(x){return x.nome===op.grupo;})[0]; vel=g?(Number(g.velocidade)||0):0; }
+  var tempo=(vel>0)?(' · ~'+formatarTempo(rodar/vel)):'';
+  return '<b>≈ rodar '+fmtQtd(rodar)+' '+lbl+'</b>'+tempo+' <span style="opacity:.7">('+img+' img/golpe)</span>';
+}
+function apPreviaSetup(opId){
+  var op=AP_OPS.find(function(o){return o.id===opId;}); if(!op)return;
+  var el=document.getElementById('ap-prev-'+opId); if(!el)return;
+  el.innerHTML=apPreviaCalc(op,apNum('ap-carr-'+opId),apNum('ap-rep-'+opId));
+}
 
 function abrirApontamento(key){
   var r=ITENS.find(function(x){return x.key===key;}); if(!r)return;
@@ -4076,7 +4175,7 @@ function osrComputarRows(roteiro){
     for(var k=i;k<ests.length;k++){ pct+=(Number(ests[k].g.desp_prod_pct)||0)/100; }
     for(var k2=i+1;k2<ests.length;k2++){ if(ests[k2].est.unit===it.est.unit)setupNext+=(Number(ests[k2].est.desp)||0); }
     var denom=Math.max(0.05,1-pct), qtdRodar=(Number(it.est.qtd)||0)/denom+setupNext, vel=Number(it.est.vel)||0;
-    return {etapa_idx:i+1,grupo:it.e.grupo,carreiras:it.e.carreiras||1,acab_verniz:!!it.e.acab_verniz,acab_laminacao:!!it.e.acab_laminacao,
+    return {etapa_idx:i+1,grupo:it.e.grupo,carreiras:it.e.carreiras||1,repeticoes:it.e.repeticoes||1,acab_verniz:!!it.e.acab_verniz,acab_laminacao:!!it.e.acab_laminacao,
       unidade_est:it.est.unit,qtd_est:it.est.qtd,qtd_rodar_est:qtdRodar,setup_est_min:it.est.setup,
       prod_est_min:(vel>0?(qtdRodar/vel*60):0),desp_setup_est:it.est.desp,desp_prod_est:it.est.despProd,vel_est:vel};
   });
@@ -4408,6 +4507,8 @@ async function apCarregar(r){
     var ro=await supabaseClient.from('ordens').select('*').eq('pedido',r.pedido).eq('item',r.item).maybeSingle();
     if(ro.error) throw ro.error;
     AP_ORDEM=ro.data;
+    AP_PASSO=0;
+    try{ if(AP_ORDEM&&AP_ORDEM.produto_codigo){ var pp=await supabaseClient.from('produtos').select('alt_etiqueta,gap_etiqueta').eq('codigo_pa',AP_ORDEM.produto_codigo).maybeSingle(); if(pp&&pp.data){ AP_PASSO=(Number(pp.data.alt_etiqueta)||0)+(Number(pp.data.gap_etiqueta)||0); } } }catch(e){ AP_PASSO=0; }
     if(!AP_ORDEM){ apAviso('Esta OS ainda não existe na camada de apontamento.\n\nApós aplicar o schema 13_producao_apontamentos.sql e subir os pedidos em aberto, a OS e suas operações (geradas pela ficha técnica) aparecem aqui.'); return; }
     var rop=await supabaseClient.from('ordem_operacoes').select('*').eq('ordem_id',AP_ORDEM.id).order('etapa_idx');
     if(rop.error) throw rop.error;
@@ -4473,8 +4574,14 @@ function apHistorico(ev){
   var rows=[],openS=null,openP=null,openPar=null,prevTs=null;
   ev.forEach(function(x){
     var ts=apTs(x);
-    if(x.tipo==='setup_inicio'){openS=x;}
-    else if(x.tipo==='setup_fim'){rows.push({k:'setup',ini:openS?apTs(openS):ts,fim:ts,qtd:Number(x.qtd)||0,op:(openS||x).operador_id,fimOp:x.operador_id});openS=null;}
+    if(x.tipo==='setup_inicio'){openS={k:'setup',ini:ts,fim:null,qtd:null,trechos:0,lancs:[],op:x.operador_id,aberto:true};rows.push(openS);}
+    else if(x.tipo==='setup_lancamento'){
+      var sli=(openS&&prevTs!=null)?prevTs:ts;
+      var slrow={k:'slanc',ini:sli,fim:ts,qtd:Number(x.qtd)||0,op:x.operador_id};
+      if(openS){openS.lancs.push(slrow);openS.trechos++;}
+      else{slrow.fim=null;rows.push(slrow);}
+    }
+    else if(x.tipo==='setup_fim'){if(openS){openS.fim=ts;openS.qtd=Number(x.qtd)||0;openS.fimOp=x.operador_id;openS.aberto=false;}else{rows.push({k:'setup',ini:ts,fim:ts,qtd:Number(x.qtd)||0,op:x.operador_id});}openS=null;}
     else if(x.tipo==='prod_inicio'){openP={k:'prod',ini:ts,fim:null,qtd:0,trechos:0,lancs:[],op:x.operador_id,aberto:true};rows.push(openP);}
     else if(x.tipo==='lancamento'){
       var li=(openP&&prevTs!=null)?prevTs:ts;
@@ -4490,7 +4597,7 @@ function apHistorico(ev){
     else if(x.tipo==='observacao'){rows.push({k:'obs',ini:ts,fim:null,op:x.operador_id,motivo:x.motivo,id:x.id});}
     prevTs=ts;
   });
-  if(openS)rows.push({k:'setup',ini:apTs(openS),fim:null,qtd:null,op:openS.operador_id,aberto:true});
+  // setup aberto já está em rows (push no setup_inicio), com aberto:true e trechos coletados
   // produção ainda aberta já está em rows (push no prod_inicio), com aberto:true e qtd acumulado
   if(openPar)rows.push({k:'parada',ini:apTs(openPar),fim:null,motivo:openPar.motivo,op:openPar.operador_id,aberto:true});
   rows.sort(function(a,b){return a.ini-b.ini;});
@@ -4498,15 +4605,15 @@ function apHistorico(ev){
 }
 function apHistoricoHtml(ev,unit,opId,ehGestor){
   var rows=apHistorico(ev); if(!rows.length)return '';
-  var IC={setup:'🔧',prod:'▶️',parada:'⏸️',validada:'✅',reabertura:'🔓',lanc:'➕',obs:'📝'};
-  var LB={setup:'Setup',prod:'Produção',parada:'Parada',validada:'Validação',reabertura:'Reabertura',lanc:'Lançamento',obs:'Observação'};
+  var IC={setup:'🔧',prod:'▶️',parada:'⏸️',validada:'✅',reabertura:'🔓',lanc:'➕',slanc:'➕',obs:'📝'};
+  var LB={setup:'Setup',prod:'Produção',parada:'Parada',validada:'Validação',reabertura:'Reabertura',lanc:'Lançamento',slanc:'Trecho',obs:'Observação'};
   function lineHtml(r,child){
-    var ponto=(r.k==='validada'||r.k==='reabertura'||r.k==='obs'||(r.k==='lanc'&&!r.fim));
+    var ponto=(r.k==='validada'||r.k==='reabertura'||r.k==='obs'||((r.k==='lanc'||r.k==='slanc')&&!r.fim));
     var per=ponto?apDT(r.ini):(r.fim?(apDT(r.ini)+' → '+apDT(r.fim)+' · '+apClock(r.fim-r.ini)):(apDT(r.ini)+' · <i>em andamento</i>'));
     var extra='';
-    if(r.k==='setup')extra=(r.qtd!=null?(' · desp. '+apFmt(r.qtd)+' '+apEsc(unit||'m')):'');
+    if(r.k==='setup')extra=(r.qtd!=null?(' · desp. '+apFmt(r.qtd)+' '+apEsc(unit||'m')):'')+(r.trechos>1?(' ('+r.trechos+' trechos)'):'');
     else if(r.k==='prod')extra=' · total '+apFmt(r.qtd)+' '+apEsc(unit||'')+(r.trechos>1?(' ('+r.trechos+' trechos)'):'');
-    else if(r.k==='lanc')extra=' · '+apFmt(r.qtd)+' '+apEsc(unit||'');
+    else if(r.k==='lanc'||r.k==='slanc')extra=' · '+apFmt(r.qtd)+' '+apEsc(unit||'');
     else if(r.k==='parada')extra=(r.motivo?(' · '+apEsc(r.motivo)):'');
     else if(r.k==='obs')extra=' · <i>'+apEsc(r.motivo||'')+'</i>';
     var nome=apEsc(apNomeOp(r.op))+(r.fimOp&&r.fimOp!==r.op?(' / '+apEsc(apNomeOp(r.fimOp))):'');
@@ -4519,7 +4626,7 @@ function apHistoricoHtml(ev,unit,opId,ehGestor){
   }
   var li=rows.map(function(r){
     var out=lineHtml(r,false);
-    if(r.k==='prod'&&r.lancs&&r.lancs.length){ out+=r.lancs.map(function(l){return lineHtml(l,true);}).join(''); }
+    if((r.k==='prod'||r.k==='setup')&&r.lancs&&r.lancs.length){ out+=r.lancs.map(function(l){return lineHtml(l,true);}).join(''); }
     return out;
   }).join('');
   return '<details class="ap-hist" style="margin-top:8px"'+(rows.length<=6?' open':'')+'>'+
@@ -4531,18 +4638,26 @@ function apManualFormHtml(op){
   var ehGestor=PERFIL&&PERFIL.papel==='gestor';
   var operSel=ehGestor?('<label class="ap-ml-f" style="display:flex;flex-direction:column;font-size:11px;color:#666;gap:2px">Operador<select class="ap-sel" id="ap-mo-'+op.id+'">'+AP_USERS.map(function(u){return '<option value="'+apEsc(u.id)+'">'+apEsc(u.nome)+'</option>';}).join('')+'</select></label>'):'';
   function fld(lbl,inner){return '<label class="ap-ml-f" style="display:flex;flex-direction:column;font-size:11px;color:#666;gap:2px">'+lbl+inner+'</label>';}
+  // VOREY/batida ainda nao iniciada: no manual tambem informa maquina + carreiras x
+  // repeticoes, para recalcular a etapa (igual ao Iniciar setup) antes de gravar o bloco.
+  var pagManual=(op.status==='aguardando'&&setupPorImagens(op.grupo))
+    ? fld('Máquina','<select class="ap-sel" id="ap-mmaq-'+op.id+'"><option value="">— máquina —</option>'+apSubs(op.grupo).map(function(s){return '<option value="'+apEsc(s.nome)+'"'+(op.maquina===s.nome?' selected':'')+'>'+apEsc(s.nome)+'</option>';}).join('')+'</select>')
+      +fld('Carreiras','<input class="ap-input" type="number" min="1" id="ap-mcarr-'+op.id+'" style="width:76px" value="'+apEsc(op.carreiras||1)+'">')
+      +fld('Repetições','<input class="ap-input" type="number" min="1" id="ap-mrep-'+op.id+'" style="width:76px" value="'+apEsc(op.repeticoes||1)+'">')
+    : '';
   return '<div id="ap-manual-'+op.id+'" style="display:none;margin-top:8px;padding:10px;border:1px dashed #cfd4da;border-radius:8px;background:#fafbfc">'+
     '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end">'+
       fld('Bloco','<select class="ap-sel" id="ap-mb-'+op.id+'"><option value="producao">Produção</option><option value="setup">Setup</option></select>')+
+      pagManual+
       fld('Data','<input class="ap-input" type="date" id="ap-md-'+op.id+'" style="width:140px">')+
       fld('Início','<input class="ap-input" type="time" id="ap-mi-'+op.id+'" style="width:110px">')+
       fld('Fim','<input class="ap-input" type="time" id="ap-mf-'+op.id+'" style="width:110px">')+
-      fld('Metros','<input class="ap-input" type="number" min="0" id="ap-mm-'+op.id+'" style="width:110px">')+
+      fld(apUnidadeLabel(op).charAt(0).toUpperCase()+apUnidadeLabel(op).slice(1),'<input class="ap-input" type="number" min="0" id="ap-mm-'+op.id+'" style="width:110px">')+
       operSel+
     '</div>'+
     '<div class="ap-actions" style="margin-top:8px"><button class="ap-btn" onclick="apManualRegistrar(\''+op.id+'\')"><i class="ti ti-check"></i> Registrar</button>'+
       '<button class="ap-btn-sec" onclick="apManualToggle(\''+op.id+'\')">Cancelar</button></div>'+
-    '<div class="ap-hint" style="margin-top:4px">Para quando esqueceu de iniciar/finalizar. Metros = desperdício (setup) ou produzido (produção).</div>'+
+    '<div class="ap-hint" style="margin-top:4px">Para quando esqueceu de iniciar/finalizar. Valor em '+apEsc(apUnidadeLabel(op))+' = desperdício (setup) ou produzido (produção).</div>'+
   '</div>';
 }
 function apManualToggle(opId){var el=document.getElementById('ap-manual-'+opId);if(!el)return;el.style.display=el.style.display==='none'?'block':'none';}
@@ -4557,8 +4672,21 @@ async function apManualRegistrar(opId){
   if(isNaN(ini.getTime())||isNaN(fim.getTime())){alert('Data/horário inválidos.');return;}
   if(!(ini<fim)){alert('O fim deve ser depois do início.');return;}
   if(fim.getTime()>Date.now()+5*60000){alert('O fim não pode estar no futuro.');return;}
-  if(m==null||m<0){alert('Informe os metros.');return;}
+  if(m==null||m<0){alert('Informe o valor.');return;}
   var oper=null; var sel=document.getElementById('ap-mo-'+opId); if(sel)oper=sel.value||null;
+  // VOREY/batida ainda aguardando: recalcula a etapa (maquina + carreiras x repeticoes)
+  // ANTES de gravar o bloco, igual ao Iniciar setup. So quando o form mostra esses campos.
+  var opM=AP_OPS.find(function(o){return o.id===opId;});
+  if(opM&&opM.status==='aguardando'&&setupPorImagens(opM.grupo)&&document.getElementById('ap-mmaq-'+opId)){
+    var mmaq=(document.getElementById('ap-mmaq-'+opId)||{}).value||'';
+    var mcarr=parseInt(apNum('ap-mcarr-'+opId))||0, mrep=parseInt(apNum('ap-mrep-'+opId))||0;
+    if(!mmaq){alert('Selecione a máquina.');return;}
+    if(mcarr<=0||mrep<=0){alert('Informe carreiras e repetições.');return;}
+    try{
+      var rr=await supabaseClient.rpc('recalcular_op_imagens',{p_operacao:opId,p_maquina:mmaq,p_carreiras:mcarr,p_repeticoes:mrep});
+      if(rr&&rr.error)throw rr.error;
+    }catch(e){ var mm=(e.message||e)+''; if(/recalcular_op_imagens|PGRST202|function|does not exist/i.test(mm)) alert('Precisa aplicar a migration 29_ (função recalcular_op_imagens).'); else alert('Não foi possível recalcular a etapa.\n'+mm); return; }
+  }
   try{
     var res=await supabaseClient.rpc('apontamento_manual',{p_operacao:opId,p_bloco:bloco,p_ini:ini.toISOString(),p_fim:fim.toISOString(),p_metros:m,p_operador:oper,p_motivo:null});
     if(res.error)throw res.error;
@@ -4587,7 +4715,7 @@ function apRenderOp(r,op,estado){
       '<div class="ap-est ap-hint">Grupo com apontamento <b>desligado</b> — produção programada manualmente pelo gestor, sem apontamento. Ligue em <b>Máquinas → Apontamento ativo</b> quando o operador estiver pronto.</div></div>';
   }
   var ev=apEventos(op.id);
-  var unit=op.unidade_est||'';
+  var unit=apUnidadeLabel(op);
   var somaL=apSomaLanc(ev), setupMs=apSomaPares(ev,'setup_inicio','setup_fim'), setupMet=apSetupMetros(ev);
   var lancChips=ev.filter(function(x){return x.tipo==='lancamento';}).map(function(l,k){return '<span class="ap-chip">#'+(k+1)+': '+apFmt(l.qtd)+' '+apEsc(unit)+'</span>';}).join(' ');
   var acoes='', fb='';
@@ -4599,17 +4727,25 @@ function apRenderOp(r,op,estado){
   } else if(op.status==='aguardando'){
     var subs=apSubs(op.grupo);
     var sel = subs.length ? '<select class="ap-sel" id="ap-maq-'+op.id+'" onchange="apAtribuirMaquina(\''+op.id+'\',this.value)"><option value="">— máquina —</option>'+subs.map(function(s){return '<option value="'+apEsc(s.nome)+'"'+(op.maquina===s.nome?' selected':'')+'>'+apEsc(s.nome)+'</option>';}).join('')+'</select>' : '';
-    // Grupo com sub por pagina (ex.: VOREY): operador informa carreiras x repeticoes
-    // no setup (carreira pre-preenchida da ficha, editavel; repeticao digitada).
-    var pagIn = grupoTemPagina(op.grupo)
-      ? '<span class="ap-hint" style="margin-left:4px">Por página (VOREY):</span>'+
-        '<input class="ap-input" id="ap-carr-'+op.id+'" type="number" min="1" style="width:84px" title="Carreiras" value="'+apEsc(op.carreiras||1)+'" placeholder="carreiras">'+
-        '<input class="ap-input" id="ap-rep-'+op.id+'" type="number" min="1" style="width:84px" title="Repetições" value="'+apEsc(op.repeticoes||1)+'" placeholder="repetições">'
+    // VOREY (por página) ou BATIDA (modo unidade): operador informa carreiras x
+    // repetições no setup (pré-preenchidas da ficha, editáveis). Recalcula na hora.
+    var pagIn = setupPorImagens(op.grupo)
+      ? '<span class="ap-hint" style="margin-left:4px">Carreiras × repetições:</span>'+
+        '<input class="ap-input" id="ap-carr-'+op.id+'" type="number" min="1" style="width:84px" title="Carreiras" value="'+apEsc(op.carreiras||1)+'" placeholder="carreiras" oninput="apPreviaSetup(\''+op.id+'\')">'+
+        '<input class="ap-input" id="ap-rep-'+op.id+'" type="number" min="1" style="width:84px" title="Repetições" value="'+apEsc(op.repeticoes||1)+'" placeholder="repetições" oninput="apPreviaSetup(\''+op.id+'\')">'+
+        '<span id="ap-prev-'+op.id+'" class="ap-hint" style="margin-left:4px">'+apPreviaCalc(op,op.carreiras,op.repeticoes)+'</span>'
       : '';
     acoes = sel+pagIn+'<button class="ap-btn" onclick="apIniciarSetup(\''+op.id+'\')"><i class="ti ti-player-play"></i> Iniciar setup</button>';
   } else if(op.status==='em_setup'){
-    fb='<div class="ap-est">Setup em andamento: '+apTimerSpan(apUltTs(ev,'setup_inicio'),0)+'</div>';
-    acoes = '<input class="ap-input" id="ap-qs-'+op.id+'" type="number" min="0" placeholder="metros de setup"><button class="ap-btn" onclick="apFinalizarSetup(\''+op.id+'\')"><i class="ti ti-player-stop"></i> Finalizar setup</button>';
+    var somaSetup=apSomaSetupLanc(ev);
+    var setupChips=ev.filter(function(x){return x.tipo==='setup_lancamento';}).map(function(l,k){return '<span class="ap-chip">#'+(k+1)+': '+apFmt(l.qtd)+' '+apEsc(unit)+'</span>';}).join(' ');
+    fb='<div class="ap-est">Setup em andamento: '+apTimerSpan(apUltTs(ev,'setup_inicio'),0)+'</div>'+
+       (setupChips?'<div class="ap-est">'+setupChips+'</div>':'')+
+       (somaSetup>0?'<div class="ap-est">Acerto lançado: <b>'+apFmt(somaSetup)+' '+apEsc(unit)+'</b></div>':'');
+    var motS = '<select class="ap-sel" id="ap-mot-'+op.id+'">'+AP_MOTIVOS.map(function(m){return '<option>'+apEsc(m)+'</option>';}).join('')+'</select>';
+    acoes = '<input class="ap-input" id="ap-sl-'+op.id+'" type="number" min="0" placeholder="'+apEsc(unit)+' deste trecho"><button class="ap-btn-sec" onclick="apSetupLancar(\''+op.id+'\')"><i class="ti ti-plus"></i> Lançar</button>'+
+      motS+'<button class="ap-btn-sec" onclick="apSetupParada(\''+op.id+'\')"><i class="ti ti-player-pause"></i> Parada</button>'+
+      '<input class="ap-input" id="ap-qs-'+op.id+'" type="number" min="0" placeholder="'+apEsc(unit)+' final (opc.)"><button class="ap-btn" onclick="apFinalizarSetup(\''+op.id+'\')"><i class="ti ti-player-stop"></i> Finalizar setup</button>';
   } else if(op.status==='setup_ok'){
     fb='<div class="ap-est">Setup concluído: <b>'+apFmt(apMsMin(setupMs))+' min</b> · desperdício <b>'+apFmt(setupMet)+' '+apEsc(unit||'m')+'</b></div>';
     acoes = '<button class="ap-btn" onclick="apAcao(\''+op.id+'\',\'prod_inicio\')"><i class="ti ti-player-play"></i> Iniciar produção</button>';
@@ -4617,23 +4753,24 @@ function apRenderOp(r,op,estado){
     fb=(lancChips?'<div class="ap-est">'+lancChips+'</div>':'')+
       '<div class="ap-est">Produzido: <b>'+apFmt(somaL)+' '+apEsc(unit)+'</b> (meta a rodar '+apFmt(op.qtd_rodar_est!=null?op.qtd_rodar_est:op.qtd_est)+') · Tempo produtivo: '+apTimerSpan(apUltTs(ev,'prod_inicio'),apParadasRodada(ev))+'</div>';
     var mot = '<select class="ap-sel" id="ap-mot-'+op.id+'">'+AP_MOTIVOS.map(function(m){return '<option>'+apEsc(m)+'</option>';}).join('')+'</select>';
-    acoes = '<input class="ap-input" id="ap-lq-'+op.id+'" type="number" min="0" placeholder="metragem deste trecho"><button class="ap-btn-sec" onclick="apLancar(\''+op.id+'\')"><i class="ti ti-plus"></i> Lançar</button>'+
+    acoes = '<input class="ap-input" id="ap-lq-'+op.id+'" type="number" min="0" placeholder="'+apEsc(unit)+' deste trecho"><button class="ap-btn-sec" onclick="apLancar(\''+op.id+'\')"><i class="ti ti-plus"></i> Lançar</button>'+
       mot+'<button class="ap-btn-sec" onclick="apParada(\''+op.id+'\')"><i class="ti ti-player-pause"></i> Parada</button>'+
       '<button class="ap-btn" onclick="apFinalizarProducao(\''+op.id+'\')"><i class="ti ti-player-stop"></i> Finalizar</button>';
   } else if(op.status==='parado'){
+    var emSetupPar=!apTemProdInicio(ev);  // sem prod_inicio -> parada durante o SETUP
     var ultPar=ev.filter(function(x){return x.tipo==='parada_inicio';}).slice(-1)[0];
-    fb='<div class="ap-est">Parado — '+apEsc(ultPar?ultPar.motivo:'')+' há '+apTimerSpan(ultPar?apTs(ultPar):0,0)+' · Produzido: <b>'+apFmt(somaL)+' '+apEsc(unit)+'</b></div>';
-    acoes = '<button class="ap-btn" onclick="apAcao(\''+op.id+'\',\'parada_fim\')"><i class="ti ti-player-play"></i> Retomar produção</button>';
+    fb='<div class="ap-est">Parado — '+apEsc(ultPar?ultPar.motivo:'')+' há '+apTimerSpan(ultPar?apTs(ultPar):0,0)+' · '+(emSetupPar?('Acerto: <b>'+apFmt(apSomaSetupLanc(ev))+' '+apEsc(unit)+'</b>'):('Produzido: <b>'+apFmt(somaL)+' '+apEsc(unit)+'</b>'))+'</div>';
+    acoes = '<button class="ap-btn" onclick="apAcao(\''+op.id+'\',\'parada_fim\')"><i class="ti ti-player-play"></i> Retomar '+(emSetupPar?'setup':'produção')+'</button>';
   } else if(op.status==='finalizada'){
     var prodMs=apSomaPares(ev,'prod_inicio','prod_fim')-apSomaPares(ev,'parada_inicio','parada_fim');
     fb='<div class="ap-est"><span>setup: <b>'+apFmt(apMsMin(setupMs))+' min</b></span><span>produção: <b>'+apFmt(apMsMin(Math.max(0,prodMs)))+' min</b></span><span>produzido: <b>'+apFmt(somaL)+' '+apEsc(unit)+'</b></span><span>desp. setup: <b>'+apFmt(setupMet)+'</b></span></div>';
     acoes = '<button class="ap-btn-sec" onclick="apAcao(\''+op.id+'\',\'reabertura\')"><i class="ti ti-lock-open"></i> Reabrir</button>';
   }
   var est = (op.setup_est_min!=null||op.prod_est_min!=null)
-    ? '<div class="ap-est ap-hint"><span>estim.: setup '+apFmt(op.setup_est_min)+' min'+(op.desp_setup_est!=null?(' · '+apFmt(op.desp_setup_est)+' '+apEsc(op.unidade_est||'m')):'')+'</span><span>produção '+apFmt(op.prod_est_min)+' min</span>'+
+    ? '<div class="ap-est ap-hint"><span>estim.: setup '+apFmt(op.setup_est_min)+' min'+(op.desp_setup_est!=null?(' · '+apFmt(op.desp_setup_est)+' '+apEsc(unit)):'')+'</span><span>produção '+apFmt(op.prod_est_min)+' min</span>'+
       (op.qtd_rodar_est!=null
-        ? '<span>rodar <b>'+apFmt(op.qtd_rodar_est)+' '+apEsc(op.unidade_est||'')+'</b> <span style="opacity:.7">(líq. '+apFmt(op.qtd_est)+')</span></span>'
-        : '<span>qtd '+apFmt(op.qtd_est)+' '+apEsc(op.unidade_est||'')+'</span>')+
+        ? '<span>rodar <b>'+apFmt(op.qtd_rodar_est)+' '+apEsc(unit)+'</b> <span style="opacity:.7">(líq. '+apFmt(op.qtd_est)+')</span></span>'
+        : '<span>qtd '+apFmt(op.qtd_est)+' '+apEsc(unit)+'</span>')+
       (op.vel_est?'<span>vel. '+apFmt(op.vel_est)+'</span>':'')+'</div>'
     : '<div class="ap-est ap-hint">estimativa ainda não calculada</div>';
   var ehGestor=PERFIL&&PERFIL.papel==='gestor';
@@ -4658,16 +4795,17 @@ async function apIniciarSetup(opId){
   var op=AP_OPS.find(function(o){return o.id===opId;}); if(!op)return;
   var subs=apSubs(op.grupo), maq=null;
   if(subs.length){ var el=document.getElementById('ap-maq-'+opId); maq=el?el.value:''; if(!maq){alert('Selecione a máquina física.');return;} }
-  // Sub por pagina (VOREY): recalcula a etapa em PAGINAS via RPC (o operador nao faz
-  // UPDATE direto na op; a RPC valida e insere o setup_inicio).
-  if(maq && subEhPagina(op.grupo, maq)){
+  // VOREY (sub por pagina) ou BATIDA (grupo unidade): recalcula a etapa por
+  // carreiras x repeticoes via RPC (o operador nao faz UPDATE direto na op; a RPC
+  // valida e insere o setup_inicio). Idempotente (recalcula das etiquetas).
+  if(maq && (subEhPagina(op.grupo, maq) || grupoEhUnidade(op.grupo))){
     var carr=parseInt(apNum('ap-carr-'+opId))||0, rep=parseInt(apNum('ap-rep-'+opId))||0;
-    if(carr<=0||rep<=0){ alert('Informe carreiras e repetições (maiores que zero) para a VOREY.'); return; }
+    if(carr<=0||rep<=0){ alert('Informe carreiras e repetições (maiores que zero).'); return; }
     try{
       var res=await supabaseClient.rpc('iniciar_setup_pagina',{p_operacao:opId,p_maquina:maq,p_carreiras:carr,p_repeticoes:rep});
       if(res&&res.error)throw res.error;
       var r=ITENS.find(function(x){return x.key===AP_KEY;}); await apCarregar(r);
-    }catch(e){ var m=(e.message||e)+''; if(/iniciar_setup_pagina|PGRST202|function|does not exist/i.test(m)) alert('Precisa aplicar a migration 26_ (função iniciar_setup_pagina).'); else alert('Não foi possível iniciar o setup por página.\n'+m); }
+    }catch(e){ var m=(e.message||e)+''; if(/iniciar_setup_pagina|PGRST202|function|does not exist/i.test(m)) alert('Precisa aplicar as migrations 26_/28_ (função iniciar_setup_pagina).'); else alert('Não foi possível iniciar o setup.\n'+m); }
     return;
   }
   await apAcao(opId,'setup_inicio',{maquina:maq});
@@ -4693,14 +4831,27 @@ async function apFinalizarProducao(opId){
   if(q&&q>0){ await apAcao(opId,'lancamento',{qtd:q},true); }
   await apAcao(opId,'prod_fim');
 }
-// Finalizar SETUP: mesma lógica da trava — se o desperdício de setup não foi informado,
-// pede confirmação antes de gravar setup zerado.
+// Lançar TRECHO de setup (setup_lancamento) — igual ao Lançar da produção.
+async function apSetupLancar(opId){
+  var q=apNum('ap-sl-'+opId); if(!q||q<=0){alert('Informe o valor do trecho de setup.');return;}
+  await apAcao(opId,'setup_lancamento',{qtd:q});
+}
+// Parada DURANTE o setup: aproveita o trecho ainda digitado e marca parada.
+async function apSetupParada(opId){
+  var el=document.getElementById('ap-mot-'+opId); var motivo=el?el.value:'';
+  var q=apNum('ap-sl-'+opId); if(q&&q>0){ await apAcao(opId,'setup_lancamento',{qtd:q},true); }
+  await apAcao(opId,'parada_inicio',{motivo:motivo});
+}
+// Finalizar SETUP: o desperdício de setup = SOMA dos trechos + o valor final digitado.
+// Grava esse TOTAL no setup_fim (a view de KPI continua lendo dele; sem mudança no banco).
 async function apFinalizarSetup(opId){
   var q=apNum('ap-qs-'+opId);
-  if(!(q&&q>0)){
-    if(!confirm('A metragem de setup não foi informada — o desperdício de setup ficará ZERADO.\n\nFinalizar o setup mesmo assim?'))return;
+  var jaSetup=apSomaSetupLanc(apEventos(opId));
+  var total=jaSetup+((q&&q>0)?q:0);
+  if(!(total>0)){
+    if(!confirm('O acerto de setup ficará ZERADO.\n\nFinalizar o setup mesmo assim?'))return;
   }
-  await apAcao(opId,'setup_fim',{qtd:q});
+  await apAcao(opId,'setup_fim',{qtd:total});
 }
 async function apAcao(opId,tipo,extra,silencioso){
   try{
@@ -4905,7 +5056,7 @@ async function materializarProduto(pa){
       var denom=Math.max(0.05, 1-pct);
       var qtdRodar=(Number(it.est.qtd)||0)/denom + setupNext;
       var vel=Number(it.est.vel)||0;
-      return {ordem_id:o.id,etapa_idx:it.e.ordem,grupo:it.e.grupo,carreiras:it.e.carreiras||1,
+      return {ordem_id:o.id,etapa_idx:it.e.ordem,grupo:it.e.grupo,carreiras:it.e.carreiras||1,repeticoes:it.e.repeticoes||1,
         acab_verniz:!!it.e.acab_verniz,acab_laminacao:!!it.e.acab_laminacao,
         unidade_est:it.est.unit,qtd_est:it.est.qtd,qtd_rodar_est:qtdRodar,
         setup_est_min:it.est.setup,prod_est_min:(vel>0?(qtdRodar/vel*60):0),
