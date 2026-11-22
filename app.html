@@ -2469,18 +2469,20 @@ function renderKpiTabelas(){
   var opsByOs={}; rows.forEach(function(o){ var k=o.pedido+'-'+o.item; (opsByOs[k]=opsByOs[k]||[]).push(o); });
   var sQtd=0,sRodar=0,sBase=0,nOs=0; Object.keys(opsByOs).forEach(function(k){ var o=kOsMetros(opsByOs[k]); if(!o)return; sQtd+=kNum(o.qtd_real); sRodar+=kRodar(o); sBase+=kNum(o.qtd_est); nOs++; });
   var rodando=sSetup+sProd, desvio=sProd-sProdEst, pctPar=(rodando+sPar)>0?(sPar/(rodando+sPar)*100):0;
-  var dReal=sRodadoAll-sKBase, dPrev=sRodadoAll-sRodarAll; // refugo de producao por etapa (base ja inclui o acerto da proxima); setup fica em Desp. setup
+  var dReal=sRodadoAll-sKBase, dPrev=sRodadoAll-sRodarAll; // refugo de producao por etapa (por maquina)
+  var dRealFis=sQtd-sBase; // DESPERDICIO REAL no nivel-OS = material fisico = rodado da 1a etapa - liquido (NAO soma etapas: mesmo substrato nos 2 passes)
+  var dPrevFis=sQtd-sRodar; // DESP. VS PREVISTO no nivel-OS = rodado da 1a etapa - previsto a rodar da 1a etapa (o plano ja embute a cascata; NAO soma etapas)
   document.getElementById('kpi-cards').innerHTML=[
     kCard('Tempo rodando',kHM(rodando),'setup '+kHM(sSetup)+' + prod '+kHM(sProd)),
     kCard('Paradas',kHM(sPar),kFmt(pctPar)+'% do tempo'),
     kCard('Produzido (1ª etapa)',kFmt(sQtd)+' m','a rodar '+kFmt(sRodar)+' · líq. '+kFmt(sBase)+' · '+nOs+' OS'),
-    kCard('Desperdício real',(dReal>=0?'+':'')+kFmt(dReal)+' m','operacional (soma por etapa) · '+(sRodadoAll>0?kFmt(dReal/sRodadoAll*100)+'% do rodado':'—')),
-    kCard('Desp. vs previsto',(dPrev>=0?'+':'')+kFmt(dPrev)+' m','vs a rodar · '+kPctD(dPrev,sRodarAll)),
+    kCard('Desperdício real',(dRealFis>=0?'+':'')+kFmt(dRealFis)+' m','material (1ª etapa − líquido) · '+(sBase>0?kFmt(dRealFis/sBase*100)+'% a mais que o líquido':'—')),
+    kCard('Desp. vs previsto',(dPrevFis>=0?'+':'')+kFmt(dPrevFis)+' m','vs a rodar (1ª etapa) · '+(sRodar>0?kFmt(dPrevFis/sRodar*100)+'% a mais que o previsto':'—')),
     kCard('Desvio produção',(desvio>=0?'+':'')+kFmt(desvio)+' min','real × estim. · '+kPct(sProd,sProdEst)),
     kCard('Desp. setup',kFmt(sDespS)+' m','estim. '+kFmt(sDespSEst)+' m · '+kPct(sDespS,sDespSEst))
   ].join('');
   // ---- por maquina (agrupado: Tempo | Metros) ----
-  var pm={}; rows.forEach(function(o){ var k=(o.grupo||'')+'||'+(o.maquina||'(sem máquina)'); var a=(pm[k]=pm[k]||{grupo:o.grupo,maquina:o.maquina||'(sem máquina)',n:0,setup:0,prod:0,prodEst:0,qtd:0,rodar:0,base:0,despS:0,velSum:0,velN:0}); a.n++; a.setup+=kNum(o.setup_real_min); a.prod+=kNum(o.prod_real_min); a.prodEst+=kNum(o.prod_est_min); a.qtd+=kNum(o.qtd_real); a.rodar+=kRodar(o); a.base+=kBase(o); a.despS+=kNum(o.desp_setup_real); if(kNum(o.vel_est)>0){a.velSum+=kNum(o.vel_est);a.velN++;} });
+  var pm={}; rows.forEach(function(o){ var k=(o.grupo||'')+'||'+(o.maquina||'(sem máquina)'); var a=(pm[k]=pm[k]||{grupo:o.grupo,maquina:o.maquina||'(sem máquina)',n:0,setup:0,prod:0,prodEst:0,qtd:0,rodar:0,base:0,despS:0,despSEst:0,velSum:0,velN:0}); a.n++; a.setup+=kNum(o.setup_real_min); a.prod+=kNum(o.prod_real_min); a.prodEst+=kNum(o.prod_est_min); a.qtd+=kNum(o.qtd_real); a.rodar+=kRodar(o); a.base+=kBase(o); a.despS+=kNum(o.desp_setup_real); a.despSEst+=kNum(o.desp_setup_est); if(kNum(o.vel_est)>0){a.velSum+=kNum(o.vel_est);a.velN++;} });
   var maqArr=Object.keys(pm).map(function(k){return pm[k];}).sort(function(a,b){return b.prod-a.prod;});
   var tMaq;
   if(!maqArr.length){ tMaq='<div class="ap-hint">Sem dados no período/seleção.</div>'; }
@@ -2489,7 +2491,7 @@ function renderKpiTabelas(){
     '<th class="grp sep" colspan="3">Tempo</th><th class="grp sep" colspan="4">Metros</th>'+
     '<th class="sep" rowspan="2">Vel. méd/prev</th></tr>'+
     '<tr><th class="sep">Setup</th><th>Produção real/est.</th><th>Desvio prod.</th>'+
-    '<th class="sep">Produzido real/est.</th><th>Desp. real</th><th>Desp. vs prev</th><th>Desp. setup</th></tr>'+
+    '<th class="sep">Produzido real/est.</th><th>Desp. real</th><th>Desp. vs prev</th><th>Desp. setup real/est</th></tr>'+
     '</thead><tbody>'+maqArr.map(function(a){
       var dReal=a.qtd-a.base, dPrev=a.qtd-a.rodar, dvT=a.prod-a.prodEst, velReal=a.prod>0?(a.qtd/a.prod*60):0, velPrev=a.velN>0?(a.velSum/a.velN):0;
       return '<tr><td class="l">'+apEsc(kGnome(a.grupo))+' · '+apEsc(a.maquina)+'</td><td>'+a.n+'</td>'+
@@ -2498,7 +2500,7 @@ function renderKpiTabelas(){
         '<td class="sep">'+kFmt(a.qtd)+' / '+kFmt(a.rodar)+'</td>'+
         '<td>'+(dReal>=0?'+':'')+kFmt(dReal)+' ('+kPctD(dReal,a.base)+')</td>'+
         '<td>'+(dPrev>=0?'+':'')+kFmt(dPrev)+' ('+kPct(a.qtd,a.rodar)+')</td>'+
-        '<td>'+kFmt(a.despS)+'</td>'+
+        '<td>'+kFmt(a.despS)+' / '+kFmt(a.despSEst)+'</td>'+
         '<td class="sep">'+kFmt(velReal)+' / '+kFmt(velPrev)+'</td></tr>';
     }).join('')+'</tbody></table>'; }
   // ---- por operador (com tempo de setup) ----
@@ -2511,10 +2513,10 @@ function renderKpiTabelas(){
   var parRows=Object.keys(pmt).map(function(k){return pmt[k];}).sort(function(a,b){return b.min-a.min;}).map(function(a){ return [apEsc(a.motivo), String(a.n), kHM(a.min)]; });
   var tPar=kTbl([{t:'Motivo',l:true},{t:'Ocorrências'},{t:'Tempo'}],parRows);
   // ---- estimado x real por OS (agregado por OS; clique abre o detalhe) ----
-  var pos={}; rows.forEach(function(o){ var k=o.pedido+'-'+o.item; var a=(pos[k]=pos[k]||{pedido:o.pedido,item:o.item,cliente:o.cliente_nome||'',desc:o.descricao||'',ops:[],despS:0,rodadoAll:0,kbaseAll:0,rodarAll:0,prod:0,prodEst:0,ref:0}); a.ops.push(o); a.despS+=kNum(o.desp_setup_real); a.rodadoAll+=kNum(o.qtd_real); a.kbaseAll+=kBase(o); a.rodarAll+=kRodar(o); a.prod+=kNum(o.prod_real_min); a.prodEst+=kNum(o.prod_est_min); var r=kpiDataRef(o)||0; if(r>a.ref)a.ref=r; });
-  var osList=Object.keys(pos).map(function(k){ var a=pos[k], f=kOsMetros(a.ops)||{}; a.qtd=kNum(f.qtd_real); a.rodar=kRodar(f); a.base=kNum(f.qtd_est); a.dReal=a.rodadoAll-a.kbaseAll; a.dPrev=a.rodadoAll-a.rodarAll; return a; }).sort(function(a,b){return b.ref-a.ref;}).slice(0,200);
+  var pos={}; rows.forEach(function(o){ var k=o.pedido+'-'+o.item; var a=(pos[k]=pos[k]||{pedido:o.pedido,item:o.item,cliente:o.cliente_nome||'',desc:o.descricao||'',ops:[],despS:0,despSEst:0,rodadoAll:0,kbaseAll:0,rodarAll:0,prod:0,prodEst:0,ref:0}); a.ops.push(o); a.despS+=kNum(o.desp_setup_real); a.despSEst+=kNum(o.desp_setup_est); a.rodadoAll+=kNum(o.qtd_real); a.kbaseAll+=kBase(o); a.rodarAll+=kRodar(o); a.prod+=kNum(o.prod_real_min); a.prodEst+=kNum(o.prod_est_min); var r=kpiDataRef(o)||0; if(r>a.ref)a.ref=r; });
+  var osList=Object.keys(pos).map(function(k){ var a=pos[k], f=kOsMetros(a.ops)||{}; a.qtd=kNum(f.qtd_real); a.rodar=kRodar(f); a.base=kNum(f.qtd_est); a.dReal=a.qtd-a.base; a.dPrev=a.qtd-a.rodar; return a; }).sort(function(a,b){return b.ref-a.ref;}).slice(0,200);
   var tDet=kOsTabela(osList);
-  // ---- por materia-prima (m2; substrato consumido na 1a etapa que rodou da OS) ----
+  // ---- por materia-prima (m2; substrato consumido na 1a etapa que rodou da OS = producao + setup) ----
   // Independe de maquina/operador/grupo (substrato e consumido uma vez por OS);
   // respeita periodo + cliente + OS. Converte metros->m2 pela largura do produto.
   var matRowsOps=KPI_OPS.filter(function(o){
@@ -2532,7 +2534,10 @@ function renderKpiTabelas(){
     var nome=info.nome?(info.nome+(info.forn?(' · '+info.forn):'')):'(sem matéria-prima)';
     var a=(matAgg[nome]=matAgg[nome]||{nome:nome,nOs:0,m2Est:0,m2Real:0,custo:0,icms:0,ipi:0});
     // custo/impostos por OS (cada OS usa o SEU snapshot de preço) -> soma
-    var m2Est=kRodar(ref)*larg/1000, m2Real=kNum(ref.qtd_real)*larg/1000, custo=m2Real*kNum(info.valor);
+    // substrato consumido = producao + SETUP (o acerto tambem gasta MP):
+    // rodado real = qtd_real + desp_setup_real; estimado = previsto a rodar + desp. setup estimado
+    var mEst=kRodar(ref)+kNum(ref.desp_setup_est), mReal=kNum(ref.qtd_real)+kNum(ref.desp_setup_real);
+    var m2Est=mEst*larg/1000, m2Real=mReal*larg/1000, custo=m2Real*kNum(info.valor);
     a.nOs++; a.m2Est+=m2Est; a.m2Real+=m2Real; a.custo+=custo; a.icms+=custo*kNum(info.icms)/100; a.ipi+=custo*kNum(info.ipi)/100;
   });
   var matArr=Object.keys(matAgg).map(function(k){return matAgg[k];}).sort(function(a,b){return b.m2Real-a.m2Real;});
@@ -2553,7 +2558,7 @@ function renderKpiTabelas(){
   document.getElementById('kpi-conteudo').innerHTML=
     '<h3>Por máquina</h3><div class="kpi-scroll">'+tMaq+'</div>'+
     '<h3>Por operador</h3><div class="kpi-scroll">'+tOp+'</div>'+
-    '<h3>Por matéria-prima <span style="font-weight:400;color:var(--text3);font-size:12px">(m² · custo/ICMS/IPI sobre o rodado · por OS, independe de máquina)</span></h3><div class="kpi-scroll">'+tMat+'</div>'+
+    '<h3>Por matéria-prima <span style="font-weight:400;color:var(--text3);font-size:12px">(m² · custo/ICMS/IPI sobre o rodado = produção + setup · por OS, independe de máquina)</span></h3><div class="kpi-scroll">'+tMat+'</div>'+
     '<h3>Paradas por motivo</h3><div class="kpi-scroll">'+tPar+'</div>'+
     '<h3>Estimado × real por OS <span style="font-weight:400;color:var(--text3);font-size:12px">(clique na linha p/ detalhe · máx. 200)</span></h3><div class="kpi-scroll">'+tDet+'</div>';
 }
@@ -2562,16 +2567,17 @@ function kOsTabela(list){
   if(!list.length)return '<div class="ap-hint">Sem dados no período/seleção.</div>';
   var head='<thead>'+
     '<tr><th class="l" rowspan="2">OS</th><th class="l" rowspan="2">Cliente</th><th class="l" rowspan="2">Produto</th>'+
-    '<th class="grp sep" colspan="3">Metros</th><th class="sep" rowspan="2">Tempo prod. real/est. (min)</th></tr>'+
-    '<tr><th class="sep">Produzido real/est.</th><th>Desp. real</th><th>Desp. vs prev</th></tr></thead>';
-  var body=list.map(function(a){ var dReal=kNum(a.dReal), dPrev=kNum(a.dPrev), pctR=a.rodadoAll>0?(dReal/a.rodadoAll*100):null;
+    '<th class="grp sep" colspan="4">Metros</th><th class="sep" rowspan="2">Tempo prod. real/est. (min)</th></tr>'+
+    '<tr><th class="sep">Produzido real/est.</th><th>Desp. real</th><th>Desp. vs prev</th><th>Desp. setup real/est</th></tr></thead>';
+  var body=list.map(function(a){ var dReal=kNum(a.dReal), dPrev=kNum(a.dPrev), pctR=a.base>0?(dReal/a.base*100):null;
     return '<tr class="kpi-os-row" onclick="kpiAbrirOS('+a.pedido+','+a.item+')">'+
       '<td class="l">'+apEsc(a.pedido+'-'+a.item)+'</td>'+
       '<td class="l">'+apEsc(a.cliente||'—')+'</td>'+
       '<td class="l">'+apEsc(kDescCurta(a.desc))+'</td>'+
       '<td class="sep">'+kFmt(a.qtd)+' / '+kFmt(a.rodar)+'</td>'+
       '<td>'+(dReal>=0?'+':'')+kFmt(dReal)+(pctR!=null?(' ('+(pctR>=0?'+':'')+kFmt(pctR)+'%)'):'')+'</td>'+
-      '<td>'+(dPrev>=0?'+':'')+kFmt(dPrev)+' ('+kPctD(dPrev,a.rodarAll)+')</td>'+
+      '<td>'+(dPrev>=0?'+':'')+kFmt(dPrev)+' ('+kPctD(dPrev,a.rodar)+')</td>'+
+      '<td>'+kFmt(a.despS)+' / '+kFmt(a.despSEst)+'</td>'+
       '<td class="sep">'+kFmt(a.prod)+' / '+kFmt(a.prodEst)+'</td></tr>';
   }).join('');
   return '<table>'+head+'<tbody>'+body+'</tbody></table>';
@@ -2583,10 +2589,10 @@ async function kpiAbrirOS(pedido,item){
   if(!ops.length)return;
   var cli=ops[0].cliente_nome||'—', desc=ops[0].descricao||'';
   var tt=document.getElementById('kpi-os-titulo'); if(tt)tt.textContent='OS '+pedido+'-'+item;
-  var tProd=0,tProdEst=0,tSetup=0,tSetupEst=0,tDespS=0,tDReal=0,tDPrev=0,tRodAll=0,tRodarAll=0;
+  var tProd=0,tProdEst=0,tSetup=0,tSetupEst=0,tDespS=0,tDespSEst=0,tDReal=0,tDPrev=0,tRodAll=0,tRodarAll=0;
   var linhas=ops.map(function(o){
     var rodar=kRodar(o), base=kBase(o), qtd=kNum(o.qtd_real), prod=kNum(o.prod_real_min);
-    tProd+=prod; tProdEst+=kNum(o.prod_est_min); tSetup+=kNum(o.setup_real_min); tSetupEst+=kNum(o.setup_est_min); tDespS+=kNum(o.desp_setup_real);
+    tProd+=prod; tProdEst+=kNum(o.prod_est_min); tSetup+=kNum(o.setup_real_min); tSetupEst+=kNum(o.setup_est_min); tDespS+=kNum(o.desp_setup_real); tDespSEst+=kNum(o.desp_setup_est);
     tDReal+=(qtd-base); tDPrev+=(qtd-rodar); tRodAll+=qtd; tRodarAll+=rodar;
     var velReal=prod>0?(qtd/prod*60):0, velPrev=kNum(o.vel_est), dReal=qtd-base, dPrev=qtd-rodar;
     return '<tr>'+
@@ -2597,7 +2603,7 @@ async function kpiAbrirOS(pedido,item){
       '<td class="sep">'+kFmt(qtd)+' / '+kFmt(rodar)+'</td>'+
       '<td>'+(dReal>=0?'+':'')+kFmt(dReal)+' ('+kPctD(dReal,base)+')</td>'+
       '<td>'+(dPrev>=0?'+':'')+kFmt(dPrev)+' ('+kPct(qtd,rodar)+')</td>'+
-      '<td>'+kFmt(kNum(o.desp_setup_real))+'</td>'+
+      '<td>'+kFmt(kNum(o.desp_setup_real))+' / '+kFmt(kNum(o.desp_setup_est))+'</td>'+
       '<td class="sep">'+kFmt(velReal)+' / '+kFmt(velPrev)+'</td></tr>';
   }).join('');
   var head='<thead>'+
@@ -2605,20 +2611,20 @@ async function kpiAbrirOS(pedido,item){
     '<th class="grp sep" colspan="2">Tempo (min)</th><th class="grp sep" colspan="4">Metros</th>'+
     '<th class="sep" rowspan="2">Vel. méd/prev</th></tr>'+
     '<tr><th class="sep">Setup real/est.</th><th>Produção real/est.</th>'+
-    '<th class="sep">Produzido real/est.</th><th>Desp. real</th><th>Desp. vs prev</th><th>Desp. setup</th></tr></thead>';
+    '<th class="sep">Produzido real/est.</th><th>Desp. real</th><th>Desp. vs prev</th><th>Desp. setup real/est</th></tr></thead>';
   // Produzido do total = 1a etapa (metros nao somam); desperdicio = SOMA por etapa; tempos somam
-  var f0=kOsMetros(ops)||{}, tQtd=kNum(f0.qtd_real), tRodar=kRodar(f0);
-  var dRealT=tDReal, dPrevT=tDPrev, pctRT=tRodAll>0?(dRealT/tRodAll*100):null;
-  var foot='<tr style="font-weight:700"><td class="l" colspan="2">Total <span style="font-weight:400">(produzido = 1ª etapa · desp. = soma das etapas)</span></td>'+
+  var f0=kOsMetros(ops)||{}, tQtd=kNum(f0.qtd_real), tRodar=kRodar(f0), tLiq=kNum(f0.qtd_est);
+  var dRealT=tQtd-tLiq, dPrevT=tQtd-tRodar, pctRT=tLiq>0?(dRealT/tLiq*100):null; // Total (nivel-OS): desp. real e vs prev = 1a etapa (NAO somam etapas)
+  var foot='<tr style="font-weight:700"><td class="l" colspan="2">Total <span style="font-weight:400">(nível-OS: produzido, desp. real e vs prev = 1ª etapa · não somam)</span></td>'+
     '<td class="sep">'+kFmt(tSetup)+' / '+kFmt(tSetupEst)+'</td><td>'+kFmt(tProd)+' / '+kFmt(tProdEst)+'</td>'+
     '<td class="sep">'+kFmt(tQtd)+' / '+kFmt(tRodar)+'</td>'+
     '<td>'+(dRealT>=0?'+':'')+kFmt(dRealT)+(pctRT!=null?(' ('+(pctRT>=0?'+':'')+kFmt(pctRT)+'%)'):'')+'</td>'+
-    '<td>'+(dPrevT>=0?'+':'')+kFmt(dPrevT)+' ('+kPctD(dPrevT,tRodarAll)+')</td>'+
-    '<td>'+kFmt(tDespS)+'</td><td class="sep">—</td></tr>';
+    '<td>'+(dPrevT>=0?'+':'')+kFmt(dPrevT)+' ('+kPctD(dPrevT,tRodar)+')</td>'+
+    '<td>'+kFmt(tDespS)+' / '+kFmt(tDespSEst)+'</td><td class="sep">—</td></tr>';
   document.getElementById('kpi-os-conteudo').innerHTML=
     '<div class="ap-hint" style="margin-bottom:8px">Cliente: <b>'+apEsc(cli)+'</b>'+(desc?' · '+apEsc(desc):'')+'</div>'+
     '<div class="kpi-scroll"><table>'+head+'<tbody>'+linhas+foot+'</tbody></table></div>'+
-    '<div class="ap-hint" style="margin-top:8px">real/est. = realizado / estimado. <b>Desp. real</b> = refugo de <b>produção</b> da etapa = rodado − (o que a próxima precisa rodar + o acerto dela); a <b>última etapa</b> = rodado − líquido do produto. O setup de cada máquina fica <b>só</b> na coluna Desp. setup. O <b>Total</b> soma as etapas. <b>Desp. vs prev</b> = rodado × o que deveria rodar (cascata). Vel. em '+(ops[0].unidade_est==='un'?'un':'m')+'/h.</div>'+
+    '<div class="ap-hint" style="margin-top:8px">real/est. = realizado / estimado. <b>Desp. real</b> (por etapa) = refugo <b>operacional</b> da etapa = rodado − (o que a próxima precisa rodar + o acerto dela); a <b>última etapa</b> = rodado − líquido do produto. O setup de cada máquina fica <b>só</b> na coluna Desp. setup. <b>Desp. vs prev</b> (por etapa) = rodado − o previsto a rodar da etapa (cascata). Já no <b>Total</b> (nível-OS), tanto a <b>Desp. real</b> (rodado da 1ª etapa − líquido) quanto a <b>Desp. vs prev</b> (rodado da 1ª etapa − previsto da 1ª etapa, que já embute a cascata) usam a <b>1ª etapa</b> e <b>não</b> somam as etapas — é o mesmo substrato passando nas duas. Vel. em '+(ops[0].unidade_est==='un'?'un':'m')+'/h.</div>'+
     '<h4 style="margin:14px 0 4px">Ocorrências por etapa</h4>'+
     '<div id="kpi-os-ocorr" class="ap-hint">Carregando apontamentos…</div>';
   document.getElementById('modal-kpi-os').style.display='flex';
