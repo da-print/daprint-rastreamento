@@ -1,7 +1,7 @@
 # PCP — Monitoramento de Produção (estado atual)
 
 Documento técnico/handoff do projeto PCP. Leia antes de continuar o trabalho.
-Última atualização: 2026-11-16.
+Última atualização: 2026-11-22.
 
 ## 1. Visão geral
 
@@ -308,7 +308,17 @@ apontamento (ver `aplicar_apontamento`).
 **`18_papel_permissoes.sql`** (tabela `papel_permissoes`; idempotente, SEM seed) →
 **`19_pendencias_resp_obs.sql`** (coluna `ordem_pendencias.responsavel_id` + tabela `pendencia_observacoes`; idempotente) →
 **`20_materias_primas.sql`** (tabela `materias_primas` + coluna `produtos.materia_prima_id` + view `v_ordem_materia`; idempotente) →
-**`21_mp_fornecedor_snapshot.sql`** (coluna `fornecedor` em `materias_primas` + unicidade (nome,fornecedor); colunas de snapshot `mp_*` em `ordens`; `v_ordem_materia` lê snapshot c/ fallback; idempotente).
+**`21_mp_fornecedor_snapshot.sql`** (coluna `fornecedor` em `materias_primas` + unicidade (nome,fornecedor); colunas de snapshot `mp_*` em `ordens`; `v_ordem_materia` lê snapshot c/ fallback; idempotente) →
+**`22_custo_produto.sql`** (custo do produto vendido: `maquinas_sub.custo_hora`; colunas de custo em `produtos`; tabelas `acabamentos`, `produto_acabamentos`, `ribbons`, `custo_parametros`; idempotente — ver §13) →
+**`23_operador_apontamento.sql`** (operador lê o roteiro inteiro das OS que tocam a máquina dele; idempotente — ver §14) →
+**`24_operador_apontamento_perf.sql`** (RLS do operador por conjunto, evita timeout; idempotente — ver §14) →
+**`25_operador_pedidos_apontamento.sql`** (`item_na_minha_maquina` passa a considerar a etapa atual do apontamento; idempotente — ver §14) →
+**`26_vorei_pagina.sql`** (`maquinas_sub.por_pagina`/`velocidade_pagina`, `ordem_operacoes.repeticoes`, RPC `iniciar_setup_pagina`; idempotente — ver §15) →
+**`27_prioridade.sql`** (coluna `overrides.prioridade`; idempotente — ver §15) →
+**`28_batida_setup.sql`** (generaliza `iniciar_setup_pagina` p/ o grupo em `modo='unidade'`; idempotente — ver §15) →
+**`29_recalcular_imagens.sql`** (`_recompute_imagens` interna + `recalcular_op_imagens` chamável; lançamento manual recalcula; idempotente — ver §15) →
+**`30_setup_trechos.sql`** (evento `setup_lancamento` + `parada_fim`/`status_operacao_log` cientes da fase setup×produção; idempotente — ver §15) →
+**`31_custo_mp.sql`** (CUSTO v2 — **substitui o `22_` órfão, NÃO aplicar o 22_**: `tipo`+campos de custo em `materias_primas`; colunas de custo em `produtos` incl. `impressao`/`carreiras`/`repeticoes`/`tinta_branca`; `produto_etapas.maquina_custo`; `produto_acabamentos`→materias_primas; `maquinas_sub_custo` [custo_hora + insumo_m2]; `custo_parametros`; dropa a FK antiga `produtos_ribbon_id_fkey` e reconcilia `produto_acabamentos`; idempotente — ver §17).
 
 ## 12. Matérias-primas + m² nos KPIs (2026-11-15)
 
@@ -485,3 +495,294 @@ no formato do import (reimportável), e **overlay de progresso** no import (`mos
   dos `apontamentos`.
 
 **PENDENTE:** Vendedores e Usuários em lista (padrão das Máquinas); fase de escala (índices/retenção).
+
+## 13. Custo do produto vendido (2026-11-16) — ⚠️ SUPERADO pela §17
+
+**NÃO use esta seção nem o `22_custo_produto.sql`.** A arquitetura de custo foi **refeita** (unificada
+nas matérias-primas por tipo, ficha única, motor detalhado) — ver **§17**. O `22_` ficou **órfão** (não
+aplicar) e o `31_` o substitui. O texto abaixo é histórico (fórmulas de clichê/tinta/ribbon seguem válidas,
+só mudou ONDE os dados são cadastrados e lidos).
+
+**Status: desenvolvido LOCAL, NÃO publicado.** Migration `22_custo_produto.sql` ainda **não aplicada**
+no banco e `app.html` **não publicado** (aguarda teste do usuário). Tudo aditivo e com gate
+`window._custoReady` (tabela `acabamentos` existe) — o app degrada com aviso sem o `22_`. **Não altera
+o cálculo de produção/apontamento existente.**
+
+**Ingredientes (decisões validadas):** custos **variáveis** (escalam com a qtd): substrato (já existia),
+hora-máquina, tinta, acabamentos (laminação/verniz/stamping), ribbon. Custos **fixos** (1× por pedido):
+clichê, faca, zinco (ferramental do hot stamping). Apresentação: **fixo à parte + variável por unidade**
+(cards: fixos, variáveis, totais/unitário c/ fixo diluído).
+
+**Banco (`22_`, idempotente):**
+- `maquinas_sub_custo` (R$/h **por submáquina**, tabela **separada e restrita** — leitura só gestor/editor, pois `maquinas_sub` é lida por todos; `CUSTO_HORA_SUB` no app).
+- `produtos`: `espaco_carreiras`, `esqueleto_lateral` (mm, clichê), `chapado` (bool, sem clichê de cor),
+  `custo_faca` (R$ fixo), `ocupacao_tinta` (% média), `ribbon_id` (soft FK), `carreiras_ribbon`.
+- `acabamentos` (cadastro de tipos): `tipo_calculo` ∈ {filme, verniz, stamping}; `valor_m2` (filme/fita),
+  `gramatura`+`preco_kg` (verniz), `setup_m` (metros de acerto que soma ao setup), `gera_cliche`
+  (verniz localizado/cold → +1 clichê), `gera_zinco` (hot → zinco).
+- `produto_acabamentos` (quais a ficha usa + params por produto: `ocupacao`, `fita_larg_mm`/`fita_alt_mm`
+  [stamping], `valor_zinco`).
+- `ribbons` (nome, tipo cera/misto/resina/outro, `largura_mm` [só cadastro], `comprimento_m`, `valor_rolo`).
+- `custo_parametros` (linha única id=1): `preco_cliche_cm2` (default 0,17), `tinta_gramatura` (fração kg/m²),
+  `tinta_preco_kg`. RLS: select authenticated, escrita `posso_editar()`.
+
+**Fórmulas (motor único `custoProduto` no app, reusado por ficha/simulador/KPI):**
+- **Clichê** (fixo, 1 por cor; 0 se chapado; +1 por acabamento `gera_cliche`):
+  `Larg_cm = PISO[(larg_etiqueta*carreiras + espaco_carreiras*(carreiras−1) + esqueleto_lateral)/10] + 4`;
+  `Alt_cm = ARRED[((alt+gap)*repetições)/10] + 4`; `custo = Larg_cm*Alt_cm*nClichês*preco_cliche_cm2`.
+  Carreiras/repetições vêm da **1ª etapa `por_cor`** (impressão).
+- **Tinta/verniz:** `m²_com_desp × gramatura × ocupação% × preco_kg` (gramatura já é fração do quilo;
+  **não** divide por 1000). Tinta ainda **× nº cores**.
+- **Hora-máquina:** Σ etapas `(prod_min + setup_min)/60 × R$/h`, onde `prod_min = qtd_rodar/vel`,
+  `setup_min = metros_acerto/vel` (metros_acerto = base do grupo + Σ `setup_m` dos acabamentos na etapa de
+  impressão). R$/h da estimativa = **média** das subs com `custo_hora>0` do grupo (o real por OS usaria a
+  sub que rodou — hoje o KPI mostra a estimativa pela ficha).
+- **Ribbon:** `metros = (etiquetas_líquidas/carreiras_ribbon) × passo/1000`; `custo = metros × valor_rolo/comprimento_m`.
+- **Acabamentos:** filme `m²×valor_m2`; verniz (fórmula gramatura); stamping fita `(larg×alt mm²→m²)×etiquetas×valor_m2`.
+- Substrato reaproveita a MP (`valor_m2`+ICMS+IPI) × m²_com_desp da 1ª etapa em metros.
+- **Cascata** "quanto rodar" (`custoEsts`) **espelha** `materializarProduto` (replicada p/ não mexer na
+  produção — anotar se um dia unificar).
+
+**Frontend (`app.html`):**
+- **Ficha**: campos novos (espaço/esqueleto, chapado, faca, ocupação de tinta, ribbon + carreiras de ribbon)
+  + seção "Acabamentos aplicados" (checkbox por tipo, com params) + **prévia de custo para 1.000 etiquetas**
+  (`renderFichaCusto`/`fichaProdLive`). `abrirFicha`/`espelharFicha` carregam `produto_acabamentos`;
+  `salvarFicha` grava campos e `produto_acabamentos` só com `_custoReady`.
+- **Aba Custo** (sidebar, gestor/editor via `ver_custo` em `PERM_ABAS`/`PERM_GESTOR_TABS`): parâmetros globais,
+  cadastro de **acabamentos** e **ribbons**, e **simulador** (produto + qtd/um → custo). `renderCusto`.
+- **Máquinas**: input **R$/h por submáquina** (`atualizarCustoHoraSub`).
+- **KPI · popup da OS** (`kpiAbrirOS`): bloco "Custo estimado (ficha atual)" para a qtd do pedido.
+- Bloco de resumo reutilizável `custoResumoHtml`; dados carregados por `ensureCustoData` (lazy, degrada).
+
+**PENDENTE/próximo:** custo **real** por OS usando o apontado (sub que rodou, metros reais) — hoje o KPI
+mostra o estimado pela ficha; ocupação de tinta por cor (hoje média por ficha); validar fórmulas com um
+caso real do usuário.
+
+## 14. Operador vê/aponta a máquina dele + MP no painel/impressão (2026-11-17) — EM PRODUÇÃO
+
+**Status:** `23_`/`24_`/`25_` aplicados no banco e `app.html` publicado (2026-11-17).
+
+**Problema:** o operador (`visualizador_maquina`) só via os itens **sem ficha** da máquina dele;
+os itens **com ficha** sumiam. Ele deve ver **e apontar** os itens, mas **só quando estão na etapa
+dele** (regra do usuário: CORTE vê CORTE, Digital vê Digital, etc.).
+
+**Causa raiz (RLS, 2 camadas) — diagnóstico via impersonação no SQL Editor:**
+1. **Leitura da camada de apontamento era por grupo:** o operador só lia as `ordem_operacoes` do
+   **próprio grupo**, então para uma OS com roteiro ele recebia só a etapa dele e o `APONT_ESTADO`
+   (fila/etapa atual) saía incompleto.
+2. **`item_na_minha_maquina(ped,it)`** (gate da policy `SELECT` de `pedidos_abertos` p/ o operador)
+   olhava **só a camada legada** (override + `pcp.grupo_maquinas`) e **ignorava o apontamento**. Um
+   item com ficha cujo `pcp` está numa etapa anterior retornava `false` → o item **nem entrava na
+   lista base** do painel (que é montada a partir de `pedidos_abertos`), mesmo com `APONT_ESTADO`
+   pronto e a etapa atual sendo a máquina dele. Os sem ficha apareciam porque o `pcp` deles já está
+   na máquina do operador.
+   **ATENÇÃO:** a policy real de produção de `pedidos_abertos` **divergia do `03_rls_papeis.sql`**
+   (no arquivo era leitura livre p/ o operador; na produção é `item_na_minha_maquina`). Sempre
+   conferir o banco real (`pg_policies`, `pg_get_functiondef`) — ver regra geral no topo deste doc.
+
+**Correções (idempotentes, reaplicáveis; escrita/apontamento INALTERADOS):**
+- **`23_operador_apontamento.sql`**: operador passa a ler o roteiro **inteiro** das OS que tocam a
+  máquina dele (helpers `os_toca_minha_maquina`/`apont_os_toca_minha`, SECURITY DEFINER). IDs são
+  **uuid** (ordens/ordem_operacoes/apontamentos), não bigint.
+- **`24_operador_apontamento_perf.sql`**: troca as funções **por-linha** do `23_` por **conjuntos
+  calculados uma vez** (`minhas_ordens_ids()`/`minhas_operacoes_ids()`, usados com `id in (select …)`)
+  nas policies de SELECT de `ordens`/`ordem_operacoes`/`apontamentos`. (A suspeita de timeout na
+  leitura não se confirmou, mas a versão por conjunto é mais eficiente e ficou.)
+- **`25_operador_pedidos_apontamento.sql`** (a correção decisiva): estende `item_na_minha_maquina`
+  para **também** retornar `true` quando a **etapa ATUAL** (1ª `ordem_operacoes` não finalizada por
+  `etapa_idx`) da OS está numa máquina do operador. Mantém as 2 regras antigas (override/pcp) e a
+  escrita intactas. Assim os itens com ficha na etapa do operador entram na lista base e aparecem;
+  os que estão a montante continuam ocultos (a regra do usuário).
+
+**Frontend (`app.html`):**
+- **Painel do operador:** filtra os grupos exibidos por `PERFIL.maquinas_permitidas` (reforço visual;
+  o RLS já recorta). Operador só vê os cards das máquinas dele.
+- **Coluna "Matéria-prima" no painel** (`linhaHtml`/`tabelaHtml`, de `MP_NOME_POR_PA`).
+- **Impressão/PDF**: colunas **PA** (código do produto) e **Matéria-prima** (`linhaImpressaoHtml`/
+  `blocoGrupoImpressaoHtml`; colspan da sub-linha ajustado p/ 10).
+- Apontamento do operador já funcionava por `perm('acao_apontar')` (default true) + RLS de insert
+  restrito ao grupo dele.
+
+**Limitação conhecida:** itens que saíram de `pedidos_abertos` mas ainda têm etapa pendente em
+`ordens` (ex.: 11596-1, 11597-1) **não aparecem** no painel, porque ele é montado a partir de
+`pedidos_abertos`. Para cobrir esses, seria preciso montar a linha do painel também a partir de
+`ordens` (não feito).
+
+## 15. Prioridade, Ações, página/batida no setup e setup por trechos (2026-11-18 a 20)
+
+**Status:** branch `feat/acoes-prioridade` (acumula tudo abaixo). Migrations `26_`–`30_`.
+Validado localmente pelo usuário item a item; **aplicar as migrations e publicar o `app.html`
+pelo fluxo manual** (deploy é do usuário). Tudo aditivo/retrocompatível — **não** altera a
+produção/apontamento legados nem OS antigas.
+
+### Rollout híbrido — encaminhar p/ a FRENTE (não voltar)
+Quando uma etapa ON (ex. CORTE) finaliza e a PRÓXIMA está num grupo OFF (programação manual, ex.
+REVISORA), o item **avança** p/ a etapa manual seguinte em vez de "voltar" p/ a etapa ON anterior
+(ex. DIGITAL). A cadeia segue a ordem do roteiro; a etapa atual é sempre a 1ª não-finalizada
+(mesmo OFF). Itens em grupo OFF ganharam **"Reabrir etapa"** (gestor/editor) p/ desfazer a
+finalização manual de uma etapa (distinto do `reabrirApontamento`/`reabrirItem`).
+
+### Filtro de Situação (painel)
+Seletor na barra de filtros do painel: **aguardando / em setup / em produção / parado / falta de
+material** (pendência de material aberta). Só visual; recorta os itens exibidos pela situação do
+apontamento.
+
+### Prioridade na fila — `27_prioridade.sql`
+Flag `overrides.prioridade` (bool, default false). Gestor/editor marca o item (pelo popup **Ações**)
+→ ele vai p/ o **topo** da fila da máquina dele, com ❗. Entre os priorizados, a ordem do arraste
+vale (`ordCompare`/`ordComparePainel` colocam prioridade primeiro, depois a ordem manual). Decisão
+do usuário: "indico prioridade e lá eu arrasto". Escrita de `overrides` já é `posso_editar()`.
+
+### Popup "Ações" — `abrirAcoes`
+Consolidou os botões por item do painel (**Ver ficha, Configurações da OS, Pendência, Prioridade**)
+num **único** botão "Ações" que abre um popup com essas opções. O botão **Apontamento** fica
+separado (ação principal). Reduz a poluição da linha do painel.
+
+### M/L inclui o setup
+A coluna **M/L** do painel passou a mostrar o **total estimado da etapa = setup (em metros) +
+produção com desperdício** (`desp_setup_est + qtd_rodar_est`), não só a produção.
+
+### VOREY por página — `26_vorei_pagina.sql`
+A sub-máquina **VOREY** (grupo CORTE) calcula **por página**, como a batida: `páginas =
+etiquetas ÷ (carreiras × repetições)`; velocidade em **páginas/h** (`maquinas_sub.velocidade_pagina`,
+flag `maquinas_sub.por_pagina`). **BROTECH** segue em metro. O operador informa carreiras × repetições
+**ao iniciar o setup** (RPC `iniciar_setup_pagina`, SECURITY DEFINER: valida permissão + status
+`aguardando`, insere o `setup_inicio` e recalcula a etapa). Coluna `ordem_operacoes.repeticoes`.
+Helpers no app: `subEhPagina`, `grupoEhUnidade`, `setupPorImagens`, `grupoTemPagina`, `apUnidadeLabel`.
+**Idempotente:** recalcula sempre das **ETIQUETAS da OS** (invariante = `ordens.qtd × conversão`) e
+das **razões** da op (`qtd_rodar/qtd_est`, `desp/qtd`), então reabrir/trocar os valores recalcula
+proporcional, **não compõe** (bug de composição corrigido ao reescrever a RPC a partir do invariante).
+
+### Batida — carreiras × repetições no setup — `28_batida_setup.sql`
+Generaliza `iniciar_setup_pagina` p/ o grupo em `modo='unidade'` (batida): mesma matemática, com
+velocidade da **sub-máquina** (batidas/h) e fallback na velocidade do grupo. O operador informa
+carreiras × repetições **no setup** (antes só na ficha). Igual à VOREY (idempotente pelo invariante).
+
+### Lançamento manual recalcula + rótulos + prévia — `29_recalcular_imagens.sql`
+- **`29_`** (endurecida em 2 revisões de segurança): separa o recálculo numa função **interna**
+  `_recompute_imagens` (**sem grant** a authenticated/anon/public; revalida permissão por defesa em
+  profundidade) e expõe a chamável `recalcular_op_imagens` (`FOR UPDATE`, valida permissão +
+  `status='aguardando'` **antes** de qualquer efeito, depois chama a interna). Serve p/ o
+  **lançamento manual** de VOREY/batida (`apManualRegistrar`) também recalcular a etapa (máquina +
+  carreiras × repetições) antes de gravar o bloco, igual ao Iniciar setup. A `iniciar_setup_pagina`
+  foi realinhada ao mesmo padrão (valida antes, insere `setup_inicio`, recalcula).
+- **Rótulos de unidade** (`apUnidadeLabel(op)`): o modal mostra **"metros" / "páginas" / "batidas"**
+  conforme a etapa, não "metros" fixo — vale p/ lançar, finalizar e lançamento manual.
+- **Prévia em tempo real** (`apPreviaCalc`/`apPreviaSetup`): ao digitar carreiras/repetições no setup
+  de VOREY/batida, mostra ao vivo a estimativa resultante (páginas/batidas + tempo).
+
+### Setup com trechos + paradas — `30_setup_trechos.sql` (2026-11-20)
+O **setup** ganhou o **mesmo módulo da produção**: **lançar acerto por trecho**, **parada com
+motivo** durante o setup e **finalizar** somando os trechos + o valor final (opcional). Para setups
+longos. `30_` (idempotente):
+- Novo evento **`setup_lancamento`** (enum `tipo_apontamento`): **não muda status** (cai no `else`
+  dos triggers, mantém `em_setup`).
+- **`parada_fim` ciente da fase**: se ainda **não** houve `prod_inicio` na op, volta p/ `em_setup`;
+  se já houve, volta p/ `em_producao` (como antes). Aplicado em `aplicar_apontamento` e em
+  `status_operacao_log` (que também **ignora** `setup_lancamento`/`lancamento`/`observacao` ao deduzir).
+- **A view de KPI NÃO muda**: o desperdício de setup segue lido do **`setup_fim.qtd`**, onde o app
+  grava o **TOTAL** (Σ trechos + final) em `apFinalizarSetup`.
+- App: estado `em_setup` com Lançar (`apSetupLancar` → `setup_lancamento`) / Parada (`apSetupParada`)
+  / Finalizar setup (`apFinalizarSetup`, trava zerado com confirmação, aproveita o campo digitado);
+  estado `parado` **ciente da fase** (mostra *Acerto* × *Produzido*; botão "Retomar setup/produção",
+  via `apTemProdInicio`). **Histórico** (`apHistorico`): `setup` virou **bloco** com `lancs` e cada
+  trecho (`slanc`) aninhado sob ele, como os lançamentos na produção (modal `apHistoricoHtml` e popup
+  de KPI `kpiHistHtml`). Helper `apSomaSetupLanc`.
+
+**PENDENTE desta leva:** aplicar `26_`–`30_` no banco e publicar o `app.html` da branch
+`feat/acoes-prioridade`; retomar os **custos** (§17).
+
+## 16. KPIs — nível-OS físico, MP+setup, setup real/est (2026-11-20 a 22)
+
+Tudo na branch `feat/acoes-prioridade`; só frontend (sem schema). Validado pelo usuário.
+
+- **Desperdício no NÍVEL-OS = FÍSICO** (card do topo, coluna da tabela "por OS" e Total do popup).
+  Antes somava o refugo por etapa (contava o mesmo substrato 2×). Agora:
+  **Desp. real** = `rodado da 1ª etapa − líquido` (`kOsMetros.qtd_real − qtd_est`); **Desp. vs previsto** =
+  `rodado da 1ª etapa − previsto a rodar da 1ª etapa` (o previsto da 1ª etapa já embute a cascata).
+  **%**: Desp. real sobre o **líquido** ("a mais que o líquido"); vs previsto sobre o **previsto**.
+  As linhas **por máquina** e **por etapa** (popup) seguem o **refugo operacional por etapa** (`rodado − kBase`),
+  então a soma por máquina NÃO bate com o card da OS — proposital (medidas diferentes; há legenda).
+- **KPI "Por matéria-prima" inclui o SETUP** no m²: `m² rodado = (qtd_real + desp_setup_real) × largura`;
+  `m² estimado = (previsto a rodar + desp_setup_est) × largura` (o acerto também consome substrato).
+- **Setup em metros com comparativo real/est** nas tabelas **por máquina** e **por OS** e no **popup**
+  (coluna "Desp. setup real/est"); o card do topo já trazia estim.+%. Setup continua **somando** entre etapas.
+
+**Parser de OP → fichas (`tools/importar_fichas_op.py`): ABORTADO.** Chegou a ler os PDFs de OP do ERP e
+gerar a planilha no formato do import de fichas, mas o usuário **desistiu** (risco de leitura/dado errado).
+O script existe na branch, inerte; não é o caminho atual.
+
+## 17. Custo do produto vendido — v2, UNIFICADO nas matérias-primas (2026-11-21 a 22)
+
+**Status:** branch `feat/acoes-prioridade`; `31_custo_mp.sql` **aplicado em teste**, `app.html` **não publicado**.
+Validado item a item pelo usuário. **SUBSTITUI a §13/`22_`** (órfão — não aplicar). **Produção/painel 100%
+INTOCADOS**: os campos novos são aditivos e lidos **só** pelo motor de custo; o painel segue lendo
+`produto_etapas`/`produtos`/`pcp` como sempre. Gates: `window._mpTipoReady` (31_ aplicado) + `_podeEditar`.
+
+### Decisão de arquitetura
+**Tudo se cadastra nas Matérias-primas, por `tipo`.** Não há "parâmetros globais". `materias_primas.tipo` ∈
+`substrato | laminacao | verniz | tinta | cliche | ribbon | stamping`, cada tipo com seus campos de cálculo
+(`20_`/`21_` + `31_`). A **ficha do produto é ÚNICA** (produção + custo no mesmo form). A **aba Custo** fica
+só com o **simulador**. `31_` é idempotente e reconcilia resíduos do `22_` (dropa a FK antiga
+`produtos_ribbon_id_fkey`; ajusta `produto_acabamentos`).
+
+### Matérias-primas por tipo (campos de cálculo)
+- **substrato**: `valor_m2` (BRUTO, R$/m²), `largura_mm`, `icms_pct`, `ipi_pct`.
+- **laminação / stamping (fita)**: `valor_m2` (R$/m²).
+- **verniz**: `gramatura` (**g/m²**) + `preco_kg` (R$/kg); flag `gera_cliche` (localizado/cold → +1 clichê).
+- **tinta**: aplicação **flexo** (`gramatura` g/m² + `preco_kg`) OU **digital** (`valor_m2` R$/m² + `sub_id`
+  = sub-máquina digital + flag `tinta_branca` = add-on de branco sobre o base da mesma sub).
+- **clichê**: `valor_m2` = **R$/cm²**.
+- **ribbon**: `comprimento_m` (m/rolo) + `valor_rolo` (R$/rolo) + `largura_mm`.
+- Comuns a acabamentos: `setup_m` (acerto), `gera_cliche`, `gera_zinco` (hot → zinco).
+- A lista mostra o valor na unidade certa por tipo (`mpValorCol`: /kg verniz/tinta-flexo, /rolo ribbon,
+  /cm² clichê, /m² demais). Form: campos trocam por tipo (`mpAplicarTipo`), com aplicação flexo/digital p/ tinta.
+
+### Ficha única (ordem das seções + gatilho)
+`renderFicha`: **Dados técnicos** (PA, descrição, **Impressão** [gatilho: sem/digital/flexo], larg/alt/gap, e
+— só flexo — espaço entre carreiras, **nº de carreiras**, **repetições**, esqueleto) → **Cores e processos**
+(só impresso; nº cores, ocupação de tinta, chapado, tinta branca[digital]) → **Acabamentos**
+(`produto_acabamentos`: verniz/laminação/cold/hot; verniz localizado → ocupação; stamping → fita L×A; hot →
+valor do zinco) → **Matéria-prima** (substrato + largura) → **Ribbon** (MP tipo ribbon + carreiras de ribbon) →
+**Conversões** → **Roteiro de produção** (inalterado; cada etapa ganhou **"Máq. custo"** = sub só p/ custo,
+`produto_etapas.maquina_custo`) → **Custos** (faca R$) → **Prévia de custo (1.000 et.)**.
+O gatilho **`impressao`** (`produtos.impressao`) esconde seções (`fichaAplicarImpressao`): *sem impressão* →
+sem cores/clichê/tinta; *digital* → sem clichê de cor; *flexo* → com clichê. **carreiras/repetições do CLICHÊ
+ficam nos dados técnicos** (`produtos.carreiras`/`repeticoes`), não na etapa do roteiro. `salvarFicha` grava
+produtos (campos de custo) + `produto_acabamentos` + `produto_etapas.maquina_custo`, tudo com gate.
+
+### Motor `custoProduto(prod,etapas,conv,acabs,qtd,um)`
+- **m² (substrato)** = `[ (etiquetas/carreiras × passo/1000) ÷ (1 − Σdesp%) + Σ setup(m) de TODAS as etapas ]
+  × largura_substrato/1000` — i.e. `metrosRodar = qtdRodar(1ª etapa) + acerto da própria 1ª etapa`; largura =
+  **do substrato** (não do produto). Cada etapa roda o SEU metro da cascata (a revisora NÃO roda o total da flexo).
+- **Hora-máquina** por etapa = **Acerto** (`setup_min → h × R$/h`) + **Execução** (`metros a rodar da etapa ÷
+  velocidade × R$/h`). R$/h e velocidade vêm da **sub de custo** (`maquina_custo`) da etapa; sem sub → média do
+  grupo. (Acerto é TEMPO de setup, não desperdício÷velocidade — bug corrigido.)
+- **Clichê** (fixo): `PISO[(larg_et×carr + espaço×(carr−1) + esqueleto)/10]+4 × ARRED[((alt+gap)×rep)/10]+4 ×
+  nº clichês × R$/cm²`; R$/cm² da **MP tipo clichê** (fallback `custo_parametros.preco_cliche_cm2`=0,17).
+  nº clichês = cores (0 se `chapado` **ou** impressão ≠ flexo) + acabamentos `gera_cliche`. carr/rep dos dados técnicos.
+- **Tinta**: flexo = `m²×(gramatura/1000)×ocupação%×R$/kg` — **NÃO × cores**, e **só da MP tinta flexo** (sem
+  fallback a parâmetro global); digital = `m²×(insumo base + branca)` das MPs tinta por sub.
+- **Acabamentos**: laminação `m²×valor/m²`; verniz `m²×(gram/1000)×ocupação×R$/kg` (ocupação 100% se verniz
+  total); stamping `(fita L×A mm²→m²)×etiquetas×valor/m²`. Zinco (hot) = fixo.
+- **Ribbon**: `metros=(etiquetas/carreiras_ribbon)×passo/1000`; `rolos=teto(metros/comprimento_rolo)`;
+  `custo=rolos×valor_rolo`.
+- **Substrato = BRUTO** (sem ICMS/IPI no custo). **Crédito de ICMS** sai como **DEDUÇÃO** à parte: cada material
+  com `icms_pct>0` gera `crédito = total × icms%`; **Custo líquido = bruto − Σ crédito ICMS**. (IPI/DRE completo
+  fica p/ depois.)
+- **Detalhamento** (`custoResumoHtml`): tabela com seções **Fabricação** (acerto/execução por máquina, com
+  metros e velocidade), **Materiais**, **Deduções (crédito de ICMS)** e **Fixos**; colunas Tipo (F/V), Un., Qtd,
+  R$ unit., Total e %; totais bruto/líquido/unitário; e "detalhes do cálculo" (metros líq/rodado, m² líq/rodado,
+  perda m e %). Espelha o Relatório de Custos do ERP do usuário.
+
+### Aba Custo + Máquinas
+- **Aba Custo** (sidebar `ver_custo`, gestor/editor): só o **simulador** (campo de busca por código/descrição →
+  `custoProduto` → detalhamento). `renderCusto`/`custoSimular`. Sem card de parâmetros globais.
+- **Máquinas**: input **R$/h por sub-máquina** (`atualizarCustoHoraSub` → `maquinas_sub_custo.custo_hora`;
+  `CUSTO_HORA_SUB` carregado no `recarregarDoBanco`). `maquinas_sub_custo` também tem `insumo_m2` (não usado —
+  a tinta digital ficou como MP).
+- `ensureCustoData` carrega `custo_parametros` + `CUSTO_HORA_SUB` (lazy, degrada). `custoAcabsNorm` monta os
+  acabamentos (MP→{tipo_calculo, valores, icms_pct, params do produto}). Prévia: `custoFichaPreview`/`prodFromFicha`.
+
+**PRÓXIMO (visão do usuário):** **KPI de margem** — o Excel de pedidos que já é subido passa a trazer
+**preço/emissão**, e o sistema mostra faturamento × custo = **margem** por item e por mês.

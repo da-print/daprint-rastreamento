@@ -598,6 +598,7 @@ body.sb-collapsed .sb-badge{ display:none !important }
     <a class="sb-i" data-aba="fichas" href="#" onclick="navAba('fichas');return false" title="Fichas técnicas"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><polyline points="14 3 14 8 19 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg><span>Fichas técnicas</span></a>
     <a class="sb-i" data-aba="materias" href="#" onclick="navAba('materias');return false" title="Matérias-primas"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 4-9 4-9-4z"/><path d="M3 12l9 4 9-4"/><path d="M3 17l9 4 9-4"/></svg><span>Matérias-primas</span></a>
     <a class="sb-i" data-aba="maquinas" href="#" onclick="navAba('maquinas');return false" title="Máquinas"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><rect x="4" y="9" width="16" height="8" rx="2"/><rect x="7" y="14" width="10" height="6"/></svg><span>Máquinas</span></a>
+    <a class="sb-i" data-aba="custo" href="#" onclick="navAba('custo');return false" title="Custo"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M14.5 9a2.5 2 0 0 0-2.5-1.5c-1.4 0-2.5.9-2.5 2s1.1 1.7 2.5 2 2.5.9 2.5 2-1.1 2-2.5 2A2.5 2 0 0 1 9.5 15"/><line x1="12" y1="6" x2="12" y2="18"/></svg><span>Custo</span></a>
     <a class="sb-i" data-aba="vendedores" href="#" onclick="navAba('vendedores');return false" title="Vendedores"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="3" y1="12" x2="21" y2="12"/></svg><span>Vendedores</span></a>
     <a class="sb-i" data-aba="usuarios" href="#" onclick="navAba('usuarios');return false" title="Usuários"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 5.5a3 3 0 0 1 0 5.8"/><path d="M21 20a6 6 0 0 0-4.5-5.8"/></svg><span>Usuários</span></a>
     <a class="sb-i" data-aba="historico" href="#" onclick="navAba('historico');return false" title="Histórico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><polyline points="3 4 3 9 8 9"/><polyline points="12 7 12 12 15 14"/></svg><span>Histórico</span></a>
@@ -917,7 +918,7 @@ function setSidebarAtivo(key){ try{ document.querySelectorAll('#side-nav [data-a
   <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px">
     <div>
       <h2 style="font-size:16px;margin:0">Matérias-primas</h2>
-      <div style="font-size:12px;color:var(--text3)">Cadastro de substratos: largura, valor por m², ICMS e IPI. A ficha do produto seleciona a matéria-prima daqui.</div>
+      <div style="font-size:12px;color:var(--text3)">Cadastro de insumos por tipo (substrato, laminação, verniz, ribbon, stamping) — cada tipo com seu critério de cálculo. A ficha do produto seleciona daqui.</div>
     </div>
     <button class="btn-primary" onclick="mpNovo()">+ Nova matéria-prima</button>
   </div>
@@ -926,10 +927,29 @@ function setSidebarAtivo(key){ try{ document.querySelectorAll('#side-nav [data-a
     <div class="mp-grid">
       <label style="grid-column:1/-1">Nome / descrição<input id="mp-nome" placeholder="ex.: COUCHÊ ADESIVO 90g"></label>
       <label>Fornecedor<input id="mp-forn" placeholder="ex.: Fornecedor X"></label>
-      <label>Largura padrão (mm)<input id="mp-larg" type="number" step="0.01" placeholder="ex.: 320"></label>
-      <label>Valor por m² (R$)<input id="mp-valor" type="number" step="0.0001" placeholder="valor bruto"></label>
+      <label id="mp-tipo-label">Tipo<select id="mp-tipo" onchange="mpAplicarTipo(this.value)">
+        <option value="substrato">Substrato</option>
+        <option value="laminacao">Laminação (filme)</option>
+        <option value="verniz">Verniz</option>
+        <option value="tinta">Tinta</option>
+        <option value="cliche">Clichê</option>
+        <option value="ribbon">Ribbon</option>
+        <option value="stamping">Stamping (fita)</option>
+      </select></label>
+      <label id="mpf-aplic">Aplicação<select id="mp-tinta-aplic" onchange="mpAplicarTipo((document.getElementById('mp-tipo')||{}).value)"><option value="flexo">Flexo (R$/kg)</option><option value="digital">Digital (R$/m²)</option></select></label>
+      <label id="mpf-larg">Largura (mm)<input id="mp-larg" type="number" step="0.01" placeholder="ex.: 320"></label>
+      <label id="mpf-valor">Valor por m² (R$)<input id="mp-valor" type="number" step="0.0001" placeholder="digital: R$/m²"></label>
+      <label id="mpf-gram">Gramatura (g/m²)<input id="mp-gram" type="number" step="0.01" placeholder="ex.: 3"></label>
+      <label id="mpf-precokg">Preço do quilo (R$/kg)<input id="mp-precokg" type="number" step="0.01" placeholder="flexo: R$/kg"></label>
+      <label id="mpf-sub">Sub-máquina (digital)<select id="mp-sub"><option value="">—</option></select></label>
+      <label id="mpf-compr">Comprimento do rolo (m)<input id="mp-compr" type="number" step="0.01" placeholder="ex.: 450"></label>
+      <label id="mpf-rolo">Valor do rolo (R$)<input id="mp-rolo" type="number" step="0.01" placeholder="0"></label>
+      <label id="mpf-setup">Acerto/setup (m)<input id="mp-setup" type="number" step="0.01" placeholder="metros de acerto"></label>
       <label>ICMS (%)<input id="mp-icms" type="number" step="0.01" placeholder="0"></label>
       <label>IPI (%)<input id="mp-ipi" type="number" step="0.01" placeholder="0"></label>
+      <label id="mpf-branca" style="flex-direction:row;align-items:center;gap:6px"><input id="mp-branca" type="checkbox" style="width:auto">É tinta branca (add-on sobre o base)</label>
+      <label id="mpf-gcliche" style="flex-direction:row;align-items:center;gap:6px"><input id="mp-gcliche" type="checkbox" style="width:auto">Gera clichê (localizado/cold)</label>
+      <label id="mpf-gzinco" style="flex-direction:row;align-items:center;gap:6px"><input id="mp-gzinco" type="checkbox" style="width:auto">Gera zinco (hot stamping)</label>
     </div>
     <div style="display:flex;gap:8px;margin-top:12px">
       <button class="btn-primary" onclick="mpSalvar()">Salvar</button>
@@ -937,6 +957,11 @@ function setSidebarAtivo(key){ try{ document.querySelectorAll('#side-nav [data-a
     </div>
   </div>
   <div id="materias-conteudo"></div>
+</div>
+
+<div id="custo-view" style="display:none">
+  <div style="margin-bottom:10px"><h2 style="font-size:16px;margin:0">Custo</h2><div style="font-size:12px;color:var(--text3)">Parâmetros globais + simulador. Hora-máquina (R$/h) fica em Máquinas; acabamentos/ribbon/tinta nas Matérias-primas.</div></div>
+  <div id="custo-conteudo"></div>
 </div>
 
 <div id="kpis-view" style="display:none">
@@ -1420,7 +1445,7 @@ function desligarRealtime(){
 // Mostra/esconde recursos conforme o papel do usuario.
 // ===================== PERMISSÕES POR PAPEL (flags; gestor edita na aba Permissões) =====================
 var _PERMS={}; // papel -> {chave:bool}
-var PERM_GESTOR_TABS=['categorias','vendedores','maquinas','materias','usuarios','historico','listas','permissoes'];
+var PERM_GESTOR_TABS=['categorias','vendedores','maquinas','materias','custo','usuarios','historico','listas','permissoes'];
 function permDefault(papel,chave){
   if(chave.indexOf('ver_')===0){ var aba=chave.slice(4); return PERM_GESTOR_TABS.indexOf(aba)<0; } // só gestor nas abas de cadastro; demais visíveis
   if(chave==='acao_editar')return papel==='editor';
@@ -1437,7 +1462,7 @@ async function carregarPermissoes(){
   catch(e){}
 }
 var PERM_PAPEIS=[['editor','Editor'],['visualizador','Visualizador'],['visualizador_maquina','Operador'],['representante','Representante']];
-var PERM_ABAS=[['ver_painel','Painel de produção'],['ver_entregas','Entregas por data'],['ver_pendencias','Pendências'],['ver_kpis','KPIs'],['ver_fichas','Fichas técnicas'],['ver_materias','Matérias-primas'],['ver_maquinas','Máquinas'],['ver_vendedores','Vendedores'],['ver_usuarios','Usuários'],['ver_historico','Histórico'],['ver_listas','Listas']];
+var PERM_ABAS=[['ver_painel','Painel de produção'],['ver_entregas','Entregas por data'],['ver_pendencias','Pendências'],['ver_kpis','KPIs'],['ver_fichas','Fichas técnicas'],['ver_materias','Matérias-primas'],['ver_custo','Custo'],['ver_maquinas','Máquinas'],['ver_vendedores','Vendedores'],['ver_usuarios','Usuários'],['ver_historico','Histórico'],['ver_listas','Listas']];
 var PERM_ACOES=[['acao_editar','Editar programação / finalizar'],['acao_upload','Subir planilhas (upload)'],['acao_apontar','Apontar produção']];
 async function permSet(papel,chave,val){
   try{ var r=await supabaseClient.from('papel_permissoes').upsert({papel:papel,chave:chave,permitido:!!val},{onConflict:'papel,chave'}); if(r.error)throw r.error;
@@ -1536,8 +1561,13 @@ async function recarregarDoBanco(silencioso, light){
     // _mpReady=true so quando a tabela existe (= coluna produtos.materia_prima_id tambem,
     // pois vem na mesma migration); gate p/ nao quebrar o salvar-ficha antes do 20_.
     try{ var rmp=await supabaseClient.from('materias_primas').select('*').order('nome');
-      if(rmp&&!rmp.error){ MATERIAS_PRIMAS=rmp.data||[]; window._mpReady=true; }
-      else { MATERIAS_PRIMAS=[]; window._mpReady=false; } }catch(e){ MATERIAS_PRIMAS=[]; window._mpReady=false; }
+      if(rmp&&!rmp.error){ MATERIAS_PRIMAS=rmp.data||[]; window._mpReady=true;
+        // _mpTipoReady = o 31_ (custo) foi aplicado -> libera os campos de custo na ficha/MP
+        if(MATERIAS_PRIMAS.length){ window._mpTipoReady=('tipo' in MATERIAS_PRIMAS[0]); }
+        else { try{ var _pt=await supabaseClient.from('materias_primas').select('tipo').limit(1); window._mpTipoReady=!_pt.error; }catch(_e){ window._mpTipoReady=false; } }
+      }
+      else { MATERIAS_PRIMAS=[]; window._mpReady=false; window._mpTipoReady=false; } }catch(e){ MATERIAS_PRIMAS=[]; window._mpReady=false; window._mpTipoReady=false; }
+    if(window._mpTipoReady){ try{ await carregarCustoHoraSub(); }catch(_e2){} }  // R$/h por sub (p/ a aba Maquinas e o custo)
     // Mapa leve produto -> nome da materia-prima (p/ ordenar a fila do painel por MP).
     // Degrada em silencio: se nao der, a ordenacao por MP so fica vazia.
     try{ var mpById={}; (MATERIAS_PRIMAS||[]).forEach(function(m){mpById[String(m.id)]=m.nome;});
@@ -2276,6 +2306,9 @@ function mudarAba(aba){
   var matv=document.getElementById('materias-view');
   if(matv)matv.style.display=aba==='materias'?'block':'none';
   if(aba==='materias'&&typeof renderMaterias==='function')renderMaterias();
+  var cuv=document.getElementById('custo-view');
+  if(cuv)cuv.style.display=aba==='custo'?'block':'none';
+  if(aba==='custo'&&typeof renderCusto==='function')renderCusto();
   if(aba==='usuarios'){uAtualizarCampos();carregarListaUsuarios();}
   var ha=document.getElementById('header-acoes');
   if(ha)ha.style.display=(aba==='painel')?'flex':'none';
@@ -3535,6 +3568,7 @@ function renderMaquinas(){
             '<span style="flex:0 0 200px;font-weight:600">'+apEsc(s.nome)+'</span>'+
             '<span style="font-size:12px;color:var(--text3)">Velocidade:</span>'+
             '<input class="obs-input" style="width:110px" type="number" value="'+(s.velocidade!=null?s.velocidade:'')+'" placeholder="usa grupo" onchange="atualizarVelocidadeSub('+s.id+',this.value)">'+
+            (window._mpTipoReady?('<span style="font-size:12px;color:var(--text3)">R$/h:</span><input class="obs-input" style="width:90px" type="number" step="0.01" value="'+(CUSTO_HORA_SUB[String(s.id)]!=null?CUSTO_HORA_SUB[String(s.id)]:'')+'" placeholder="0,00" onchange="atualizarCustoHoraSub('+s.id+',this.value)">'):'')+
             '<label style="font-size:12px;color:var(--text);display:inline-flex;align-items:center;gap:4px" title="Calcula por página (carreiras × repetições), como a batida. Ex.: VOREY."><input type="checkbox" '+(s.por_pagina?'checked':'')+' onchange="atualizarPorPaginaSub('+s.id+',this.checked)"> por página</label>'+
             (s.por_pagina?('<span style="font-size:12px;color:var(--text3)">Págs/h:</span><input class="obs-input" style="width:100px" type="number" value="'+(s.velocidade_pagina!=null?s.velocidade_pagina:'')+'" placeholder="páginas/h" onchange="atualizarVelocidadePaginaSub('+s.id+',this.value)">'):'')+
             '<button class="btn-sec" onclick="removerSubMaquina('+s.id+')">Remover</button>'+
@@ -4417,6 +4451,9 @@ async function renderMaterias(){
     var r=await supabaseClient.from('materias_primas').select('*').order('nome');
     if(r.error)throw r.error;
     MATERIAS_PRIMAS=r.data||[];
+    if(MATERIAS_PRIMAS.length){ window._mpTipoReady=('tipo' in MATERIAS_PRIMAS[0]); }
+    else { try{ var pr=await supabaseClient.from('materias_primas').select('tipo').limit(1); window._mpTipoReady=!pr.error; }catch(_){ window._mpTipoReady=false; } }
+    var ready=!!window._mpTipoReady;
     var pode=!!window._podeEditar;
     if(!MATERIAS_PRIMAS.length){ el.innerHTML='<div class="ap-hint">Nenhuma matéria-prima cadastrada ainda.'+(pode?' Use “+ Nova matéria-prima”.':'')+'</div>'; return; }
     var body=MATERIAS_PRIMAS.map(function(mp){
@@ -4428,26 +4465,80 @@ async function renderMaterias(){
       return '<tr'+(inativo?' class="off"':'')+'>'+
         '<td class="l">'+apEsc(mp.nome)+(inativo?'<span class="mp-tag">inativo</span>':'')+'</td>'+
         '<td class="l">'+vfEsc(mp.fornecedor)+'</td>'+
+        (ready?('<td class="l">'+apEsc(mpTipoDesc(mp))+'</td>'):'')+
         '<td>'+mpFmt(mp.largura_mm)+'</td>'+
-        '<td>'+mpFmt(mp.valor_m2)+'</td>'+
+        '<td>'+(ready?mpValorCol(mp):mpFmt(mp.valor_m2))+'</td>'+
         '<td>'+mpFmt(mp.icms_pct)+'</td>'+
         '<td>'+mpFmt(mp.ipi_pct)+'</td>'+
         '<td class="l">'+acts+'</td></tr>';
     }).join('');
     el.innerHTML='<div class="mp-card" style="padding:0;overflow-x:auto"><table><thead><tr>'+
-      '<th class="l">Matéria-prima</th><th class="l">Fornecedor</th><th>Largura (mm)</th><th>Valor/m² (R$)</th><th>ICMS (%)</th><th>IPI (%)</th><th class="l"></th>'+
+      '<th class="l">Matéria-prima</th><th class="l">Fornecedor</th>'+(ready?'<th class="l">Tipo</th>':'')+'<th>Largura (mm)</th><th>Valor (R$)</th><th>ICMS (%)</th><th>IPI (%)</th><th class="l"></th>'+
       '</tr></thead><tbody>'+body+'</tbody></table></div>';
   }catch(e){ el.innerHTML='<div class="ap-hint" style="white-space:pre-wrap">Não foi possível carregar as matérias-primas.\n\nProvavelmente o 20_materias_primas.sql ainda não foi aplicado no banco.\n\nDetalhe: '+apEsc(e.message||e)+'</div>'; }
 }
+var MPTIPO_LABEL={substrato:'Substrato',laminacao:'Laminação',verniz:'Verniz',tinta:'Tinta',cliche:'Clichê',ribbon:'Ribbon',stamping:'Stamping'};
+function mpValorCol(mp){
+  var t=mp.tipo||'substrato';
+  if(t==='ribbon')return mpFmt(mp.valor_rolo)+' <span style="color:var(--text3);font-size:11px">/rolo</span>';
+  if(t==='verniz'||(t==='tinta'&&mp.sub_id==null))return mpFmt(mp.preco_kg)+' <span style="color:var(--text3);font-size:11px">/kg</span>';
+  if(t==='cliche')return mpFmt(mp.valor_m2)+' <span style="color:var(--text3);font-size:11px">/cm²</span>';
+  return mpFmt(mp.valor_m2)+' <span style="color:var(--text3);font-size:11px">/m²</span>';
+}
+function mpTipoDesc(mp){
+  var t=MPTIPO_LABEL[mp.tipo]||mp.tipo||'Substrato';
+  if(mp.tipo==='tinta'){
+    if(mp.sub_id!=null){ var s=(MAQUINAS_SUB_DB||[]).filter(function(x){return String(x.id)===String(mp.sub_id);})[0]; t+=' · digital'+(s?(' '+s.nome):'')+(mp.tinta_branca?' (branca)':''); }
+    else t+=' · flexo';
+  }
+  return t;
+}
+function mpSet(id,v){ var e=document.getElementById(id); if(e)e.value=(v!=null?v:''); }
+function mpAplicarTipo(tipo){
+  tipo=tipo||'substrato';
+  var aplic=((document.getElementById('mp-tinta-aplic')||{}).value)||'flexo';
+  var td=(tipo==='tinta'&&aplic==='digital'), tf=(tipo==='tinta'&&aplic==='flexo');
+  var vl=document.getElementById('mpf-valor'); if(vl&&vl.childNodes[0])vl.childNodes[0].nodeValue=(tipo==='cliche'?'R$/cm² do clichê':'Valor por m² (R$)');
+  var show={
+    'mpf-aplic': tipo==='tinta',
+    'mpf-larg':  (tipo==='substrato'||tipo==='ribbon'),
+    'mpf-valor': (tipo==='substrato'||tipo==='laminacao'||tipo==='stamping'||tipo==='cliche'||td),
+    'mpf-gram':  (tipo==='verniz'||tf),
+    'mpf-precokg':(tipo==='verniz'||tf),
+    'mpf-sub':   td,
+    'mpf-branca':td,
+    'mpf-compr': tipo==='ribbon',
+    'mpf-rolo':  tipo==='ribbon',
+    'mpf-setup': (tipo==='laminacao'||tipo==='verniz'||tipo==='stamping'),
+    'mpf-gcliche':(tipo==='verniz'||tipo==='stamping'),
+    'mpf-gzinco':tipo==='stamping'
+  };
+  Object.keys(show).forEach(function(id){ var e=document.getElementById(id); if(e)e.style.display=show[id]?'':'none'; });
+}
 function mpPreencher(mp){
   mp=mp||{};
-  document.getElementById('mp-id').value=mp.id!=null?mp.id:'';
-  document.getElementById('mp-nome').value=mp.nome||'';
-  document.getElementById('mp-forn').value=mp.fornecedor||'';
-  document.getElementById('mp-larg').value=mp.largura_mm!=null?mp.largura_mm:'';
-  document.getElementById('mp-valor').value=mp.valor_m2!=null?mp.valor_m2:'';
-  document.getElementById('mp-icms').value=mp.icms_pct!=null?mp.icms_pct:'';
-  document.getElementById('mp-ipi').value=mp.ipi_pct!=null?mp.ipi_pct:'';
+  mpSet('mp-id',mp.id!=null?mp.id:'');
+  mpSet('mp-nome',mp.nome||''); mpSet('mp-forn',mp.fornecedor||'');
+  mpSet('mp-larg',mp.largura_mm); mpSet('mp-valor',mp.valor_m2);
+  mpSet('mp-icms',mp.icms_pct); mpSet('mp-ipi',mp.ipi_pct);
+  var subSel=document.getElementById('mp-sub');
+  if(subSel){ var digSubs=(MAQUINAS_SUB_DB||[]).filter(function(s){return /digital/i.test(s.grupo||'');});
+    subSel.innerHTML='<option value="">—</option>'+digSubs.map(function(s){return '<option value="'+s.id+'">'+apEsc((s.grupo||'')+' · '+(s.nome||''))+'</option>';}).join(''); }
+  var ready=!!window._mpTipoReady, tl=document.getElementById('mp-tipo-label');
+  if(tl)tl.style.display=ready?'':'none';
+  if(ready){
+    mpSet('mp-tipo',mp.tipo||'substrato');
+    mpSet('mp-gram',mp.gramatura); mpSet('mp-precokg',mp.preco_kg);
+    mpSet('mp-compr',mp.comprimento_m); mpSet('mp-rolo',mp.valor_rolo); mpSet('mp-setup',mp.setup_m);
+    var gc=document.getElementById('mp-gcliche'); if(gc)gc.checked=!!mp.gera_cliche;
+    var gz=document.getElementById('mp-gzinco'); if(gz)gz.checked=!!mp.gera_zinco;
+    var ap=document.getElementById('mp-tinta-aplic'); if(ap)ap.value=(mp.sub_id!=null?'digital':'flexo');
+    if(subSel)subSel.value=(mp.sub_id!=null?String(mp.sub_id):'');
+    var br=document.getElementById('mp-branca'); if(br)br.checked=!!mp.tinta_branca;
+    mpAplicarTipo(mp.tipo||'substrato');
+  } else {
+    mpAplicarTipo('substrato'); // sem o 31_: so os campos de substrato
+  }
   document.getElementById('mp-form').style.display='block';
 }
 function mpNovo(){ if(!window._podeEditar){alert('Sem permissão para editar.');return;} mpPreencher({}); document.getElementById('mp-nome').focus(); }
@@ -4463,6 +4554,21 @@ async function mpSalvar(){
     icms_pct:mpNum(document.getElementById('mp-icms').value)||0,
     ipi_pct:mpNum(document.getElementById('mp-ipi').value)||0,
     atualizado_em:new Date().toISOString()};
+  if(window._mpTipoReady){
+    payload.tipo=(document.getElementById('mp-tipo')||{}).value||'substrato';
+    payload.gramatura=mpNum(document.getElementById('mp-gram').value)||0;
+    payload.preco_kg=mpNum(document.getElementById('mp-precokg').value)||0;
+    payload.comprimento_m=mpNum(document.getElementById('mp-compr').value)||0;
+    payload.valor_rolo=mpNum(document.getElementById('mp-rolo').value)||0;
+    payload.setup_m=mpNum(document.getElementById('mp-setup').value)||0;
+    payload.gera_cliche=!!(document.getElementById('mp-gcliche')||{}).checked;
+    payload.gera_zinco=!!(document.getElementById('mp-gzinco')||{}).checked;
+    var _aplic=((document.getElementById('mp-tinta-aplic')||{}).value)||'flexo';
+    if(payload.tipo==='tinta'&&_aplic==='digital'){
+      payload.sub_id=Number((document.getElementById('mp-sub')||{}).value)||null;
+      payload.tinta_branca=!!(document.getElementById('mp-branca')||{}).checked;
+    } else { payload.sub_id=null; payload.tinta_branca=false; }
+  }
   try{
     var r;
     if(id){ r=await supabaseClient.from('materias_primas').update(payload).eq('id',Number(id)); }
@@ -4891,7 +4997,7 @@ async function apExcluirObs(id,opId){
 }
 
 // ===================== FICHA TECNICA (produtos) + MATERIALIZACAO =====================
-var FICHA_PA=null, FICHA_ROTEIRO=[], FICHA_CONV=[], FICHA_GRUPOS=[];
+var FICHA_PA=null, FICHA_ROTEIRO=[], FICHA_CONV=[], FICHA_GRUPOS=[], FICHA_ACAB=[];
 function fval(id){var e=document.getElementById(id);return e?e.value:'';}
 function fnum(id){var e=document.getElementById(id);return e&&e.value!==''?parseFloat(e.value):0;}
 function grupoFicha(nome){return FICHA_GRUPOS.filter(function(g){return g.nome===nome;})[0]||{};}
@@ -4912,6 +5018,7 @@ async function abrirFicha(codigoPa){
     FICHA_CONV=(await supabaseClient.from('produto_conversoes').select('*').eq('produto_codigo',FICHA_PA)).data||[];
     FICHA_ROTEIRO=(await supabaseClient.from('produto_etapas').select('*').eq('produto_codigo',FICHA_PA).order('ordem')).data||[];
     if(!FICHA_CONV.length)FICHA_CONV=[{um:'MI',fator:1000}];
+    FICHA_ACAB=await carregarFichaAcab(FICHA_PA);
     renderFicha(prod||{});
   }catch(e){ document.getElementById('ficha-conteudo').innerHTML='<div class="ap-op"><div class="ap-hint">Erro ao carregar a ficha. O schema 13_ foi aplicado?\n'+apEsc(e.message||e)+'</div></div>'; }
 }
@@ -4928,11 +5035,15 @@ async function espelharFicha(pa){
     FICHA_GRUPOS=(await supabaseClient.from('maquinas_grupos').select('*')).data||[];
     var src=(await supabaseClient.from('produtos').select('*').eq('codigo_pa',pa).maybeSingle()).data||{};
     FICHA_CONV=((await supabaseClient.from('produto_conversoes').select('*').eq('produto_codigo',pa)).data||[]).map(function(c){return {um:c.um,fator:c.fator};});
-    FICHA_ROTEIRO=((await supabaseClient.from('produto_etapas').select('*').eq('produto_codigo',pa).order('ordem')).data||[]).map(function(e){return {grupo:e.grupo,carreiras:e.carreiras||1,repeticoes:e.repeticoes||1,acab_verniz:!!e.acab_verniz,acab_laminacao:!!e.acab_laminacao};});
+    FICHA_ROTEIRO=((await supabaseClient.from('produto_etapas').select('*').eq('produto_codigo',pa).order('ordem')).data||[]).map(function(e){return {grupo:e.grupo,carreiras:e.carreiras||1,repeticoes:e.repeticoes||1,acab_verniz:!!e.acab_verniz,acab_laminacao:!!e.acab_laminacao,maquina_custo:e.maquina_custo||null};});
+    FICHA_ACAB=await carregarFichaAcab(pa);
     if(!FICHA_CONV.length)FICHA_CONV=[{um:'MI',fator:1000}];
     // produto "novo" sem codigo_pa (campo fica editavel); demais parametros copiados
     var novo={descricao:src.descricao||'',materia_prima_id:src.materia_prima_id,larg_substrato:src.larg_substrato,
-      larg_etiqueta:src.larg_etiqueta,alt_etiqueta:src.alt_etiqueta,gap_etiqueta:src.gap_etiqueta,cores:src.cores};
+      larg_etiqueta:src.larg_etiqueta,alt_etiqueta:src.alt_etiqueta,gap_etiqueta:src.gap_etiqueta,cores:src.cores,
+      custo_faca:src.custo_faca,ocupacao_tinta:src.ocupacao_tinta,espaco_carreiras:src.espaco_carreiras,
+      esqueleto_lateral:src.esqueleto_lateral,ribbon_id:src.ribbon_id,carreiras_ribbon:src.carreiras_ribbon,
+      chapado:src.chapado,tinta_branca:src.tinta_branca,impressao:src.impressao,carreiras:src.carreiras,repeticoes:src.repeticoes};
     renderFicha(novo);
   }catch(e){ document.getElementById('ficha-conteudo').innerHTML='<div class="ap-op"><div class="ap-hint">Erro ao espelhar a ficha.\n'+apEsc(e.message||e)+'</div></div>'; }
 }
@@ -4940,25 +5051,68 @@ async function espelharFicha(pa){
 function renderFicha(p){
   var grupos=FICHA_GRUPOS.slice().sort(function(a,b){return (a.ordem_exibicao||0)-(b.ordem_exibicao||0);});
   var optsGrupo=grupos.map(function(g){return '<option value="'+apEsc(g.nome)+'">'+apEsc(g.display||g.nome)+'</option>';}).join('');
-  var html='<div class="f-grid">'+
+  var ready=!!window._mpTipoReady;
+  var html=
+  // ----- Dados técnicos -----
+  '<div class="f-sub">Dados técnicos</div>'+
+  '<div class="f-grid">'+
     '<label class="f-fld">Código (PA)<input id="f-pa" value="'+apEsc(FICHA_PA)+'" placeholder="PA000000000000"'+(FICHA_PA?' readonly':'')+'></label>'+
+    '<label class="f-fld">Impressão<select id="f-imp" onchange="fichaAplicarImpressao()"><option value="sem">Sem impressão</option><option value="digital">Digital</option><option value="flexo">Flexográfica</option></select></label>'+
     '<label class="f-fld" style="grid-column:1/-1">Descrição<input id="f-desc" value="'+apEsc(p.descricao||'')+'"></label>'+
-    '<label class="f-fld">Matéria-prima<select id="f-mp" onchange="fichaMPChange()">'+fichaMPOptions(p.materia_prima_id)+'</select></label>'+
-    '<label class="f-fld">Largura substrato (mm) <span class="ap-hint" style="font-weight:400">p/ conversão m²</span><input id="f-lsub" type="number" value="'+apEsc(p.larg_substrato!=null?p.larg_substrato:'')+'"></label>'+
     '<label class="f-fld">Largura etiqueta (mm)<input id="f-let" type="number" value="'+apEsc(p.larg_etiqueta!=null?p.larg_etiqueta:'')+'"></label>'+
     '<label class="f-fld">Altura etiqueta (mm)<input id="f-aet" type="number" value="'+apEsc(p.alt_etiqueta!=null?p.alt_etiqueta:'')+'" oninput="renderFichaRoteiro()"></label>'+
-    '<label class="f-fld">Gap (mm)<input id="f-gap" type="number" value="'+apEsc(p.gap_etiqueta!=null?p.gap_etiqueta:0)+'" oninput="renderFichaRoteiro()"></label>'+
-    '<label class="f-fld">Nº de cores<input id="f-cores" type="number" value="'+apEsc(p.cores!=null?p.cores:0)+'" oninput="renderFichaRoteiro()"></label>'+
+    '<label class="f-fld">Gap / espaço entre repetições (mm)<input id="f-gap" type="number" value="'+apEsc(p.gap_etiqueta!=null?p.gap_etiqueta:0)+'" oninput="renderFichaRoteiro()"></label>'+
+    (ready?('<label class="f-fld fimp-flexo">Espaço entre carreiras (mm)<input id="f-espcarr" type="number" step="0.01" value="'+apEsc(p.espaco_carreiras!=null?p.espaco_carreiras:0)+'"></label>'):'')+
+    (ready?('<label class="f-fld fimp-flexo">Número de carreiras<input id="f-carr" type="number" min="1" value="'+apEsc(p.carreiras!=null?p.carreiras:1)+'"></label>'):'')+
+    (ready?('<label class="f-fld fimp-flexo">Repetições (altura+gap)<input id="f-rep" type="number" min="1" value="'+apEsc(p.repeticoes!=null?p.repeticoes:1)+'"></label>'):'')+
+    (ready?('<label class="f-fld fimp-flexo">Esqueleto lateral (mm)<input id="f-esq" type="number" step="0.01" value="'+apEsc(p.esqueleto_lateral!=null?p.esqueleto_lateral:0)+'"></label>'):'')+
   '</div>'+
+  // ----- Cores e processos (só impresso) -----
+  '<div class="f-sub fimp-impresso">Cores e processos</div>'+
+  '<div class="f-grid fimp-impresso">'+
+    '<label class="f-fld">Nº de cores<input id="f-cores" type="number" value="'+apEsc(p.cores!=null?p.cores:0)+'" oninput="renderFichaRoteiro()"></label>'+
+    (ready?('<label class="f-fld fimp-flexo">Ocupação de tinta (%)<input id="f-ocup" type="number" step="0.01" value="'+apEsc(p.ocupacao_tinta!=null?p.ocupacao_tinta:0)+'"></label>'):'')+
+    (ready?('<label class="f-fld fimp-flexo f-chk" style="flex-direction:row;align-items:center;gap:6px"><input id="f-chapado" type="checkbox" '+(p.chapado?'checked':'')+'> Chapado (sem clichê de cor)</label>'):'')+
+    (ready?('<label class="f-fld fimp-digital f-chk" style="flex-direction:row;align-items:center;gap:6px"><input id="f-branca" type="checkbox" '+(p.tinta_branca?'checked':'')+'> Tinta branca (digital)</label>'):'')+
+  '</div>'+
+  // ----- Acabamentos -----
+  (ready?('<div class="f-sub">Acabamentos <span class="ap-hint" style="font-weight:400">verniz, laminação, cold/hot stamping</span></div>'+
+    '<div id="f-acab"></div>'+
+    '<div class="f-row" style="margin-top:4px"><select class="ap-sel" id="f-nacab" style="max-width:320px"><option value="">— escolher acabamento —</option>'+fichaAcabAddOptions()+'</select><button class="ap-btn-sec" onclick="fichaAddAcab()">+ Adicionar acabamento</button></div>'):'')+
+  // ----- Matéria-prima -----
+  '<div class="f-sub">Matéria-prima</div>'+
+  '<div class="f-grid">'+
+    '<label class="f-fld">Substrato<select id="f-mp" onchange="fichaMPChange()">'+fichaMPOptions(p.materia_prima_id)+'</select></label>'+
+    '<label class="f-fld">Largura substrato (mm) <span class="ap-hint" style="font-weight:400">p/ conversão m²</span><input id="f-lsub" type="number" value="'+apEsc(p.larg_substrato!=null?p.larg_substrato:'')+'"></label>'+
+  '</div>'+
+  // ----- Ribbon -----
+  (ready?('<div class="f-sub">Ribbon</div><div class="f-grid">'+
+    '<label class="f-fld">Ribbon<select id="f-ribbon">'+fichaRibbonOptions(p.ribbon_id)+'</select></label>'+
+    '<label class="f-fld">Carreiras de ribbon<input id="f-carrib" type="number" min="1" value="'+apEsc(p.carreiras_ribbon!=null?p.carreiras_ribbon:1)+'"></label>'+
+  '</div>'):'')+
+  // ----- Conversões -----
   '<div class="f-sub">Unidades de medida (conversão) <span class="ap-hint" style="font-weight:400">unidade da base → etiquetas</span></div>'+
   '<div id="f-conv"></div>'+
   '<div class="f-row" style="margin-top:4px"><input class="ap-input" id="f-nconv-um" placeholder="Unidade (ROLO, CAIXA)" style="width:160px"><input class="ap-input" id="f-nconv-f" type="number" placeholder="etiquetas" style="width:110px"><button class="ap-btn-sec" onclick="fichaAddConv()">+ Adicionar</button></div>'+
+  // ----- Roteiro de produção (INALTERADO — o painel/produção lê daqui) -----
   '<div class="f-sub">Roteiro de produção <span class="ap-hint" style="font-weight:400">grupos na ordem; acabamento por etapa</span></div>'+
   '<div id="f-roteiro"></div>'+
   '<div class="f-row" style="margin-top:4px"><select class="ap-sel" id="f-netapa" style="max-width:220px">'+optsGrupo+'</select><button class="ap-btn-sec" onclick="fichaAddEtapa()">+ Adicionar etapa</button></div>'+
+  // ----- Custos -----
+  (ready?('<div class="f-sub">Custos</div><div class="f-grid"><label class="f-fld">Faca (R$) <span class="ap-hint" style="font-weight:400">fixo por pedido</span><input id="f-faca" type="number" step="0.01" value="'+apEsc(p.custo_faca!=null?p.custo_faca:0)+'"></label></div>'):
+    '<div class="f-sub">Custos</div><div class="ap-hint">Aplique o 31_custo_mp.sql e clique em “Recarregar do banco” para liberar os campos de custo.</div>')+
+  (ready?('<div id="f-custo-prev" style="margin-top:8px"></div><div class="f-row" style="margin-top:6px"><button class="ap-btn-sec" onclick="custoFichaPreview()">Calcular custo (1.000 et.)</button></div>'):'')+
   '<div class="ap-actions" style="margin-top:16px"><button class="ap-btn" onclick="salvarFicha()"><i class="ti ti-check"></i> Salvar ficha e materializar</button></div>';
   document.getElementById('ficha-conteudo').innerHTML=html;
-  renderFichaConv(); renderFichaRoteiro();
+  renderFichaConv(); renderFichaRoteiro(); renderFichaAcab();
+  var impSel=document.getElementById('f-imp'); if(impSel)impSel.value=(p.impressao||'flexo');
+  fichaAplicarImpressao();
+}
+function fichaAplicarImpressao(){
+  var imp=((document.getElementById('f-imp')||{}).value)||'flexo';
+  var impresso=(imp==='digital'||imp==='flexo'), root=document.getElementById('ficha-conteudo'); if(!root)return;
+  function setCls(cls,on){ var es=root.querySelectorAll('.'+cls); for(var i=0;i<es.length;i++)es[i].style.display=on?'':'none'; }
+  setCls('fimp-impresso',impresso); setCls('fimp-flexo',imp==='flexo'); setCls('fimp-digital',imp==='digital');
 }
 function renderFichaConv(){
   document.getElementById('f-conv').innerHTML=FICHA_CONV.map(function(c,i){
@@ -4999,13 +5153,19 @@ function renderFichaRoteiro(){
       '<span class="ap-chip">'+apEsc(AP_LABEL_MODO[g.modo]||g.modo||'fixo')+'</span>'+
       '<span class="ap-hint">Carreiras</span><input class="ap-input" type="number" min="1" style="width:70px" value="'+apEsc(e.carreiras||1)+'" onchange="FICHA_ROTEIRO['+i+'].carreiras=parseInt(this.value)||1;renderFichaRoteiro()">'+
       (modo==='unidade'?('<span class="ap-hint">Repetições</span><input class="ap-input" type="number" min="1" style="width:70px" value="'+apEsc(e.repeticoes||1)+'" onchange="FICHA_ROTEIRO['+i+'].repeticoes=parseInt(this.value)||1;renderFichaRoteiro()">'):'')+
+      (window._mpTipoReady&&modo!=='validacao'?('<span class="ap-hint" title="Sub-máquina usada só na estruturação de custo; a produção/painel continua pelo grupo">Máq. custo</span><select class="ap-sel" style="max-width:160px" onchange="FICHA_ROTEIRO['+i+'].maquina_custo=this.value||null">'+fichaSubCustoOptions(e.grupo,e.maquina_custo)+'</select>'):'')+
       '<button class="ap-btn-sec" onclick="fichaMoveEtapa('+i+',-1)">↑</button><button class="ap-btn-sec" onclick="fichaMoveEtapa('+i+',1)">↓</button>'+
       '<button class="ap-btn-sec" onclick="FICHA_ROTEIRO.splice('+i+',1);renderFichaRoteiro()">remover</button></div>'+acab+estLine+'</div>';
   }).join('')||'<div class="ap-hint">Sem etapas. Adicione os grupos de máquina do roteiro.</div>';
 }
 function fichaAddEtapa(){
   var grupo=fval('f-netapa'); if(!grupo)return;
-  FICHA_ROTEIRO.push({grupo:grupo,carreiras:1,repeticoes:1,acab_verniz:false,acab_laminacao:false}); renderFichaRoteiro();
+  FICHA_ROTEIRO.push({grupo:grupo,carreiras:1,repeticoes:1,acab_verniz:false,acab_laminacao:false,maquina_custo:null}); renderFichaRoteiro();
+}
+function fichaSubCustoOptions(grupo,sel){
+  var opts='<option value="">(média do grupo)</option>';
+  (MAQUINAS_SUB_DB||[]).filter(function(s){return s.grupo===grupo;}).forEach(function(s){ opts+='<option value="'+apEsc(s.nome)+'"'+(String(s.nome)===String(sel)?' selected':'')+'>'+apEsc(s.nome)+'</option>'; });
+  return opts;
 }
 function fichaMoveEtapa(i,d){var j=i+d;if(j<0||j>=FICHA_ROTEIRO.length)return;var t=FICHA_ROTEIRO[i];FICHA_ROTEIRO[i]=FICHA_ROTEIRO[j];FICHA_ROTEIRO[j]=t;renderFichaRoteiro();}
 
@@ -5119,6 +5279,296 @@ function fichaMPChange(){
   if(!mp)return;
   if(mp.largura_mm!=null){ var l=document.getElementById('f-lsub'); if(l)l.value=mp.largura_mm; }
 }
+function fichaRibbonOptions(sel){
+  var opts='<option value="">— sem ribbon —</option>';
+  (MATERIAS_PRIMAS||[]).filter(function(m){return m.tipo==='ribbon'&&m.ativo!==false;}).forEach(function(m){
+    opts+='<option value="'+m.id+'"'+(String(m.id)===String(sel)?' selected':'')+'>'+apEsc(m.nome+(m.fornecedor?(' · '+m.fornecedor):''))+'</option>';
+  });
+  return opts;
+}
+// ---- Acabamentos aplicados ao produto (produto_acabamentos) ----
+async function carregarFichaAcab(pa){
+  if(!window._mpTipoReady)return [];
+  var r=await supabaseClient.from('produto_acabamentos').select('*').eq('produto_codigo',pa).order('ordem');
+  if(!r||r.error)return [];
+  return (r.data||[]).map(function(a){return {materia_prima_id:a.materia_prima_id,ocupacao:a.ocupacao,fita_larg_mm:a.fita_larg_mm,fita_alt_mm:a.fita_alt_mm,valor_zinco:a.valor_zinco};});
+}
+function fichaAcabOptions(){ return (MATERIAS_PRIMAS||[]).filter(function(m){return ['verniz','laminacao','stamping'].indexOf(m.tipo)>=0 && m.ativo!==false;}); }
+function fichaAcabAddOptions(){ return fichaAcabOptions().map(function(m){return '<option value="'+m.id+'">'+apEsc((MPTIPO_LABEL[m.tipo]||m.tipo)+': '+m.nome+(m.fornecedor?(' · '+m.fornecedor):''))+'</option>';}).join(''); }
+function renderFichaAcab(){
+  var cont=document.getElementById('f-acab'); if(!cont)return;
+  if(!FICHA_ACAB.length){ cont.innerHTML='<div class="ap-hint">Nenhum acabamento aplicado.</div>'; return; }
+  cont.innerHTML=FICHA_ACAB.map(function(a,i){
+    var mp=(MATERIAS_PRIMAS||[]).filter(function(m){return String(m.id)===String(a.materia_prima_id);})[0]||{};
+    var tipo=mp.tipo||'';
+    var nome='<b style="min-width:170px">'+apEsc(mp.nome||'(MP removida)')+(mp.fornecedor?(' · '+apEsc(mp.fornecedor)):'')+'</b><span class="ap-chip">'+apEsc(MPTIPO_LABEL[tipo]||tipo)+(mp.gera_cliche?' · clichê':'')+(mp.gera_zinco?' · zinco':'')+'</span>';
+    var params='';
+    if(tipo==='verniz'&&mp.gera_cliche){ params+='<span class="ap-hint">Ocupação (%)</span><input class="ap-input" type="number" step="0.01" style="width:90px" value="'+apEsc(a.ocupacao!=null?a.ocupacao:0)+'" onchange="FICHA_ACAB['+i+'].ocupacao=parseFloat(this.value)||0">'; }
+    if(tipo==='stamping'){
+      params+='<span class="ap-hint">Fita L×A (mm)</span><input class="ap-input" type="number" step="0.01" style="width:66px" value="'+apEsc(a.fita_larg_mm!=null?a.fita_larg_mm:'')+'" onchange="FICHA_ACAB['+i+'].fita_larg_mm=parseFloat(this.value)||0"> × <input class="ap-input" type="number" step="0.01" style="width:66px" value="'+apEsc(a.fita_alt_mm!=null?a.fita_alt_mm:'')+'" onchange="FICHA_ACAB['+i+'].fita_alt_mm=parseFloat(this.value)||0">';
+      if(mp.gera_zinco){ params+='<span class="ap-hint">Zinco (R$)</span><input class="ap-input" type="number" step="0.01" style="width:90px" value="'+apEsc(a.valor_zinco!=null?a.valor_zinco:0)+'" onchange="FICHA_ACAB['+i+'].valor_zinco=parseFloat(this.value)||0">'; }
+    }
+    return '<div class="f-row" style="margin-bottom:6px;flex-wrap:wrap;gap:8px;align-items:center">'+nome+params+'<button class="ap-btn-sec" onclick="FICHA_ACAB.splice('+i+',1);renderFichaAcab()">remover</button></div>';
+  }).join('');
+}
+function fichaAddAcab(){
+  var sel=document.getElementById('f-nacab'); if(!sel||!sel.value)return;
+  var id=Number(sel.value);
+  if(FICHA_ACAB.some(function(a){return String(a.materia_prima_id)===String(id);})){ alert('Esse acabamento já foi adicionado.'); return; }
+  FICHA_ACAB.push({materia_prima_id:id,ocupacao:0,fita_larg_mm:null,fita_alt_mm:null,valor_zinco:0});
+  sel.value=''; renderFichaAcab();
+}
+// ===================== MOTOR DE CUSTO =====================
+var CUSTO_PARAMS=null, CUSTO_HORA_SUB={};
+async function carregarCustoHoraSub(){
+  try{ var r=await supabaseClient.from('maquinas_sub_custo').select('sub_id,custo_hora');
+    CUSTO_HORA_SUB={}; if(r&&!r.error){ (r.data||[]).forEach(function(x){ CUSTO_HORA_SUB[String(x.sub_id)]=Number(x.custo_hora)||0; }); return true; }
+    return false; }catch(e){ CUSTO_HORA_SUB={}; return false; }
+}
+async function atualizarCustoHoraSub(id,val){
+  var c=parseFloat(val)||0;
+  try{ var r=await supabaseClient.from('maquinas_sub_custo').upsert({sub_id:id,custo_hora:c,atualizado_em:new Date().toISOString()}); if(r.error)throw r.error; CUSTO_HORA_SUB[String(id)]=c; }
+  catch(e){ alert('Não foi possível salvar o R$/h.\n'+(e.message||e)); }
+}
+async function ensureCustoData(force){
+  if(window._custoReady && !force) return true;
+  try{
+    var p=await supabaseClient.from('custo_parametros').select('*').eq('id',1).maybeSingle();
+    if(p&&p.error){ window._custoReady=false; return false; }
+    CUSTO_PARAMS=(p&&p.data)||{preco_cliche_cm2:0.17,tinta_gramatura:0,tinta_preco_kg:0};
+    await carregarCustoHoraSub();
+    window._custoReady=true; return true;
+  }catch(e){ window._custoReady=false; return false; }
+}
+function custoGmap(){ var m={}; (MAQUINAS_GRUPOS_DB||[]).forEach(function(g){m[g.nome]=g;}); return m; }
+// R$/h do grupo = media das subs com custo_hora>0 (estimativa; o real por OS usaria a sub que rodou)
+function custoHoraGrupo(grupoNome){
+  var subs=(MAQUINAS_SUB_DB||[]).filter(function(s){return s.grupo===grupoNome;});
+  var vals=subs.map(function(s){return Number(CUSTO_HORA_SUB[String(s.id)])||0;}).filter(function(v){return v>0;});
+  if(!vals.length)return 0;
+  return vals.reduce(function(a,v){return a+v;},0)/vals.length;
+}
+// sub-maquina de CUSTO escolhida na ficha (e.maquina_custo); null = usa a media do grupo.
+function custoSubDaEtapa(e){
+  if(e&&e.maquina_custo){ var s=(MAQUINAS_SUB_DB||[]).filter(function(x){return x.grupo===e.grupo&&x.nome===e.maquina_custo;})[0]; if(s)return s; }
+  return null;
+}
+// R$/cm2 do cliche: da MP tipo 'cliche' (valor_m2); fallback ao parametro global.
+function custoClichePreco(){
+  var mc=(MATERIAS_PRIMAS||[]).filter(function(m){return m.tipo==='cliche'&&m.ativo!==false;})[0];
+  return mc?(Number(mc.valor_m2)||0):(Number((CUSTO_PARAMS||{}).preco_cliche_cm2)||0);
+}
+// Cascata "quanto rodar" por etapa — ESPELHA materializarProduto (nao mexe na producao).
+function custoEsts(prod,etapas,conv,qtd,um){
+  var gmap=custoGmap();
+  var ests=(etapas||[]).map(function(e){ var g=gmap[e.grupo]||{}; return {e:e,g:g,est:estimarEtapa(prod,{qtd:qtd,um:um},g,e,conv)}; });
+  for(var i=0;i<ests.length;i++){
+    var pct=0,setupNext=0;
+    for(var k=i;k<ests.length;k++){ pct+=(Number(ests[k].g.desp_prod_pct)||0)/100; }
+    for(var k2=i+1;k2<ests.length;k2++){ if(ests[k2].est.unit===ests[i].est.unit) setupNext+=(Number(ests[k2].est.desp)||0); }
+    ests[i].qtdRodar=(Number(ests[i].est.qtd)||0)/Math.max(0.05,1-pct)+setupNext;
+  }
+  return ests;
+}
+function custoTintaFlexo(prod,m2){
+  // SO a MP de tinta flexo (tipo tinta, sem sub). Sem MP -> 0 (nao usa mais valor global antigo).
+  var ft=(MATERIAS_PRIMAS||[]).filter(function(m){return m.tipo==='tinta'&&!m.sub_id&&m.ativo!==false;})[0];
+  if(!ft)return 0;
+  var gram=Number(ft.gramatura)||0, pkg=Number(ft.preco_kg)||0; // gram em g/m2
+  return m2*(gram/1000)*((Number(prod.ocupacao_tinta)||0)/100)*pkg; // NAO multiplica por nº de cores
+}
+function custoTintaDigital(prod,m2,subIdPref){
+  var subId=subIdPref;
+  if(!subId){ var digSubs=(MAQUINAS_SUB_DB||[]).filter(function(s){return /digital/i.test(s.grupo||'');}); if(!digSubs.length)return 0; subId=digSubs[0].id; }
+  function tintaDe(branca){ return (MATERIAS_PRIMAS||[]).filter(function(m){return m.tipo==='tinta'&&String(m.sub_id)===String(subId)&&(!!m.tinta_branca)===branca&&m.ativo!==false;})[0]; }
+  var base=tintaDe(false), br=prod.tinta_branca?tintaDe(true):null;
+  return m2*((base?(Number(base.valor_m2)||0):0)+(br?(Number(br.valor_m2)||0):0));
+}
+// acabamento (MP) -> {tipo_calculo, ...} : laminacao->filme, stamping->stamping, verniz->verniz
+function custoAcabsNorm(lista){
+  return (lista||[]).map(function(pa){
+    var mp=(MATERIAS_PRIMAS||[]).filter(function(x){return String(x.id)===String(pa.materia_prima_id);})[0]; if(!mp)return null;
+    var tc=(mp.tipo==='laminacao')?'filme':(mp.tipo==='stamping')?'stamping':'verniz';
+    return {nome:mp.nome,tipo_calculo:tc,valor_m2:mp.valor_m2,gramatura:mp.gramatura,preco_kg:mp.preco_kg,setup_m:mp.setup_m,icms_pct:mp.icms_pct,
+      gera_cliche:mp.gera_cliche,gera_zinco:mp.gera_zinco,ocupacao:pa.ocupacao,fita_larg_mm:pa.fita_larg_mm,fita_alt_mm:pa.fita_alt_mm,valor_zinco:pa.valor_zinco};
+  }).filter(Boolean);
+}
+function custoProduto(prod,etapas,conv,acabs,qtd,um){
+  prod=prod||{}; acabs=acabs||[];
+  var P=CUSTO_PARAMS||{preco_cliche_cm2:0.17,tinta_gramatura:0,tinta_preco_kg:0};
+  var tot=(Number(qtd)||0)*fatorConvFicha(conv,um);           // etiquetas liquidas
+  var alt=Number(prod.alt_etiqueta)||0, gap=Number(prod.gap_etiqueta)||0, passo=alt+gap;
+  var cores=Number(prod.cores)||0, imp=prod.impressao||'flexo';
+  var larS=Number(prod.larg_substrato)||0, larE=Number(prod.larg_etiqueta)||0;
+  var ests=custoEsts(prod,etapas,conv,qtd,um);
+  var impr=null, prm=null;
+  for(var i=0;i<ests.length;i++){ var md=(ests[i].g.modo||'fixo'); if(md==='por_cor'&&!impr)impr=ests[i]; if(ests[i].est.unit==='m'&&!prm)prm=ests[i]; }
+  var refCarr=Math.max(1,Number(prod.carreiras)||Number((impr||prm||{e:{}}).e.carreiras)||1);
+  var refRep=Math.max(1,Number(prod.repeticoes)||Number((impr||prm||{e:{}}).e.repeticoes)||1);
+  // metros rodados da 1a etapa em metros = producao c/ cascata (qtdRodar) + o SETUP da
+  // propria etapa (qtdRodar ja traz o setup das SEGUINTES; falta o acerto dela mesma).
+  var metrosRodar=prm?((Number(prm.qtdRodar)||0)+(Number(prm.est.desp)||0)):0;
+  var m2=metrosRodar*(larS/1000);                             // area do substrato rodado (larg. do substrato)
+  // ---- FIXOS ----
+  var largCm=Math.floor((larE*refCarr+(Number(prod.espaco_carreiras)||0)*(refCarr-1)+(Number(prod.esqueleto_lateral)||0))/10)+4;
+  var altCm =Math.round(((alt+gap)*refRep)/10)+4;
+  var areaCliche=Math.max(0,largCm)*Math.max(0,altCm);
+  var corCliche=(prod.chapado||imp!=='flexo')?0:cores;       // digital/sem NAO gera cliche de cor
+  var nCliche=corCliche+acabs.filter(function(a){return a.gera_cliche;}).length;
+  var cCliche=areaCliche*custoClichePreco()*nCliche;
+  var cFaca=Number(prod.custo_faca)||0;
+  var cZinco=acabs.reduce(function(s,a){return s+(a.gera_zinco?(Number(a.valor_zinco)||0):0);},0);
+  var fixo=cCliche+cFaca+cZinco;
+  var linhas=[];
+  if(cCliche>0)linhas.push({g:'fix',label:'Clichê ('+nCliche+'× · '+apFmt(largCm)+'×'+apFmt(altCm)+' cm)',tipo:'F',unid:'un',qtd:nCliche,custo:(nCliche>0?cCliche/nCliche:0),total:cCliche});
+  if(cFaca>0)linhas.push({g:'fix',label:'Faca',tipo:'F',unid:'un',qtd:1,custo:cFaca,total:cFaca});
+  if(cZinco>0)linhas.push({g:'fix',label:'Zinco (hot stamping)',tipo:'F',unid:'un',qtd:1,custo:cZinco,total:cZinco});
+  // ---- VARIAVEIS ----
+  var mp=(prod.materia_prima_id!=null)?(MATERIAS_PRIMAS||[]).filter(function(m){return String(m.id)===String(prod.materia_prima_id);})[0]:null;
+  var vSub=0; if(mp){ vSub=m2*(Number(mp.valor_m2)||0); if(vSub>0)linhas.push({g:'mat',label:'Substrato · '+mp.nome,tipo:'V',unid:'m²',qtd:m2,custo:Number(mp.valor_m2)||0,total:vSub,icms:vSub*(Number(mp.icms_pct)||0)/100}); } // substrato = BRUTO; icms = credito
+  var vHora=0;
+  ests.forEach(function(it){
+    var sub=custoSubDaEtapa(it.e), gObj=(MAQUINAS_GRUPOS_DB||[]).filter(function(g){return g.nome===it.e.grupo;})[0];
+    var gLabel=(gObj&&gObj.display)||it.e.grupo, maqNome=sub?sub.nome:('média '+gLabel), uL=(it.est.unit==='un'?'un':'m');
+    var rh=sub?(Number(CUSTO_HORA_SUB[String(sub.id)])||0):custoHoraGrupo(it.e.grupo); if(rh<=0)return;
+    var hAc=(Number(it.est.setup)||0)/60, cAc=hAc*rh;   // ACERTO = tempo de setup (min -> h) x R$/h
+    if(cAc>0){ vHora+=cAc; linhas.push({g:'fab',label:'Acerto · '+gLabel+' ('+maqNome+') · '+apFmt(Number(it.est.desp)||0)+' '+uL,tipo:'F',unid:'h',qtd:hAc,custo:rh,total:cAc}); }
+    var vel=sub?(Number(sub.velocidade)||Number(sub.velocidade_pagina)||0):(Number(it.est.vel)||0);
+    if(vel>0){ var hPr=(Number(it.qtdRodar)||0)/vel, cPr=hPr*rh;   // EXECUCAO = metros rodar / velocidade
+      vHora+=cPr; linhas.push({g:'fab',label:'Execução · '+gLabel+' ('+maqNome+') · '+apFmt(Number(it.qtdRodar)||0)+' '+uL+' · '+apFmt(vel)+' '+uL+'/h',tipo:'V',unid:'h',qtd:hPr,custo:rh,total:cPr}); }
+  });
+  var digEt=null; for(var di=0;di<ests.length;di++){ if(/digital/i.test(ests[di].e.grupo||'')){ digEt=ests[di]; break; } }
+  var digSubPref=null; if(digEt){ var dsub=custoSubDaEtapa(digEt.e); if(dsub)digSubPref=dsub.id; }
+  var vTinta=(imp==='flexo')?custoTintaFlexo(prod,m2):(imp==='digital')?custoTintaDigital(prod,m2,digSubPref):0;
+  if(vTinta>0){ var tmp=(imp==='digital')?(MATERIAS_PRIMAS||[]).filter(function(m){return m.tipo==='tinta'&&digSubPref!=null&&String(m.sub_id)===String(digSubPref)&&!m.tinta_branca&&m.ativo!==false;})[0]:(MATERIAS_PRIMAS||[]).filter(function(m){return m.tipo==='tinta'&&m.sub_id==null&&m.ativo!==false;})[0];
+    linhas.push({g:'mat',label:(imp==='digital'?'Insumo digital':'Tinta flexo'),tipo:'V',unid:'m²',qtd:m2,custo:(m2>0?vTinta/m2:0),total:vTinta,icms:vTinta*(tmp?(Number(tmp.icms_pct)||0):0)/100}); }
+  var vAcab=0;
+  acabs.forEach(function(a){
+    var c=0;
+    var icmsA=0;
+    if(a.tipo_calculo==='filme'){ c=m2*(Number(a.valor_m2)||0); icmsA=c*(Number(a.icms_pct)||0)/100; if(c>0)linhas.push({g:'mat',label:'Laminação · '+a.nome,tipo:'V',unid:'m²',qtd:m2,custo:Number(a.valor_m2)||0,total:c,icms:icmsA}); }
+    else if(a.tipo_calculo==='verniz'){ var ocpV=((Number(a.ocupacao)||0)>0?Number(a.ocupacao):100); c=m2*((Number(a.gramatura)||0)/1000)*(ocpV/100)*(Number(a.preco_kg)||0); icmsA=c*(Number(a.icms_pct)||0)/100; if(c>0)linhas.push({g:'mat',label:'Verniz · '+a.nome,tipo:'V',unid:'m²',qtd:m2,custo:(m2>0?c/m2:0),total:c,icms:icmsA}); }
+    else if(a.tipo_calculo==='stamping'){ var af=((Number(a.fita_larg_mm)||0)*(Number(a.fita_alt_mm)||0))/1e6; c=af*tot*(Number(a.valor_m2)||0); icmsA=c*(Number(a.icms_pct)||0)/100; if(c>0)linhas.push({g:'mat',label:'Stamping · '+a.nome,tipo:'V',unid:'et',qtd:tot,custo:(tot>0?c/tot:0),total:c,icms:icmsA}); }
+    vAcab+=c;
+  });
+  var vRibbon=0, ribbon=(prod.ribbon_id!=null)?(MATERIAS_PRIMAS||[]).filter(function(m){return String(m.id)===String(prod.ribbon_id);})[0]:null;
+  if(ribbon&&Number(ribbon.comprimento_m)>0){ var cr=Math.max(1,Number(prod.carreiras_ribbon)||1); var metrosRb=(tot/cr)*passo/1000; var rolos=Math.ceil(metrosRb/Number(ribbon.comprimento_m)); vRibbon=rolos*(Number(ribbon.valor_rolo)||0); if(vRibbon>0)linhas.push({g:'mat',label:'Ribbon · '+ribbon.nome+' ('+apFmt(metrosRb)+' m → '+rolos+' rolo(s))',tipo:'V',unid:'rolo',qtd:rolos,custo:Number(ribbon.valor_rolo)||0,total:vRibbon,icms:vRibbon*(Number(ribbon.icms_pct)||0)/100}); }
+  var variavel=vSub+vHora+vTinta+vAcab+vRibbon, totalPedido=variavel+fixo;
+  var liqMetros=prm?(Number(prm.est.qtd)||0):0, m2Liq=liqMetros*(larS/1000);
+  var detalhes={liqMetros:liqMetros,metrosRodar:metrosRodar,m2Liq:m2Liq,m2:m2,perdaM:Math.max(0,metrosRodar-liqMetros),perdaPct:metrosRodar>0?((metrosRodar-liqMetros)/metrosRodar*100):0};
+  return {etiquetas:tot,m2:m2,metrosRodar:metrosRodar,linhas:linhas,detalhes:detalhes,
+    fixo:{cliche:cCliche,faca:cFaca,zinco:cZinco,total:fixo,nCliche:nCliche,areaCliche:areaCliche,largCm:largCm,altCm:altCm},
+    variavel:{substrato:vSub,hora:vHora,tinta:vTinta,acabamentos:vAcab,ribbon:vRibbon,total:variavel},
+    totalPedido:totalPedido, varUnit:tot>0?variavel/tot:0, unitComFixo:tot>0?totalPedido/tot:0};
+}
+function cBRL(v){ return 'R$ '+(Number(v)||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function custoResumoHtml(r,titulo){
+  var tot=r.totalPedido||0;
+  function pct(v){ return tot>0?apFmt(v/tot*100)+'%':'—'; }
+  function sec(nome,g){
+    var ls=(r.linhas||[]).filter(function(x){return x.g===g;}); if(!ls.length)return '';
+    var sub=ls.reduce(function(a,x){return a+(x.total||0);},0);
+    return '<tr class="cs-h"><td class="l" colspan="7">'+apEsc(nome)+'</td></tr>'+ls.map(function(x){
+      return '<tr><td class="l">'+apEsc(x.label)+'</td><td>'+x.tipo+'</td><td>'+apEsc(x.unid)+'</td><td>'+apFmt(x.qtd)+'</td><td>'+cBRL(x.custo)+'</td><td>'+cBRL(x.total)+'</td><td>'+pct(x.total)+'</td></tr>';
+    }).join('')+'<tr class="cs-s"><td class="l">Subtotal '+apEsc(nome)+'</td><td colspan="4"></td><td>'+cBRL(sub)+'</td><td>'+pct(sub)+'</td></tr>';
+  }
+  var icmsLs=(r.linhas||[]).filter(function(x){return x.g==='mat'&&(x.icms||0)>0;});
+  var creditoICMS=icmsLs.reduce(function(a,x){return a+(x.icms||0);},0);
+  function secICMS(){
+    if(!icmsLs.length)return '';
+    return '<tr class="cs-h"><td class="l" colspan="7">Deduções (crédito de ICMS)</td></tr>'+icmsLs.map(function(x){
+      return '<tr><td class="l">Crédito ICMS · '+apEsc(x.label)+'</td><td></td><td></td><td></td><td></td><td>-'+cBRL(x.icms)+'</td><td></td></tr>';
+    }).join('')+'<tr class="cs-s"><td class="l">Subtotal crédito ICMS</td><td colspan="4"></td><td>-'+cBRL(creditoICMS)+'</td><td></td></tr>';
+  }
+  var liq=(r.totalPedido||0)-creditoICMS;
+  var d=r.detalhes||{};
+  return '<style>.csT{width:100%;border-collapse:collapse;font-size:12px}.csT td,.csT th{padding:3px 7px;text-align:right;border-bottom:1px solid var(--border)}.csT td.l,.csT th.l{text-align:left}.csT .cs-h td{background:var(--bg,rgba(0,0,0,.04));font-weight:700;color:var(--text3);text-transform:uppercase;font-size:11px}.csT .cs-s td{font-weight:700}.csT .cs-t td{font-weight:800;border-top:2px solid var(--border)}</style>'+
+    '<div class="f-sub">'+apEsc(titulo||'Custo')+'</div>'+
+    '<div style="overflow-x:auto"><table class="csT">'+
+    '<thead><tr><th class="l">Descrição</th><th>Tipo</th><th>Un.</th><th>Qtd</th><th>R$ unit.</th><th>Total</th><th>%</th></tr></thead><tbody>'+
+    sec('Fabricação','fab')+sec('Materiais','mat')+secICMS()+sec('Fixos (1×/pedido)','fix')+
+    '<tr class="cs-t"><td class="l">Custo total do pedido (bruto)</td><td colspan="4"></td><td>'+cBRL(r.totalPedido)+'</td><td>100%</td></tr>'+
+    (creditoICMS>0?('<tr class="cs-t"><td class="l">Custo líquido (após crédito ICMS)</td><td colspan="4"></td><td>'+cBRL(liq)+'</td><td></td></tr>'):'')+
+    '<tr class="cs-s"><td class="l">Unitário (c/ fixo diluído'+(creditoICMS>0?', líquido':'')+')</td><td colspan="4"></td><td>'+cBRL(tot>0?(liq/r.etiquetas):0)+'</td><td></td></tr>'+
+    '<tr><td class="l">Variável por unidade</td><td colspan="4"></td><td>'+cBRL(r.varUnit)+'</td><td></td></tr>'+
+    '</tbody></table></div>'+
+    '<div class="ap-hint" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:16px">'+
+      '<span>Etiquetas: <b>'+apFmt(r.etiquetas)+'</b></span>'+
+      '<span>Metros líq./rodado: <b>'+apFmt(d.liqMetros)+'</b> / <b>'+apFmt(d.metrosRodar)+'</b></span>'+
+      '<span>m² líq./rodado: <b>'+apFmt(d.m2Liq)+'</b> / <b>'+apFmt(d.m2)+'</b></span>'+
+      '<span>Perda: <b>'+apFmt(d.perdaM)+' m</b> (<b>'+apFmt(d.perdaPct)+'%</b>)</span>'+
+    '</div>';
+}
+function prodFromFicha(){
+  function gv(id){ var e=document.getElementById(id); return e?e.value:''; }
+  return { codigo_pa:FICHA_PA, descricao:fval('f-desc'),
+    larg_substrato:fnum('f-lsub'), larg_etiqueta:fnum('f-let'), alt_etiqueta:fnum('f-aet'), gap_etiqueta:fnum('f-gap'),
+    cores:fnum('f-cores'), impressao:(gv('f-imp')||'flexo'),
+    carreiras:parseInt(fnum('f-carr'))||1, repeticoes:parseInt(fnum('f-rep'))||1,
+    espaco_carreiras:fnum('f-espcarr'), esqueleto_lateral:fnum('f-esq'), chapado:!!(document.getElementById('f-chapado')||{}).checked,
+    ocupacao_tinta:fnum('f-ocup'), custo_faca:fnum('f-faca'), tinta_branca:!!(document.getElementById('f-branca')||{}).checked,
+    materia_prima_id:gv('f-mp')?Number(gv('f-mp')):null, ribbon_id:gv('f-ribbon')?Number(gv('f-ribbon')):null,
+    carreiras_ribbon:parseInt(fnum('f-carrib'))||1 };
+}
+async function custoFichaPreview(){
+  var box=document.getElementById('f-custo-prev'); if(box)box.innerHTML='<div class="ap-hint">Calculando…</div>';
+  await ensureCustoData();
+  var prod=prodFromFicha(), acabs=custoAcabsNorm(FICHA_ACAB);
+  var r=custoProduto(prod,FICHA_ROTEIRO,FICHA_CONV,acabs,1000,'UN');
+  if(box)box.innerHTML=custoResumoHtml(r,'Prévia de custo · 1.000 etiquetas')+'<div class="ap-hint" style="margin-top:4px">hora-máquina usa o R$/h por sub (aba Máquinas). Calcula sobre o estado atual do formulário.</div>';
+}
+// ---- Aba Custo: parametros globais + simulador ----
+async function renderCusto(){
+  var el=document.getElementById('custo-conteudo'); if(!el)return;
+  if(!window._mpTipoReady){ el.innerHTML='<div class="ap-hint">Aplique o 31_custo_mp.sql e recarregue para liberar os custos.</div>'; return; }
+  el.innerHTML='<div class="ap-hint">Carregando…</div>';
+  await ensureCustoData(true);
+  var pode=!!window._podeEditar, P=CUSTO_PARAMS||{}, ro=pode?'':' disabled';
+  var card='background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:12px';
+  var grid='display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px';
+  var lab='display:flex;flex-direction:column;font-size:12px;color:var(--text3);gap:3px';
+  var inp='padding:7px 9px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px';
+  var prods=(await supabaseClient.from('produtos').select('codigo_pa,descricao').order('codigo_pa')).data||[];
+  var opts=prods.map(function(p){return '<option value="'+apEsc(p.codigo_pa+' · '+(p.descricao||''))+'"></option>';}).join('');
+  el.innerHTML=
+    '<div class="ap-hint" style="margin-bottom:10px">Clichê, tinta, substrato, laminação, ribbon e acabamentos são cadastrados nas <b>Matérias-primas</b> (por tipo). O <b>R$/h por sub-máquina</b> fica em <b>Máquinas</b>; a <b>sub-máquina de custo</b> por etapa é definida na <b>ficha</b> do produto.</div>'+
+    '<div style="'+card+'"><div style="font-weight:600;margin-bottom:8px">Simulador</div>'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><input id="sim-pa" list="sim-pa-list" placeholder="digite o código ou a descrição" style="'+inp+';min-width:300px"><datalist id="sim-pa-list">'+opts+'</datalist>'+
+      '<input id="sim-qtd" style="'+inp+';width:110px" type="number" value="1000"><select id="sim-um" style="'+inp+';width:90px"><option>UN</option><option>MI</option></select>'+
+      '<button class="btn-primary" onclick="custoSimular()">Calcular</button></div>'+
+      '<div id="sim-res" style="margin-top:10px"></div></div>';
+}
+async function salvarCustoParam(campo,val){
+  if(!window._podeEditar)return;
+  var p={}; p[campo]=parseFloat(val)||0; p.atualizado_em=new Date().toISOString();
+  try{ var r=await supabaseClient.from('custo_parametros').update(p).eq('id',1); if(r.error)throw r.error; if(CUSTO_PARAMS)CUSTO_PARAMS[campo]=p[campo]; }
+  catch(e){ alert('Não foi possível salvar o parâmetro.\n'+(e.message||e)); }
+}
+async function custoSimular(){
+  var raw=((document.getElementById('sim-pa')||{}).value)||''; var pa=raw.split(' · ')[0].trim(); if(!pa){alert('Escolha um produto.');return;}
+  var qtd=parseFloat((document.getElementById('sim-qtd')||{}).value)||0, um=(document.getElementById('sim-um')||{}).value||'UN';
+  var box=document.getElementById('sim-res'); if(box)box.innerHTML='<div class="ap-hint">Calculando…</div>';
+  await ensureCustoData();
+  var prod=(await supabaseClient.from('produtos').select('*').eq('codigo_pa',pa).maybeSingle()).data||{};
+  var etapas=(await supabaseClient.from('produto_etapas').select('*').eq('produto_codigo',pa).order('ordem')).data||[];
+  var conv=(await supabaseClient.from('produto_conversoes').select('*').eq('produto_codigo',pa)).data||[];
+  var acab=custoAcabsNorm(await carregarFichaAcab(pa));
+  var r=custoProduto(prod,etapas,conv,acab,qtd,um);
+  if(box)box.innerHTML=custoResumoHtml(r,'Custo · '+apEsc(pa)+' · '+apFmt(qtd)+' '+apEsc(um));
+}
+function fichaCustoHtml(p){
+  p=p||{};
+  return '<div class="f-sub">Custos do produto <span class="ap-hint" style="font-weight:400">campos do cálculo de custo</span></div>'+
+    '<div class="f-grid">'+
+      '<label class="f-fld">Faca (R$) <span class="ap-hint" style="font-weight:400">fixo por pedido</span><input id="f-faca" type="number" step="0.01" value="'+apEsc(p.custo_faca!=null?p.custo_faca:0)+'"></label>'+
+      '<label class="f-fld">Ocupação de tinta (%)<input id="f-ocup" type="number" step="0.01" value="'+apEsc(p.ocupacao_tinta!=null?p.ocupacao_tinta:0)+'"></label>'+
+      '<label class="f-fld">Espaço entre carreiras (mm)<input id="f-espcarr" type="number" step="0.01" value="'+apEsc(p.espaco_carreiras!=null?p.espaco_carreiras:0)+'"></label>'+
+      '<label class="f-fld">Esqueleto lateral (mm)<input id="f-esq" type="number" step="0.01" value="'+apEsc(p.esqueleto_lateral!=null?p.esqueleto_lateral:0)+'"></label>'+
+      '<label class="f-fld">Ribbon<select id="f-ribbon">'+fichaRibbonOptions(p.ribbon_id)+'</select></label>'+
+      '<label class="f-fld">Carreiras de ribbon<input id="f-carrib" type="number" min="1" value="'+apEsc(p.carreiras_ribbon!=null?p.carreiras_ribbon:1)+'"></label>'+
+      '<label class="f-fld f-chk" style="flex-direction:row;align-items:center;gap:6px"><input id="f-chapado" type="checkbox" '+(p.chapado?'checked':'')+'> Chapado (sem clichê de cor)</label>'+
+    '</div>';
+}
 async function salvarFicha(){
   try{
     var pa=FICHA_PA||((fval('f-pa')||'').trim().toUpperCase());
@@ -5132,11 +5582,31 @@ async function salvarFicha(){
       gap_etiqueta:fnum('f-gap'),cores:fnum('f-cores'),atualizado_em:new Date().toISOString()};
     // so envia materia_prima_id quando o 20_ ja foi aplicado (senao a coluna nao existe)
     if(window._mpReady)prod.materia_prima_id=mpId;
+    // campos de custo (ficha unica) — so com o 31_ aplicado (_mpTipoReady)
+    if(window._mpTipoReady){
+      prod.impressao=((document.getElementById('f-imp')||{}).value)||'flexo';
+      prod.carreiras=parseInt(fnum('f-carr'))||1;
+      prod.repeticoes=parseInt(fnum('f-rep'))||1;
+      prod.custo_faca=fnum('f-faca')||0;
+      prod.ocupacao_tinta=fnum('f-ocup')||0;
+      prod.espaco_carreiras=fnum('f-espcarr')||0;
+      prod.esqueleto_lateral=fnum('f-esq')||0;
+      var _rib=document.getElementById('f-ribbon'); prod.ribbon_id=(_rib&&_rib.value)?Number(_rib.value):null;
+      prod.carreiras_ribbon=parseInt(fnum('f-carrib'))||1;
+      prod.chapado=!!(document.getElementById('f-chapado')||{}).checked;
+      prod.tinta_branca=!!(document.getElementById('f-branca')||{}).checked;
+    }
     var up=await supabaseClient.from('produtos').upsert(prod); if(up.error)throw up.error;
     await supabaseClient.from('produto_conversoes').delete().eq('produto_codigo',pa);
     if(FICHA_CONV.length){ var ic=await supabaseClient.from('produto_conversoes').insert(FICHA_CONV.filter(function(c){return c.um;}).map(function(c){return {produto_codigo:pa,um:c.um,fator:c.fator};})); if(ic.error)throw ic.error; }
     await supabaseClient.from('produto_etapas').delete().eq('produto_codigo',pa);
-    if(FICHA_ROTEIRO.length){ var ie=await supabaseClient.from('produto_etapas').insert(FICHA_ROTEIRO.map(function(e,i){return {produto_codigo:pa,ordem:i+1,grupo:e.grupo,carreiras:e.carreiras||1,repeticoes:e.repeticoes||1,acab_verniz:!!e.acab_verniz,acab_laminacao:!!e.acab_laminacao};})); if(ie.error)throw ie.error; }
+    if(FICHA_ROTEIRO.length){ var ie=await supabaseClient.from('produto_etapas').insert(FICHA_ROTEIRO.map(function(e,i){var row={produto_codigo:pa,ordem:i+1,grupo:e.grupo,carreiras:e.carreiras||1,repeticoes:e.repeticoes||1,acab_verniz:!!e.acab_verniz,acab_laminacao:!!e.acab_laminacao}; if(window._mpTipoReady)row.maquina_custo=e.maquina_custo||null; return row;})); if(ie.error)throw ie.error; }
+    // acabamentos aplicados (custo) — tabela propria, NAO lida pela producao/painel
+    if(window._mpTipoReady){
+      await supabaseClient.from('produto_acabamentos').delete().eq('produto_codigo',pa);
+      var _ac=FICHA_ACAB.filter(function(a){return a.materia_prima_id;});
+      if(_ac.length){ var iac=await supabaseClient.from('produto_acabamentos').insert(_ac.map(function(a,idx){return {produto_codigo:pa,materia_prima_id:a.materia_prima_id,ocupacao:a.ocupacao||0,fita_larg_mm:a.fita_larg_mm,fita_alt_mm:a.fita_alt_mm,valor_zinco:a.valor_zinco||0,ordem:idx+1};})); if(iac.error)throw iac.error; }
+    }
     var n=await materializarProduto(pa);
     fecharFicha();
     alert('Ficha salva. Operações materializadas em '+n+' OS.');
