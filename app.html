@@ -599,6 +599,8 @@ body.sb-collapsed .sb-badge{ display:none !important }
     <a class="sb-i" data-aba="materias" href="#" onclick="navAba('materias');return false" title="Matérias-primas"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 4-9 4-9-4z"/><path d="M3 12l9 4 9-4"/><path d="M3 17l9 4 9-4"/></svg><span>Matérias-primas</span></a>
     <a class="sb-i" data-aba="maquinas" href="#" onclick="navAba('maquinas');return false" title="Máquinas"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><rect x="4" y="9" width="16" height="8" rx="2"/><rect x="7" y="14" width="10" height="6"/></svg><span>Máquinas</span></a>
     <a class="sb-i" data-aba="custo" href="#" onclick="navAba('custo');return false" title="Custo"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M14.5 9a2.5 2 0 0 0-2.5-1.5c-1.4 0-2.5.9-2.5 2s1.1 1.7 2.5 2 2.5.9 2.5 2-1.1 2-2.5 2A2.5 2 0 0 1 9.5 15"/><line x1="12" y1="6" x2="12" y2="18"/></svg><span>Custo</span></a>
+    <a class="sb-i" data-aba="impostos" href="#" onclick="navAba('impostos');return false" title="Impostos"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="7.5" cy="7.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/></svg><span>Impostos</span></a>
+    <a class="sb-i" data-aba="clientes" href="#" onclick="navAba('clientes');return false" title="Clientes"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/><circle cx="17.5" cy="9" r="2"/><path d="M16 20a5 5 0 0 1 5.5-6"/></svg><span>Clientes</span></a>
     <a class="sb-i" data-aba="vendedores" href="#" onclick="navAba('vendedores');return false" title="Vendedores"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="3" y1="12" x2="21" y2="12"/></svg><span>Vendedores</span></a>
     <a class="sb-i" data-aba="usuarios" href="#" onclick="navAba('usuarios');return false" title="Usuários"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 5.5a3 3 0 0 1 0 5.8"/><path d="M21 20a6 6 0 0 0-4.5-5.8"/></svg><span>Usuários</span></a>
     <a class="sb-i" data-aba="historico" href="#" onclick="navAba('historico');return false" title="Histórico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><polyline points="3 4 3 9 8 9"/><polyline points="12 7 12 12 15 14"/></svg><span>Histórico</span></a>
@@ -962,6 +964,20 @@ function setSidebarAtivo(key){ try{ document.querySelectorAll('#side-nav [data-a
 <div id="custo-view" style="display:none">
   <div style="margin-bottom:10px"><h2 style="font-size:16px;margin:0">Custo</h2><div style="font-size:12px;color:var(--text3)">Parâmetros globais + simulador. Hora-máquina (R$/h) fica em Máquinas; acabamentos/ribbon/tinta nas Matérias-primas.</div></div>
   <div id="custo-conteudo"></div>
+</div>
+
+<div id="impostos-view" style="display:none">
+  <div style="margin-bottom:10px"><h2 style="font-size:16px;margin:0">Impostos</h2><div style="font-size:12px;color:var(--text3)">Impostos/taxas configuráveis (ex.: PIS/COFINS, IRRF) por posição + ICMS por UF. Usados no cálculo de margem. IPI fica fora (repassado).</div></div>
+  <div id="impostos-conteudo"></div>
+</div>
+
+<div id="clientes-view" style="display:none">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px">
+    <div><h2 style="font-size:16px;margin:0">Clientes</h2><div style="font-size:12px;color:var(--text3)">Base de clientes (UF + vendedor) para a margem. Importe do Excel (clientes + ICMS por estado).</div></div>
+    <div style="display:flex;gap:8px"><button class="btn-sec" onclick="document.getElementById('cli-file').click()">Importar Excel</button><input type="file" id="cli-file" accept=".xlsx,.xls" style="display:none" onchange="importarClientes(this)"></div>
+  </div>
+  <input id="cli-busca" placeholder="Buscar por código, nome, UF ou vendedor…" oninput="renderClientesLista()" style="width:100%;max-width:420px;padding:7px 9px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px;margin-bottom:10px">
+  <div id="clientes-conteudo"></div>
 </div>
 
 <div id="kpis-view" style="display:none">
@@ -1445,7 +1461,7 @@ function desligarRealtime(){
 // Mostra/esconde recursos conforme o papel do usuario.
 // ===================== PERMISSÕES POR PAPEL (flags; gestor edita na aba Permissões) =====================
 var _PERMS={}; // papel -> {chave:bool}
-var PERM_GESTOR_TABS=['categorias','vendedores','maquinas','materias','custo','usuarios','historico','listas','permissoes'];
+var PERM_GESTOR_TABS=['categorias','vendedores','maquinas','materias','custo','impostos','clientes','usuarios','historico','listas','permissoes'];
 function permDefault(papel,chave){
   if(chave.indexOf('ver_')===0){ var aba=chave.slice(4); return PERM_GESTOR_TABS.indexOf(aba)<0; } // só gestor nas abas de cadastro; demais visíveis
   if(chave==='acao_editar')return papel==='editor';
@@ -1462,7 +1478,7 @@ async function carregarPermissoes(){
   catch(e){}
 }
 var PERM_PAPEIS=[['editor','Editor'],['visualizador','Visualizador'],['visualizador_maquina','Operador'],['representante','Representante']];
-var PERM_ABAS=[['ver_painel','Painel de produção'],['ver_entregas','Entregas por data'],['ver_pendencias','Pendências'],['ver_kpis','KPIs'],['ver_fichas','Fichas técnicas'],['ver_materias','Matérias-primas'],['ver_custo','Custo'],['ver_maquinas','Máquinas'],['ver_vendedores','Vendedores'],['ver_usuarios','Usuários'],['ver_historico','Histórico'],['ver_listas','Listas']];
+var PERM_ABAS=[['ver_painel','Painel de produção'],['ver_entregas','Entregas por data'],['ver_pendencias','Pendências'],['ver_kpis','KPIs'],['ver_fichas','Fichas técnicas'],['ver_materias','Matérias-primas'],['ver_custo','Custo'],['ver_impostos','Impostos'],['ver_clientes','Clientes'],['ver_maquinas','Máquinas'],['ver_vendedores','Vendedores'],['ver_usuarios','Usuários'],['ver_historico','Histórico'],['ver_listas','Listas']];
 var PERM_ACOES=[['acao_editar','Editar programação / finalizar'],['acao_upload','Subir planilhas (upload)'],['acao_apontar','Apontar produção']];
 async function permSet(papel,chave,val){
   try{ var r=await supabaseClient.from('papel_permissoes').upsert({papel:papel,chave:chave,permitido:!!val},{onConflict:'papel,chave'}); if(r.error)throw r.error;
@@ -2309,6 +2325,12 @@ function mudarAba(aba){
   var cuv=document.getElementById('custo-view');
   if(cuv)cuv.style.display=aba==='custo'?'block':'none';
   if(aba==='custo'&&typeof renderCusto==='function')renderCusto();
+  var imv=document.getElementById('impostos-view');
+  if(imv)imv.style.display=aba==='impostos'?'block':'none';
+  if(aba==='impostos'&&typeof renderImpostos==='function')renderImpostos();
+  var clv=document.getElementById('clientes-view');
+  if(clv)clv.style.display=aba==='clientes'?'block':'none';
+  if(aba==='clientes'&&typeof renderClientes==='function')renderClientes();
   if(aba==='usuarios'){uAtualizarCampos();carregarListaUsuarios();}
   var ha=document.getElementById('header-acoes');
   if(ha)ha.style.display=(aba==='painel')?'flex':'none';
@@ -4185,6 +4207,120 @@ async function verFichaItem(pa,pedido,item){
     var box=o.querySelector('.modal-box'); if(box)box.innerHTML='<div class="ap-hint" style="white-space:pre-wrap">Não foi possível carregar a ficha.\n'+apEsc(e.message||e)+'</div><div style="margin-top:12px"><button class="btn-sec" onclick="fecharVerFicha()">Fechar</button></div>';
   }
 }
+// ===================== CLIENTES / PREÇOS DO PRODUTO (vínculo p/ margem) =====================
+var PPC={pa:'',prod:null,rows:[],conv:[]};
+function fecharPrecos(){ var o=document.getElementById('modal-precos'); if(o)o.style.display='none'; }
+function ppcUms(){ var set=[]; (PPC.conv||[]).forEach(function(c){ var u=(c.um||'').toUpperCase(); if(u&&set.indexOf(u)<0)set.push(u); }); ['UN','MI'].forEach(function(u){ if(set.indexOf(u)<0)set.push(u); }); return set; }
+function ppcUmSelect(id,val){ var v=(val||'MI').toUpperCase(); return '<select id="'+id+'" style="padding:5px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text)">'+ppcUms().map(function(u){return '<option value="'+apEsc(u)+'"'+(u===v?' selected':'')+'>'+apEsc(u)+'</option>';}).join('')+'</select>'; }
+function cliFantasia(c){ return c?((c.nome_reduzido||c.nome||'')):''; }
+function cliFantasiaPlain(cod){ var c=(CLIENTES_FISCAL||[]).filter(function(x){return String(x.cliente_codigo)===String(cod);})[0]; return c?(cliFantasia(c)+(c.uf?(' · '+c.uf):'')):''; }
+function ppcCliNome(cod){ var c=(CLIENTES_FISCAL||[]).filter(function(x){return String(x.cliente_codigo)===String(cod);})[0]; return c?apEsc(cliFantasia(c)+(c.uf?(' · '+c.uf):'')):''; }
+function ppcResolveCli(txt){
+  var s=(''+(txt||'')).trim(); if(!s)return null;
+  var cod=s.indexOf(' — ')>=0?s.split(' — ')[0].trim():s;
+  var c=(CLIENTES_FISCAL||[]).filter(function(x){return String(x.cliente_codigo)===String(cod);})[0];
+  if(c)return {cliente_codigo:String(c.cliente_codigo)};
+  // permite codigo digitado manualmente (sem FK)
+  return {cliente_codigo:cod};
+}
+async function abrirPrecosCliente(pa){
+  if(!window._podeEditar){ alert('Sem permissão.'); return; }
+  pa=(pa||'').trim(); PPC={pa:pa,prod:null,rows:[],conv:[]};
+  var o=document.getElementById('modal-precos');
+  if(!o){ o=document.createElement('div'); o.id='modal-precos'; o.className='modal-overlay'; o.style.display='none';
+    o.onclick=function(ev){ if(ev.target===o)fecharPrecos(); }; document.body.appendChild(o); }
+  o.innerHTML='<div class="modal-box" style="max-width:min(980px,96vw);width:100%"><div class="ap-hint">Carregando…</div></div>';
+  o.style.display='flex';
+  try{
+    PPC.prod=(await supabaseClient.from('produtos').select('codigo_pa,descricao').eq('codigo_pa',pa).maybeSingle()).data;
+    PPC.conv=(await supabaseClient.from('produto_conversoes').select('*').eq('produto_codigo',pa)).data||[];
+    if(!(CLIENTES_FISCAL&&CLIENTES_FISCAL.length)){ var rc=await supabaseClient.from('clientes_fiscal').select('*').order('nome'); if(!rc.error)CLIENTES_FISCAL=rc.data||[]; }
+    var rp=await supabaseClient.from('produto_preco_cliente').select('*').eq('produto_codigo',pa).order('id');
+    if(rp.error)throw rp.error;
+    PPC.rows=rp.data||[];
+    renderPrecosBody();
+  }catch(e){
+    var box=o.querySelector('.modal-box'); if(box)box.innerHTML='<div class="ap-hint" style="white-space:pre-wrap">Não foi possível carregar.\nAplique o 32_margem.sql + 33_margem_impostos.sql e recarregue.\n'+apEsc(e.message||e)+'</div><div style="margin-top:12px"><button class="btn-sec" onclick="fecharPrecos()">Fechar</button></div>';
+  }
+}
+function renderPrecosBody(){
+  var o=document.getElementById('modal-precos'); if(!o)return;
+  var pa=PPC.pa, p=PPC.prod;
+  var head='<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px">'+
+    '<div><h3 style="margin:0;font-size:16px">Clientes e preços</h3>'+
+    '<div style="font-size:12px;color:var(--text3)">'+apEsc(pa)+(p&&p.descricao?(' · '+apEsc(p.descricao)):'')+'</div></div>'+
+    '<button class="carr-x" onclick="fecharPrecos()">✕</button></div>';
+  var dl='';
+  var th='<thead><tr style="color:var(--text3);font-size:11px;text-transform:uppercase"><th style="text-align:left;padding:4px 6px">Cliente</th><th style="padding:4px 6px">Preço (R$)</th><th style="padding:4px 6px">Por</th><th style="padding:4px 6px">Com nota</th><th style="padding:4px 6px">Comissão %</th><th style="padding:4px 6px"></th></tr></thead>';
+  var rows=(PPC.rows||[]).map(function(r){
+    var nome=ppcCliNome(r.cliente_codigo)||('<span style="color:var(--text3)">(cód. não encontrado)</span>');
+    return '<tr>'+
+      '<td style="padding:4px 6px"><b>'+apEsc(r.cliente_codigo)+'</b><div style="font-size:11px;color:var(--text3)">'+nome+'</div></td>'+
+      '<td style="padding:4px 6px"><input id="ppc-preco-'+r.id+'" type="number" step="0.0001" value="'+apEsc(r.preco)+'" style="width:100px;padding:5px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text)"></td>'+
+      '<td style="padding:4px 6px">'+ppcUmSelect('ppc-um-'+r.id,r.preco_um)+'</td>'+
+      '<td style="padding:4px 6px;text-align:center"><input id="ppc-nota-'+r.id+'" type="checkbox" '+(r.com_nota?'checked':'')+'></td>'+
+      '<td style="padding:4px 6px"><input id="ppc-com-'+r.id+'" type="number" step="0.01" value="'+apEsc(r.comissao_pct||0)+'" style="width:72px;padding:5px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text)"></td>'+
+      '<td style="padding:4px 6px;white-space:nowrap"><button class="btn-sec" onclick="ppcSalvar('+r.id+')">Salvar</button> <button class="btn-sec" onclick="ppcRemover('+r.id+')">✕</button></td>'+
+    '</tr>';
+  }).join('');
+  if(!(PPC.rows||[]).length) rows='<tr><td colspan="6" style="padding:10px;color:var(--text3)">Nenhum cliente vinculado a este produto.</td></tr>';
+  var tabela='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">'+th+'<tbody>'+rows+'</tbody></table></div>';
+  var addForm='<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">'+
+    '<div style="font-weight:600;font-size:13px;margin-bottom:6px">Adicionar cliente</div>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end">'+
+      '<div style="min-width:260px"><div style="font-size:11px;color:var(--text3)">Cliente (nome ou código)</div>'+
+        '<input id="ppc-add-cli" autocomplete="off" placeholder="digite para buscar…" oninput="ppcCliBusca()" style="width:260px;padding:6px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text)">'+
+        '<input type="hidden" id="ppc-add-cli-cod">'+
+        '<div id="ppc-add-cli-res" style="display:none;margin-top:4px;max-height:220px;overflow:auto;border:1px solid var(--border);border-radius:8px;background:var(--card)"></div></div>'+
+      '<div><div style="font-size:11px;color:var(--text3)">Preço (R$)</div><input id="ppc-add-preco" type="number" step="0.0001" style="width:100px;padding:6px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text)"></div>'+
+      '<div><div style="font-size:11px;color:var(--text3)">Por</div>'+ppcUmSelect('ppc-add-um','MI')+'</div>'+
+      '<div style="text-align:center"><div style="font-size:11px;color:var(--text3)">Com nota</div><input id="ppc-add-nota" type="checkbox" checked style="margin-top:8px"></div>'+
+      '<div><div style="font-size:11px;color:var(--text3)">Comissão %</div><input id="ppc-add-com" type="number" step="0.01" value="0" style="width:72px;padding:6px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text)"></div>'+
+      '<button class="btn-primary" onclick="ppcAdd()">Adicionar</button>'+
+    '</div>'+(!(CLIENTES_FISCAL&&CLIENTES_FISCAL.length)?'<div class="ap-hint" style="margin-top:8px">Nenhum cliente importado ainda — use a aba <b>Clientes</b> para importar, ou digite o código manualmente.</div>':'')+
+  '</div>';
+  o.querySelector('.modal-box').innerHTML=head+dl+tabela+addForm;
+}
+async function ppcSalvar(id){
+  if(!window._podeEditar)return;
+  var pr=Number((document.getElementById('ppc-preco-'+id)||{}).value)||0;
+  var nt=!!((document.getElementById('ppc-nota-'+id)||{}).checked);
+  var cm=Number((document.getElementById('ppc-com-'+id)||{}).value)||0;
+  var um=((document.getElementById('ppc-um-'+id)||{}).value)||'MI';
+  try{ var r=await supabaseClient.from('produto_preco_cliente').update({preco:pr,preco_um:um,com_nota:nt,comissao_pct:cm,atualizado_em:new Date().toISOString()}).eq('id',id); if(r.error)throw r.error; abrirPrecosCliente(PPC.pa); }
+  catch(e){ alert('Não foi possível salvar.\n'+(e.message||e)); }
+}
+async function ppcRemover(id){
+  if(!window._podeEditar)return; if(!confirm('Remover este vínculo de cliente/preço?'))return;
+  try{ var r=await supabaseClient.from('produto_preco_cliente').delete().eq('id',id); if(r.error)throw r.error; abrirPrecosCliente(PPC.pa); }
+  catch(e){ alert('Não foi possível remover.\n'+(e.message||e)); }
+}
+async function ppcAdd(){
+  if(!window._podeEditar)return;
+  var cod=((document.getElementById('ppc-add-cli-cod')||{}).value||'').trim();
+  var cli=cod?{cliente_codigo:cod}:ppcResolveCli((document.getElementById('ppc-add-cli')||{}).value);
+  if(!cli||!cli.cliente_codigo){ alert('Informe o cliente (nome ou código).'); return; }
+  var pr=Number((document.getElementById('ppc-add-preco')||{}).value)||0;
+  var nt=!!((document.getElementById('ppc-add-nota')||{}).checked);
+  var cm=Number((document.getElementById('ppc-add-com')||{}).value)||0;
+  var um=((document.getElementById('ppc-add-um')||{}).value)||'MI';
+  try{
+    var r=await supabaseClient.from('produto_preco_cliente').upsert({produto_codigo:PPC.pa,cliente_codigo:cli.cliente_codigo,preco:pr,preco_um:um,com_nota:nt,comissao_pct:cm,atualizado_em:new Date().toISOString()},{onConflict:'produto_codigo,cliente_codigo'});
+    if(r.error)throw r.error; abrirPrecosCliente(PPC.pa);
+  }catch(e){ alert('Não foi possível adicionar.\n'+(e.message||e)); }
+}
+function ppcCliBusca(){
+  var inp=document.getElementById('ppc-add-cli'), res=document.getElementById('ppc-add-cli-res'), h=document.getElementById('ppc-add-cli-cod'); if(!inp||!res)return;
+  if(h)h.value='';
+  var q=(inp.value||'').toLowerCase().trim();
+  var lista=(CLIENTES_FISCAL||[]);
+  if(q)lista=lista.filter(function(c){ return [c.cliente_codigo,c.nome,c.nome_reduzido].some(function(v){return (''+(v||'')).toLowerCase().indexOf(q)>=0;}); });
+  lista=lista.slice(0,40);
+  if(!q||!lista.length){ res.style.display='none'; res.innerHTML=''; return; }
+  res.innerHTML=lista.map(function(c){ var lab=c.cliente_codigo+' · '+cliFantasia(c)+(c.uf?(' ('+c.uf+')'):''); return '<div style="padding:6px 9px;cursor:pointer;border-bottom:1px solid var(--border);font-size:13px" onmousedown="ppcCliPick('+jsAttr(String(c.cliente_codigo))+','+jsAttr(lab)+')">'+apEsc(lab)+'</div>'; }).join('');
+  res.style.display='block';
+}
+function ppcCliPick(cod,lab){ var inp=document.getElementById('ppc-add-cli'), h=document.getElementById('ppc-add-cli-cod'), res=document.getElementById('ppc-add-cli-res'); if(inp)inp.value=lab; if(h)h.value=cod; if(res){res.style.display='none';res.innerHTML='';} }
 async function abrirConfigOS(pedido,item){
   try{
     var od=(await supabaseClient.from('ordens').select('*').eq('pedido',pedido).eq('item',item).maybeSingle()).data;
@@ -5266,8 +5402,10 @@ function fichaMPOptions(sel){
   var cur=(sel!=null?String(sel):'');
   var opts='<option value="">— sem matéria-prima —</option>';
   (MATERIAS_PRIMAS||[]).forEach(function(mp){
-    if(mp.ativo===false && String(mp.id)!==cur)return;
-    opts+='<option value="'+apEsc(mp.id)+'"'+(String(mp.id)===cur?' selected':'')+'>'+apEsc(mp.nome)+(mp.fornecedor?(' · '+apEsc(mp.fornecedor)):'')+(mp.ativo===false?' (inativo)':'')+'</option>';
+    var isCur=String(mp.id)===cur;
+    if(mp.tipo && mp.tipo!=='substrato' && !isCur)return;   // só substratos (e o selecionado atual, p/ não perder)
+    if(mp.ativo===false && !isCur)return;
+    opts+='<option value="'+apEsc(mp.id)+'"'+(isCur?' selected':'')+'>'+apEsc(mp.nome)+(mp.fornecedor?(' · '+apEsc(mp.fornecedor)):'')+(mp.ativo===false?' (inativo)':'')+'</option>';
   });
   return opts;
 }
@@ -5289,9 +5427,11 @@ function fichaRibbonOptions(sel){
 // ---- Acabamentos aplicados ao produto (produto_acabamentos) ----
 async function carregarFichaAcab(pa){
   if(!window._mpTipoReady)return [];
+  if(window._acabClicheReady===undefined){ try{ var pr=await supabaseClient.from('produto_acabamentos').select('cliche_carreiras').limit(1); window._acabClicheReady=!(pr&&pr.error); }catch(e){ window._acabClicheReady=false; } }
   var r=await supabaseClient.from('produto_acabamentos').select('*').eq('produto_codigo',pa).order('ordem');
   if(!r||r.error)return [];
-  return (r.data||[]).map(function(a){return {materia_prima_id:a.materia_prima_id,ocupacao:a.ocupacao,fita_larg_mm:a.fita_larg_mm,fita_alt_mm:a.fita_alt_mm,valor_zinco:a.valor_zinco};});
+  return (r.data||[]).map(function(a){return {materia_prima_id:a.materia_prima_id,ocupacao:a.ocupacao,fita_larg_mm:a.fita_larg_mm,fita_alt_mm:a.fita_alt_mm,valor_zinco:a.valor_zinco,
+    cliche_carreiras:a.cliche_carreiras,cliche_repeticoes:a.cliche_repeticoes,cliche_espaco:a.cliche_espaco,cliche_esqueleto:a.cliche_esqueleto};});
 }
 function fichaAcabOptions(){ return (MATERIAS_PRIMAS||[]).filter(function(m){return ['verniz','laminacao','stamping'].indexOf(m.tipo)>=0 && m.ativo!==false;}); }
 function fichaAcabAddOptions(){ return fichaAcabOptions().map(function(m){return '<option value="'+m.id+'">'+apEsc((MPTIPO_LABEL[m.tipo]||m.tipo)+': '+m.nome+(m.fornecedor?(' · '+m.fornecedor):''))+'</option>';}).join(''); }
@@ -5308,14 +5448,23 @@ function renderFichaAcab(){
       params+='<span class="ap-hint">Fita L×A (mm)</span><input class="ap-input" type="number" step="0.01" style="width:66px" value="'+apEsc(a.fita_larg_mm!=null?a.fita_larg_mm:'')+'" onchange="FICHA_ACAB['+i+'].fita_larg_mm=parseFloat(this.value)||0"> × <input class="ap-input" type="number" step="0.01" style="width:66px" value="'+apEsc(a.fita_alt_mm!=null?a.fita_alt_mm:'')+'" onchange="FICHA_ACAB['+i+'].fita_alt_mm=parseFloat(this.value)||0">';
       if(mp.gera_zinco){ params+='<span class="ap-hint">Zinco (R$)</span><input class="ap-input" type="number" step="0.01" style="width:90px" value="'+apEsc(a.valor_zinco!=null?a.valor_zinco:0)+'" onchange="FICHA_ACAB['+i+'].valor_zinco=parseFloat(this.value)||0">'; }
     }
-    return '<div class="f-row" style="margin-bottom:6px;flex-wrap:wrap;gap:8px;align-items:center">'+nome+params+'<button class="ap-btn-sec" onclick="FICHA_ACAB.splice('+i+',1);renderFichaAcab()">remover</button></div>';
+    // Layout do CLICHÊ deste acabamento (stamping/verniz localizado). Vazio = usa a geometria do produto.
+    var cliche='';
+    if(mp.gera_cliche && window._acabClicheReady){
+      cliche='<div style="flex-basis:100%;height:0"></div><span class="ap-hint">Clichê deste acabamento — carr</span>'+
+        '<input class="ap-input" type="number" min="1" placeholder="produto" style="width:62px" value="'+apEsc(a.cliche_carreiras!=null?a.cliche_carreiras:'')+'" onchange="FICHA_ACAB['+i+'].cliche_carreiras=this.value===\'\'?null:(parseInt(this.value)||null)">'+
+        '<span class="ap-hint">rep</span><input class="ap-input" type="number" min="1" placeholder="produto" style="width:62px" value="'+apEsc(a.cliche_repeticoes!=null?a.cliche_repeticoes:'')+'" onchange="FICHA_ACAB['+i+'].cliche_repeticoes=this.value===\'\'?null:(parseInt(this.value)||null)">'+
+        '<span class="ap-hint">espaço (mm)</span><input class="ap-input" type="number" step="0.01" placeholder="produto" style="width:76px" value="'+apEsc(a.cliche_espaco!=null?a.cliche_espaco:'')+'" onchange="FICHA_ACAB['+i+'].cliche_espaco=this.value===\'\'?null:(parseFloat(this.value)||0)">'+
+        '<span class="ap-hint">esqueleto (mm)</span><input class="ap-input" type="number" step="0.01" placeholder="produto" style="width:76px" value="'+apEsc(a.cliche_esqueleto!=null?a.cliche_esqueleto:'')+'" onchange="FICHA_ACAB['+i+'].cliche_esqueleto=this.value===\'\'?null:(parseFloat(this.value)||0)">';
+    }
+    return '<div class="f-row" style="margin-bottom:6px;flex-wrap:wrap;gap:8px;align-items:center">'+nome+params+cliche+'<button class="ap-btn-sec" onclick="FICHA_ACAB.splice('+i+',1);renderFichaAcab()">remover</button></div>';
   }).join('');
 }
 function fichaAddAcab(){
   var sel=document.getElementById('f-nacab'); if(!sel||!sel.value)return;
   var id=Number(sel.value);
   if(FICHA_ACAB.some(function(a){return String(a.materia_prima_id)===String(id);})){ alert('Esse acabamento já foi adicionado.'); return; }
-  FICHA_ACAB.push({materia_prima_id:id,ocupacao:0,fita_larg_mm:null,fita_alt_mm:null,valor_zinco:0});
+  FICHA_ACAB.push({materia_prima_id:id,ocupacao:0,fita_larg_mm:null,fita_alt_mm:null,valor_zinco:0,cliche_carreiras:null,cliche_repeticoes:null,cliche_espaco:null,cliche_esqueleto:null});
   sel.value=''; renderFichaAcab();
 }
 // ===================== MOTOR DE CUSTO =====================
@@ -5390,7 +5539,8 @@ function custoAcabsNorm(lista){
     var mp=(MATERIAS_PRIMAS||[]).filter(function(x){return String(x.id)===String(pa.materia_prima_id);})[0]; if(!mp)return null;
     var tc=(mp.tipo==='laminacao')?'filme':(mp.tipo==='stamping')?'stamping':'verniz';
     return {nome:mp.nome,tipo_calculo:tc,valor_m2:mp.valor_m2,gramatura:mp.gramatura,preco_kg:mp.preco_kg,setup_m:mp.setup_m,icms_pct:mp.icms_pct,
-      gera_cliche:mp.gera_cliche,gera_zinco:mp.gera_zinco,ocupacao:pa.ocupacao,fita_larg_mm:pa.fita_larg_mm,fita_alt_mm:pa.fita_alt_mm,valor_zinco:pa.valor_zinco};
+      gera_cliche:mp.gera_cliche,gera_zinco:mp.gera_zinco,ocupacao:pa.ocupacao,fita_larg_mm:pa.fita_larg_mm,fita_alt_mm:pa.fita_alt_mm,valor_zinco:pa.valor_zinco,
+      cliche_carreiras:pa.cliche_carreiras,cliche_repeticoes:pa.cliche_repeticoes,cliche_espaco:pa.cliche_espaco,cliche_esqueleto:pa.cliche_esqueleto};
   }).filter(Boolean);
 }
 function custoProduto(prod,etapas,conv,acabs,qtd,um){
@@ -5410,17 +5560,27 @@ function custoProduto(prod,etapas,conv,acabs,qtd,um){
   var metrosRodar=prm?((Number(prm.qtdRodar)||0)+(Number(prm.est.desp)||0)):0;
   var m2=metrosRodar*(larS/1000);                             // area do substrato rodado (larg. do substrato)
   // ---- FIXOS ----
-  var largCm=Math.floor((larE*refCarr+(Number(prod.espaco_carreiras)||0)*(refCarr-1)+(Number(prod.esqueleto_lateral)||0))/10)+4;
-  var altCm =Math.round(((alt+gap)*refRep)/10)+4;
-  var areaCliche=Math.max(0,largCm)*Math.max(0,altCm);
+  var pCliche=custoClichePreco();
+  function clicheGeo(carr,rep,esp,esq){ var lc=Math.max(0,Math.floor((larE*carr+esp*(carr-1)+esq)/10)+4); var ac=Math.max(0,Math.round(((alt+gap)*rep)/10)+4); return {lc:lc,ac:ac,area:lc*ac}; }
+  var prodGeo=clicheGeo(refCarr,refRep,Number(prod.espaco_carreiras)||0,Number(prod.esqueleto_lateral)||0);
   var corCliche=(prod.chapado||imp!=='flexo')?0:cores;       // digital/sem NAO gera cliche de cor
-  var nCliche=corCliche+acabs.filter(function(a){return a.gera_cliche;}).length;
-  var cCliche=areaCliche*custoClichePreco()*nCliche;
+  var linhas=[];
+  var nCliche=0, cCliche=0;
+  if(corCliche>0){ var ccCor=prodGeo.area*pCliche*corCliche; nCliche+=corCliche; cCliche+=ccCor; linhas.push({g:'fix',label:'Clichê de cor ('+corCliche+'× · '+apFmt(prodGeo.lc)+'×'+apFmt(prodGeo.ac)+' cm)',tipo:'F',unid:'un',qtd:corCliche,custo:prodGeo.area*pCliche,total:ccCor}); }
+  // Cada acabamento que gera clichê (cold stamping / verniz localizado) usa a SUA PROPRIA
+  // geometria (carreiras/repeticoes/espaco/esqueleto do acabamento); cai p/ a do produto se vazio.
+  acabs.forEach(function(a){ if(!a.gera_cliche)return;
+    var carr=Math.max(1,Number(a.cliche_carreiras)||refCarr);
+    var rep=Math.max(1,Number(a.cliche_repeticoes)||refRep);
+    var esp=(a.cliche_espaco!=null&&a.cliche_espaco!=='')?Number(a.cliche_espaco):(Number(prod.espaco_carreiras)||0);
+    var esq=(a.cliche_esqueleto!=null&&a.cliche_esqueleto!=='')?Number(a.cliche_esqueleto):(Number(prod.esqueleto_lateral)||0);
+    var gg=clicheGeo(carr,rep,esp,esq); var cc=gg.area*pCliche; nCliche+=1; cCliche+=cc;
+    linhas.push({g:'fix',label:'Clichê · '+(a.nome||'acabamento')+' ('+apFmt(gg.lc)+'×'+apFmt(gg.ac)+' cm)',tipo:'F',unid:'un',qtd:1,custo:cc,total:cc});
+  });
+  var largCm=prodGeo.lc, altCm=prodGeo.ac, areaCliche=prodGeo.area;
   var cFaca=Number(prod.custo_faca)||0;
   var cZinco=acabs.reduce(function(s,a){return s+(a.gera_zinco?(Number(a.valor_zinco)||0):0);},0);
   var fixo=cCliche+cFaca+cZinco;
-  var linhas=[];
-  if(cCliche>0)linhas.push({g:'fix',label:'Clichê ('+nCliche+'× · '+apFmt(largCm)+'×'+apFmt(altCm)+' cm)',tipo:'F',unid:'un',qtd:nCliche,custo:(nCliche>0?cCliche/nCliche:0),total:cCliche});
   if(cFaca>0)linhas.push({g:'fix',label:'Faca',tipo:'F',unid:'un',qtd:1,custo:cFaca,total:cFaca});
   if(cZinco>0)linhas.push({g:'fix',label:'Zinco (hot stamping)',tipo:'F',unid:'un',qtd:1,custo:cZinco,total:cZinco});
   // ---- VARIAVEIS ----
@@ -5528,14 +5688,18 @@ async function renderCusto(){
   var grid='display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px';
   var lab='display:flex;flex-direction:column;font-size:12px;color:var(--text3);gap:3px';
   var inp='padding:7px 9px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px';
-  var prods=(await supabaseClient.from('produtos').select('codigo_pa,descricao').order('codigo_pa')).data||[];
-  var opts=prods.map(function(p){return '<option value="'+apEsc(p.codigo_pa+' · '+(p.descricao||''))+'"></option>';}).join('');
+  SIM_PRODS=(await supabaseClient.from('produtos').select('codigo_pa,descricao').order('codigo_pa')).data||[];
   el.innerHTML=
     '<div class="ap-hint" style="margin-bottom:10px">Clichê, tinta, substrato, laminação, ribbon e acabamentos são cadastrados nas <b>Matérias-primas</b> (por tipo). O <b>R$/h por sub-máquina</b> fica em <b>Máquinas</b>; a <b>sub-máquina de custo</b> por etapa é definida na <b>ficha</b> do produto.</div>'+
-    '<div style="'+card+'"><div style="font-weight:600;margin-bottom:8px">Simulador</div>'+
-      '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><input id="sim-pa" list="sim-pa-list" placeholder="digite o código ou a descrição" style="'+inp+';min-width:300px"><datalist id="sim-pa-list">'+opts+'</datalist>'+
-      '<input id="sim-qtd" style="'+inp+';width:110px" type="number" value="1000"><select id="sim-um" style="'+inp+';width:90px"><option>UN</option><option>MI</option></select>'+
-      '<button class="btn-primary" onclick="custoSimular()">Calcular</button></div>'+
+    '<div style="'+card+'"><div style="font-weight:600;margin-bottom:8px">Simulador de custo e margem</div>'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'+
+        '<input id="sim-pa" autocomplete="off" placeholder="digite o código ou a descrição" style="'+inp+';min-width:300px" oninput="simPaBusca()">'+
+        '<input type="hidden" id="sim-pa-cod">'+
+        '<input id="sim-qtd" style="'+inp+';width:110px" type="number" value="1000" onchange="custoSimular()"><select id="sim-um" style="'+inp+';width:90px" onchange="custoSimular()"><option>UN</option><option>MI</option></select>'+
+        '<span id="sim-cli-wrap"></span>'+
+        '<button class="btn-primary" onclick="custoSimular()">Calcular</button></div>'+
+      '<div id="sim-pa-res" style="display:none;margin-top:6px;max-height:260px;overflow:auto;border:1px solid var(--border);border-radius:8px;background:var(--card);max-width:520px"></div>'+
+      '<div class="ap-hint" style="margin-top:6px">Digite para buscar o produto; escolha um cliente para ver preço, impostos e margem (preços no botão <b>Clientes/Preços</b> da ficha).</div>'+
       '<div id="sim-res" style="margin-top:10px"></div></div>';
 }
 async function salvarCustoParam(campo,val){
@@ -5544,17 +5708,220 @@ async function salvarCustoParam(campo,val){
   try{ var r=await supabaseClient.from('custo_parametros').update(p).eq('id',1); if(r.error)throw r.error; if(CUSTO_PARAMS)CUSTO_PARAMS[campo]=p[campo]; }
   catch(e){ alert('Não foi possível salvar o parâmetro.\n'+(e.message||e)); }
 }
+// Simulador UNIFICADO de custo + margem (produto x cliente). Carrega os dados do produto
+// (e os vinculos de preco) ao escolher o produto; recalcula custo ao mudar qtd/UM e a
+// margem ao escolher o cliente. O painel e UM so: custo detalhado -> impostos -> margem.
+var MARGEM={pa:'',prod:null,etapas:[],conv:[],acab:[],vinc:[]};
+var SIM_PRODS=[];
+function custoCliLabel(cod){ var nm=cliFantasiaPlain(cod); return cod+(nm?(' · '+nm):''); }
+function simPaBuscaHide(){ var r=document.getElementById('sim-pa-res'); if(r)r.style.display='none'; }
+function simPaBusca(){
+  var inp=document.getElementById('sim-pa'), res=document.getElementById('sim-pa-res'), h=document.getElementById('sim-pa-cod'); if(!inp||!res)return;
+  if(h)h.value='';
+  var q=(inp.value||'').toLowerCase().trim();
+  var lista=SIM_PRODS||[];
+  if(q)lista=lista.filter(function(p){ return (''+(p.codigo_pa||'')).toLowerCase().indexOf(q)>=0 || (''+(p.descricao||'')).toLowerCase().indexOf(q)>=0; });
+  lista=lista.slice(0,40);
+  if(!q||!lista.length){ res.style.display='none'; res.innerHTML=''; return; }
+  res.innerHTML=lista.map(function(p){ var lab=p.codigo_pa+' · '+(p.descricao||''); return '<div style="padding:6px 9px;cursor:pointer;border-bottom:1px solid var(--border);font-size:13px" onmousedown="simPaPick('+jsAttr(String(p.codigo_pa))+','+jsAttr(lab)+')">'+apEsc(lab)+'</div>'; }).join('');
+  res.style.display='block';
+}
+function simPaPick(cod,lab){ var inp=document.getElementById('sim-pa'), h=document.getElementById('sim-pa-cod'), res=document.getElementById('sim-pa-res'); if(inp)inp.value=lab; if(h)h.value=cod; if(res){res.style.display='none';res.innerHTML='';} custoCarregarProduto(); }
+async function custoCarregarProduto(){
+  var cod=((document.getElementById('sim-pa-cod')||{}).value||'').trim();
+  var raw=((document.getElementById('sim-pa')||{}).value)||''; var pa=cod||raw.split(' · ')[0].trim();
+  var wrap=document.getElementById('sim-cli-wrap'), res=document.getElementById('sim-res');
+  if(res)res.innerHTML='';
+  if(!pa){ if(wrap)wrap.innerHTML=''; MARGEM={pa:'',prod:null,etapas:[],conv:[],acab:[],vinc:[]}; return; }
+  if(wrap)wrap.innerHTML='<span class="ap-hint" style="align-self:center">carregando…</span>';
+  try{
+    await ensureCustoData(); await ensureImpostos();
+    MARGEM.pa=pa;
+    MARGEM.prod=(await supabaseClient.from('produtos').select('*').eq('codigo_pa',pa).maybeSingle()).data||{};
+    MARGEM.etapas=(await supabaseClient.from('produto_etapas').select('*').eq('produto_codigo',pa).order('ordem')).data||[];
+    MARGEM.conv=(await supabaseClient.from('produto_conversoes').select('*').eq('produto_codigo',pa)).data||[];
+    MARGEM.acab=custoAcabsNorm(await carregarFichaAcab(pa));
+    if(!(CLIENTES_FISCAL&&CLIENTES_FISCAL.length)){ var rc=await supabaseClient.from('clientes_fiscal').select('*').order('nome'); if(!rc.error)CLIENTES_FISCAL=rc.data||[]; }
+    var rv=await supabaseClient.from('produto_preco_cliente').select('*').eq('produto_codigo',pa).order('id'); MARGEM.vinc=(rv&&!rv.error&&rv.data)||[];
+    var inp='padding:7px 9px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px';
+    if(MARGEM.vinc.length){
+      wrap.innerHTML='<select id="sim-cli" style="'+inp+';min-width:240px" onchange="custoSimular()"><option value="">— só custo —</option>'+MARGEM.vinc.map(function(v,i){return '<option value="'+i+'">'+apEsc(custoCliLabel(v.cliente_codigo))+'</option>';}).join('')+'</select>';
+    }else{ wrap.innerHTML='<span class="ap-hint" style="align-self:center">sem preço/cliente</span>'; }
+    custoSimular();
+  }catch(e){ if(wrap)wrap.innerHTML=''; if(res)res.innerHTML='<div class="ap-hint" style="white-space:pre-wrap">Não foi possível carregar.\nAplique 31_ a 35_ e recarregue.\n'+apEsc(e.message||e)+'</div>'; }
+}
 async function custoSimular(){
-  var raw=((document.getElementById('sim-pa')||{}).value)||''; var pa=raw.split(' · ')[0].trim(); if(!pa){alert('Escolha um produto.');return;}
+  var cod=((document.getElementById('sim-pa-cod')||{}).value||'').trim();
+  var raw=((document.getElementById('sim-pa')||{}).value)||''; var pa=cod||raw.split(' · ')[0].trim(); if(!pa){alert('Escolha um produto.');return;}
+  if(pa!==MARGEM.pa){ await custoCarregarProduto(); return; }
   var qtd=parseFloat((document.getElementById('sim-qtd')||{}).value)||0, um=(document.getElementById('sim-um')||{}).value||'UN';
-  var box=document.getElementById('sim-res'); if(box)box.innerHTML='<div class="ap-hint">Calculando…</div>';
-  await ensureCustoData();
-  var prod=(await supabaseClient.from('produtos').select('*').eq('codigo_pa',pa).maybeSingle()).data||{};
-  var etapas=(await supabaseClient.from('produto_etapas').select('*').eq('produto_codigo',pa).order('ordem')).data||[];
-  var conv=(await supabaseClient.from('produto_conversoes').select('*').eq('produto_codigo',pa)).data||[];
-  var acab=custoAcabsNorm(await carregarFichaAcab(pa));
-  var r=custoProduto(prod,etapas,conv,acab,qtd,um);
-  if(box)box.innerHTML=custoResumoHtml(r,'Custo · '+apEsc(pa)+' · '+apFmt(qtd)+' '+apEsc(um));
+  var box=document.getElementById('sim-res'); if(!box)return;
+  var r=custoProduto(MARGEM.prod,MARGEM.etapas,MARGEM.conv,MARGEM.acab,qtd,um);
+  var html=custoResumoHtml(r,'Custo · '+apEsc(pa)+' · '+apFmt(qtd)+' '+apEsc(um));
+  var ci=(document.getElementById('sim-cli')||{}).value;
+  if(ci!=='' && ci!=null){ var v=MARGEM.vinc[parseInt(ci)]; if(v)html+=margemBlocoHtml(r,v,qtd,um); }
+  box.innerHTML=html;
+}
+// Bloco de impostos + preco + margem (custo detalhado ja vem acima, via custoResumoHtml).
+function margemBlocoHtml(r,v,qtd,um){
+  var et=r.etiquetas||0;
+  var creditoICMS=(r.linhas||[]).reduce(function(a,x){return a+(x.icms||0);},0);
+  var custoLiq=(r.totalPedido||0)-creditoICMS;
+  var fatPreco=fatorConvFicha(MARGEM.conv,v.preco_um)||0;
+  var unidPreco=fatPreco>0?(et/fatPreco):0;
+  var receita=(Number(v.preco)||0)*unidPreco;
+  var comNota=!!v.com_nota, comissao=Number(v.comissao_pct)||0;
+  var cli=(CLIENTES_FISCAL||[]).filter(function(x){return String(x.cliente_codigo)===String(v.cliente_codigo);})[0]||{};
+  var uf=cli.uf||'';
+  var icmsUF=comNota?(Number((IMPOSTO_UF.filter(function(x){return x.uf===uf;})[0]||{}).icms_pct)||0):0;
+  var taxasApos=comNota?IMPOSTO_TAXA.filter(function(t){return t.ativo!==false&&t.posicao==='apos';}):[];
+  var taxasFinal=comNota?IMPOSTO_TAXA.filter(function(t){return t.ativo!==false&&t.posicao!=='apos';}):[];
+  var apos=taxasApos.reduce(function(a,t){return a+(Number(t.aliquota)||0);},0);
+  var finalPct=taxasFinal.reduce(function(a,t){return a+(Number(t.aliquota)||0);},0)+icmsUF+comissao;
+  var row=function(lbl,val,strong){ return '<tr'+(strong?' style="font-weight:700"':'')+'><td class="l">'+lbl+'</td><td>'+val+'</td></tr>'; };
+  var head='<style>.mgT{width:100%;border-collapse:collapse;font-size:13px;margin-top:14px}.mgT td{padding:4px 8px;border-bottom:1px solid var(--border);text-align:right}.mgT td.l{text-align:left}.mgT .h td{background:var(--bg,rgba(0,0,0,.04));font-weight:700;color:var(--text3);text-transform:uppercase;font-size:11px}</style>';
+  if((1-apos/100)<=0){ return head+'<div class="ap-hint" style="margin-top:12px">As alíquotas "após os custos" somam ≥ 100% ('+apFmt(apos)+'%). Revise os impostos — não dá para apurar "por dentro".</div>'; }
+  // "Apos os custos" (PIS/COFINS): por dentro sobre o CUSTO (base = custo reajustado).
+  var subtotal1=custoLiq/(1-apos/100);
+  // "No final" (ICMS, IRRF, frete, comissao...): incidem sobre a RECEITA da venda.
+  var finalTotal=receita*(finalPct/100);
+  var resultado=subtotal1+finalTotal;
+  var margem=receita-resultado, margemPct=receita>0?(margem/receita*100):0;
+  var html=head+'<div class="f-sub">Impostos e margem · '+apEsc(custoCliLabel(v.cliente_codigo))+'</div><table class="mgT"><tbody>';
+  html+=row('Custo líquido (base)', cBRL(custoLiq), true);
+  if(!comNota)html+='<tr><td class="l" colspan="2" style="color:var(--text3);font-style:italic">Venda SEM nota — impostos zerados (comissão continua).</td></tr>';
+  if(taxasApos.length){ html+='<tr class="h"><td class="l" colspan="2">Após os custos (por dentro, sobre o custo)</td></tr>';
+    taxasApos.forEach(function(t){ html+=row(apEsc(t.nome)+' ('+apFmt(t.aliquota)+'%)', cBRL(subtotal1*(Number(t.aliquota)||0)/100)); }); }
+  html+='<tr class="h"><td class="l" colspan="2">No final (sobre a receita da venda)</td></tr>';
+  taxasFinal.forEach(function(t){ html+=row(apEsc(t.nome)+' ('+apFmt(t.aliquota)+'%)', cBRL(receita*(Number(t.aliquota)||0)/100)); });
+  if(comNota)html+=row('ICMS '+apEsc(uf||'?')+' ('+apFmt(icmsUF)+'%)', cBRL(receita*icmsUF/100));
+  html+=row('Comissão ('+apFmt(comissao)+'%)', cBRL(receita*comissao/100));
+  html+=row('Resultado (custo + impostos)', cBRL(resultado), true);
+  html+='<tr class="h"><td class="l" colspan="2">Preço e margem</td></tr>';
+  html+=row('Receita ('+cBRL(v.preco)+' / '+apEsc(v.preco_um)+' × '+apFmt(unidPreco)+' '+apEsc(v.preco_um)+')', '<b>'+cBRL(receita)+'</b>');
+  html+=row('<b>Margem</b>', '<b style="color:'+(margem>=0?'var(--accent)':'#c0392b')+'">'+cBRL(margem)+' · '+apFmt(margemPct)+'%</b>', false);
+  html+='</tbody></table>';
+  html+='<div class="ap-hint" style="margin-top:6px">PIS/COFINS ("após custos") incide por dentro sobre o custo; os impostos "no final" (ICMS, IRRF, frete, comissão) incidem sobre a receita da venda. IPI fica fora (repassado, não reduz margem).</div>';
+  return html;
+}
+// ===================== ABA IMPOSTOS (impostos/taxas configuraveis + ICMS por UF) =====================
+var IMPOSTO_UF=[], IMPOSTO_TAXA=[];
+async function ensureImpostos(){
+  try{
+    var t=await supabaseClient.from('imposto_taxa').select('*').order('ordem').order('nome');
+    var u=await supabaseClient.from('imposto_uf').select('*').order('uf');
+    if((t&&t.error)||(u&&u.error))return false;
+    IMPOSTO_TAXA=(t&&t.data)||[]; IMPOSTO_UF=(u&&u.data)||[]; return true;
+  }catch(e){ return false; }
+}
+async function renderImpostos(){
+  var el=document.getElementById('impostos-conteudo'); if(!el)return;
+  var pode=!!window._podeEditar; el.innerHTML='<div class="ap-hint">Carregando…</div>';
+  if(!(await ensureImpostos())){ el.innerHTML='<div class="ap-hint" style="white-space:pre-wrap">Não foi possível carregar os impostos.\nAplique o 32_margem.sql + 33_margem_impostos.sql e recarregue.</div>'; return; }
+  var card='background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:12px';
+  var inp='padding:7px 9px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px', ro=pode?'':' disabled';
+  var taxRows=IMPOSTO_TAXA.map(function(t){
+    return '<tr><td class="l" style="padding:4px 8px"><input value="'+apEsc(t.nome||'')+'" style="'+inp+';min-width:170px"'+ro+' onchange="itSalvar('+t.id+',\'nome\',this.value)"></td>'+
+      '<td style="padding:4px 8px"><input type="number" step="0.01" value="'+apEsc(t.aliquota!=null?t.aliquota:0)+'" style="'+inp+';width:100px"'+ro+' onchange="itSalvar('+t.id+',\'aliquota\',this.value)"></td>'+
+      '<td style="padding:4px 8px"><select style="'+inp+';width:140px"'+ro+' onchange="itSalvar('+t.id+',\'posicao\',this.value)"><option value="apos"'+(t.posicao==='apos'?' selected':'')+'>Após os custos</option><option value="final"'+(t.posicao!=='apos'?' selected':'')+'>No final</option></select></td>'+
+      '<td class="l" style="padding:4px 8px">'+(pode?('<button class="btn-sec" onclick="itRemover('+t.id+')">✕</button>'):'')+'</td></tr>';
+  }).join('');
+  var ufRows=IMPOSTO_UF.map(function(x){
+    return '<tr><td class="l" style="font-weight:600;padding:4px 8px">'+apEsc(x.uf||'')+'</td>'+
+      '<td style="padding:4px 8px"><input type="number" step="0.01" value="'+apEsc(x.icms_pct!=null?x.icms_pct:0)+'" style="'+inp+';width:100px"'+ro+' onchange="impSalvarIcms('+jsAttr(x.uf)+',this.value)"></td>'+
+      '<td class="l" style="padding:4px 8px">'+(pode?('<button class="btn-sec" onclick="impRemoverUF('+jsAttr(x.uf)+')">✕</button>'):'')+'</td></tr>';
+  }).join('');
+  el.innerHTML=
+    '<div style="'+card+'"><div style="font-weight:600;margin-bottom:8px">Impostos e taxas <span class="ap-hint" style="font-weight:400">"por dentro"; a posição define a ordem do cálculo</span></div>'+
+      '<div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:13px"><thead><tr style="color:var(--text3);font-size:11px;text-transform:uppercase"><th class="l" style="text-align:left;padding:4px 8px">Nome</th><th class="l" style="text-align:left;padding:4px 8px">Alíquota (%)</th><th class="l" style="text-align:left;padding:4px 8px">Posição</th><th></th></tr></thead><tbody>'+(taxRows||'<tr><td class="l" colspan="4" style="padding:6px;color:var(--text3)">Nenhum imposto/taxa. Ex.: PIS/COFINS (após custos), IRRF (no final).</td></tr>')+'</tbody></table></div>'+
+      (pode?('<div style="display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap"><input id="it-nome" placeholder="Nome (ex.: PIS/COFINS)" style="'+inp+';min-width:180px"><input id="it-aliq" type="number" step="0.01" placeholder="Alíquota %" style="'+inp+';width:120px"><select id="it-pos" style="'+inp+';width:150px"><option value="apos">Após os custos</option><option value="final">No final</option></select><button class="btn-primary" onclick="itAdd()">+ Adicionar</button></div>'):'')+
+      '<div class="ap-hint" style="margin-top:6px">Margem = preço − [ custo ÷ (1−Σ "após custos") ÷ (1−Σ "no final" + ICMS da UF + comissão do cliente) ]. IPI fica fora (repassado); "sem nota" zera os impostos (a comissão continua).</div></div>'+
+    '<div style="'+card+'"><div style="font-weight:600;margin-bottom:8px">ICMS por UF de destino <span class="ap-hint" style="font-weight:400">saindo de SP · entra "no final"</span></div>'+
+      '<div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:13px"><thead><tr style="color:var(--text3);font-size:11px;text-transform:uppercase"><th class="l" style="text-align:left;padding:4px 8px">UF</th><th class="l" style="text-align:left;padding:4px 8px">ICMS (%)</th><th></th></tr></thead><tbody>'+(ufRows||'<tr><td class="l" colspan="3" style="padding:6px;color:var(--text3)">Nenhuma UF cadastrada.</td></tr>')+'</tbody></table></div>'+
+      (pode?('<div style="display:flex;gap:8px;margin-top:10px;align-items:center"><input id="imp-nova-uf" placeholder="UF" maxlength="2" style="'+inp+';width:70px;text-transform:uppercase"><input id="imp-nova-icms" type="number" step="0.01" placeholder="ICMS %" style="'+inp+';width:110px"><button class="btn-primary" onclick="impAddUF()">+ Adicionar UF</button></div>'):'')+
+    '</div>';
+}
+async function itSalvar(id,campo,val){ if(!window._podeEditar)return;
+  var p={atualizado_em:new Date().toISOString()};
+  p[campo]=(campo==='aliquota')?(parseFloat(val)||0):((campo==='nome')?String(val).trim():val);
+  try{ var r=await supabaseClient.from('imposto_taxa').update(p).eq('id',id); if(r.error)throw r.error; var x=IMPOSTO_TAXA.filter(function(y){return y.id===id;})[0]; if(x)x[campo]=p[campo]; }
+  catch(e){ alert('Não foi possível salvar.\n'+(e.message||e)); } }
+async function itAdd(){ if(!window._podeEditar)return;
+  var nome=((document.getElementById('it-nome')||{}).value||'').trim(), al=parseFloat((document.getElementById('it-aliq')||{}).value)||0, pos=((document.getElementById('it-pos')||{}).value)||'final';
+  if(!nome){ alert('Informe o nome do imposto/taxa.'); return; }
+  try{ var r=await supabaseClient.from('imposto_taxa').insert({nome:nome,aliquota:al,posicao:pos}); if(r.error)throw r.error; renderImpostos(); }
+  catch(e){ alert('Não foi possível adicionar.\n'+(e.message||e)); } }
+async function itRemover(id){ if(!window._podeEditar)return; if(!confirm('Remover este imposto/taxa?'))return;
+  try{ var r=await supabaseClient.from('imposto_taxa').delete().eq('id',id); if(r.error)throw r.error; renderImpostos(); }
+  catch(e){ alert('Não foi possível remover.\n'+(e.message||e)); } }
+async function impSalvarIcms(uf,val){ if(!window._podeEditar)return;
+  try{ var r=await supabaseClient.from('imposto_uf').update({icms_pct:parseFloat(val)||0,atualizado_em:new Date().toISOString()}).eq('uf',uf); if(r.error)throw r.error; var x=IMPOSTO_UF.filter(function(y){return y.uf===uf;})[0]; if(x)x.icms_pct=parseFloat(val)||0; }
+  catch(e){ alert('Não foi possível salvar o ICMS.\n'+(e.message||e)); } }
+async function impAddUF(){ if(!window._podeEditar)return;
+  var uf=((document.getElementById('imp-nova-uf')||{}).value||'').trim().toUpperCase(), icms=parseFloat((document.getElementById('imp-nova-icms')||{}).value)||0;
+  if(uf.length!==2){ alert('Informe a UF (2 letras).'); return; }
+  try{ var r=await supabaseClient.from('imposto_uf').upsert({uf:uf,icms_pct:icms,atualizado_em:new Date().toISOString()}); if(r.error)throw r.error; renderImpostos(); }
+  catch(e){ alert('Não foi possível adicionar.\n'+(e.message||e)); } }
+async function impRemoverUF(uf){ if(!window._podeEditar)return; if(!confirm('Remover a UF '+uf+'?'))return;
+  try{ var r=await supabaseClient.from('imposto_uf').delete().eq('uf',uf); if(r.error)throw r.error; renderImpostos(); }
+  catch(e){ alert('Não foi possível remover.\n'+(e.message||e)); } }
+// ===================== ABA CLIENTES (base fiscal: UF + vendedor) =====================
+var CLIENTES_FISCAL=[];
+var UF_POR_NOME={'ACRE':'AC','ALAGOAS':'AL','AMAZONAS':'AM','AMAPA':'AP','BAHIA':'BA','CEARA':'CE','DISTRITO FEDERAL':'DF','ESPIRITO SANTO':'ES','GOIAS':'GO','MARANHAO':'MA','MATO GROSSO':'MT','MATO GROSSO DO SUL':'MS','MINAS GERAIS':'MG','PARA':'PA','PARAIBA':'PB','PARANA':'PR','PERNAMBUCO':'PE','PIAUI':'PI','RIO DE JANEIRO':'RJ','RIO GRANDE DO NORTE':'RN','RIO GRANDE DO SUL':'RS','RONDONIA':'RO','RORAIMA':'RR','SANTA CATARINA':'SC','SAO PAULO':'SP','SERGIPE':'SE','TOCANTINS':'TO','EXTERIOR':'EX'};
+function ufDeEstado(nome){
+  if(nome==null)return '';
+  var s=String(nome).trim().toUpperCase();
+  if(s.normalize)s=s.normalize('NFD').replace(/[̀-ͯ]/g,'');
+  if(UF_POR_NOME[s])return UF_POR_NOME[s];
+  return (s.length===2 && /^[A-Z]{2}$/.test(s))?s:'';
+}
+async function renderClientes(){
+  var el=document.getElementById('clientes-conteudo'); if(!el)return;
+  el.innerHTML='<div class="ap-hint">Carregando…</div>';
+  try{ var r=await supabaseClient.from('clientes_fiscal').select('*').order('nome'); if(r.error)throw r.error; CLIENTES_FISCAL=r.data||[]; renderClientesLista(); }
+  catch(e){ el.innerHTML='<div class="ap-hint" style="white-space:pre-wrap">Não foi possível carregar os clientes.\nAplique o 32_margem.sql + 33_margem_impostos.sql e recarregue.\n'+apEsc(e.message||e)+'</div>'; }
+}
+function renderClientesLista(){
+  var el=document.getElementById('clientes-conteudo'); if(!el)return;
+  var q=((document.getElementById('cli-busca')||{}).value||'').toLowerCase().trim();
+  var lista=(CLIENTES_FISCAL||[]).filter(function(c){ if(!q)return true; return [c.cliente_codigo,c.nome,c.nome_reduzido,c.familia,c.cnpj,c.uf,c.vendedor].some(function(v){return (''+(v||'')).toLowerCase().indexOf(q)>=0;}); });
+  var head='<div style="font-size:13px;color:var(--text3);margin-bottom:8px"><b style="color:var(--text);font-size:15px">'+CLIENTES_FISCAL.length+'</b> cliente(s)'+(q?(' · '+lista.length+' no filtro'):'')+'</div>';
+  if(!CLIENTES_FISCAL.length){ el.innerHTML=head+'<div class="ap-hint">Nenhum cliente. Use "Importar Excel".</div>'; return; }
+  var rows=lista.slice(0,500).map(function(c){
+    return '<tr><td>'+apEsc(c.cliente_codigo||'')+'</td><td>'+apEsc(c.nome||'')+'</td><td>'+apEsc(c.nome_reduzido||'')+'</td><td>'+apEsc(c.familia||'')+'</td><td>'+apEsc(c.cnpj||'')+'</td><td>'+apEsc(c.uf||'')+'</td><td>'+apEsc(c.vendedor||'')+'</td></tr>';
+  }).join('');
+  el.innerHTML='<style>#clientes-conteudo td,#clientes-conteudo th{border-bottom:1px solid var(--border);text-align:left;padding:4px 8px;font-size:13px}#clientes-conteudo th{color:var(--text3);font-size:11px;text-transform:uppercase}</style>'+
+    head+'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead><tr><th>Código</th><th>Razão social</th><th>Nome reduzido</th><th>Família</th><th>CNPJ</th><th>UF</th><th>Vendedor</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    (lista.length>500?('<div class="ap-hint" style="margin-top:6px">Mostrando 500 de '+lista.length+'. Refine a busca.</div>'):'');
+}
+function importarClientes(input){
+  if(!input.files||!input.files[0])return;
+  if(!window.XLSX){alert('Biblioteca de Excel não carregou.');return;}
+  if(!window._podeEditar){alert('Sem permissão.');return;}
+  var reader=new FileReader();
+  reader.onload=function(ev){ (async function(){
+    try{
+      var wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array'});
+      var rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:''});
+      mostrarProgresso('Importando clientes…',0);
+      // colunas: 0 Codigo,1 Razao Social,2 Nome Reduzido,3 Familia,4 CNPJ,5 Vendedor,6 Estado,7 ICMS | 9 ESTADO(ref),10 ICMS(ref)
+      var cli=[], vistos={}, ufMap={};
+      for(var i=1;i<rows.length;i++){ var r=rows[i]||[];
+        var cod=(''+(r[0]==null?'':r[0])).trim();
+        if(cod && !vistos[cod]){ vistos[cod]=1;
+          cli.push({cliente_codigo:cod,nome:(''+(r[1]||'')).trim()||null,nome_reduzido:(''+(r[2]||'')).trim()||null,familia:(''+(r[3]||'')).trim()||null,cnpj:(''+(r[4]||'')).trim()||null,vendedor:(''+(r[5]||'')).trim()||null,uf:ufDeEstado(r[6])||null,atualizado_em:new Date().toISOString()}); }
+        var euf=ufDeEstado(r[9]); if(euf){ var ic=Number(r[10])||0; ufMap[euf]=ic*(ic<=1?100:1); }
+      }
+      var ufList=Object.keys(ufMap).map(function(u){return {uf:u,icms_pct:ufMap[u],atualizado_em:new Date().toISOString()};});
+      if(ufList.length){ var iu=await supabaseClient.from('imposto_uf').upsert(ufList); if(iu.error)throw iu.error; }
+      var ok=0;
+      for(var k=0;k<cli.length;k+=200){ var lote=cli.slice(k,k+200); mostrarProgresso('Clientes '+k+' de '+cli.length+'…',k/Math.max(1,cli.length)*100); var r2=await supabaseClient.from('clientes_fiscal').upsert(lote); if(r2.error)throw r2.error; ok+=lote.length; }
+      input.value=''; fecharProgresso();
+      alert(ok+' cliente(s) e '+ufList.length+' UF(s) de ICMS importados.');
+      renderClientes();
+    }catch(e){ fecharProgresso(); alert('Erro ao importar.\n'+(e.message||e)); input.value=''; }
+  })(); };
+  reader.readAsArrayBuffer(input.files[0]);
 }
 function fichaCustoHtml(p){
   p=p||{};
@@ -5605,7 +5972,7 @@ async function salvarFicha(){
     if(window._mpTipoReady){
       await supabaseClient.from('produto_acabamentos').delete().eq('produto_codigo',pa);
       var _ac=FICHA_ACAB.filter(function(a){return a.materia_prima_id;});
-      if(_ac.length){ var iac=await supabaseClient.from('produto_acabamentos').insert(_ac.map(function(a,idx){return {produto_codigo:pa,materia_prima_id:a.materia_prima_id,ocupacao:a.ocupacao||0,fita_larg_mm:a.fita_larg_mm,fita_alt_mm:a.fita_alt_mm,valor_zinco:a.valor_zinco||0,ordem:idx+1};})); if(iac.error)throw iac.error; }
+      if(_ac.length){ var iac=await supabaseClient.from('produto_acabamentos').insert(_ac.map(function(a,idx){var o={produto_codigo:pa,materia_prima_id:a.materia_prima_id,ocupacao:a.ocupacao||0,fita_larg_mm:a.fita_larg_mm,fita_alt_mm:a.fita_alt_mm,valor_zinco:a.valor_zinco||0,ordem:idx+1}; if(window._acabClicheReady){o.cliche_carreiras=a.cliche_carreiras!=null?a.cliche_carreiras:null;o.cliche_repeticoes=a.cliche_repeticoes!=null?a.cliche_repeticoes:null;o.cliche_espaco=a.cliche_espaco!=null?a.cliche_espaco:null;o.cliche_esqueleto=a.cliche_esqueleto!=null?a.cliche_esqueleto:null;} return o;})); if(iac.error)throw iac.error; }
     }
     var n=await materializarProduto(pa);
     fecharFicha();
@@ -5656,7 +6023,8 @@ function renderFichasLista(){
       var rotTxt=f.roteiro.map(function(g){return '<span class="ap-chip">'+apEsc(dispNome(g)||g)+'</span>';}).join(' ')||'<span style="color:var(--text3)">sem roteiro</span>';
       var matTxt=f.materia?apEsc(f.materia):'<span style="color:var(--text3)">—</span>';
       return '<tr><td style="font-weight:700">'+apEsc(f.codigo)+'</td><td>'+apEsc(f.descricao)+'</td><td>'+matTxt+'</td><td>'+f.cores+'</td><td>'+rotTxt+'</td>'+
-        '<td style="white-space:nowrap"><button class="btn-sec" onclick="abrirFicha('+jsAttr(f.codigo)+')">Editar</button> <button class="btn-sec" title="Criar nova ficha a partir desta" onclick="espelharFicha('+jsAttr(f.codigo)+')">Espelhar</button></td></tr>';
+        '<td style="white-space:nowrap"><button class="btn-sec" onclick="abrirFicha('+jsAttr(f.codigo)+')">Editar</button> <button class="btn-sec" title="Criar nova ficha a partir desta" onclick="espelharFicha('+jsAttr(f.codigo)+')">Espelhar</button>'+
+        (window._podeEditar?(' <button class="btn-sec" title="Clientes, preços e comissão deste produto" onclick="abrirPrecosCliente('+jsAttr(f.codigo)+')">Clientes/Preços</button>'):'')+'</td></tr>';
     }).join('')+'</tbody></table></div>';
   el.innerHTML=html;
 }

@@ -1,7 +1,7 @@
 # PCP — Monitoramento de Produção (estado atual)
 
 Documento técnico/handoff do projeto PCP. Leia antes de continuar o trabalho.
-Última atualização: 2026-11-22.
+Última atualização: 2026-11-23.
 
 ## 1. Visão geral
 
@@ -318,7 +318,12 @@ apontamento (ver `aplicar_apontamento`).
 **`28_batida_setup.sql`** (generaliza `iniciar_setup_pagina` p/ o grupo em `modo='unidade'`; idempotente — ver §15) →
 **`29_recalcular_imagens.sql`** (`_recompute_imagens` interna + `recalcular_op_imagens` chamável; lançamento manual recalcula; idempotente — ver §15) →
 **`30_setup_trechos.sql`** (evento `setup_lancamento` + `parada_fim`/`status_operacao_log` cientes da fase setup×produção; idempotente — ver §15) →
-**`31_custo_mp.sql`** (CUSTO v2 — **substitui o `22_` órfão, NÃO aplicar o 22_**: `tipo`+campos de custo em `materias_primas`; colunas de custo em `produtos` incl. `impressao`/`carreiras`/`repeticoes`/`tinta_branca`; `produto_etapas.maquina_custo`; `produto_acabamentos`→materias_primas; `maquinas_sub_custo` [custo_hora + insumo_m2]; `custo_parametros`; dropa a FK antiga `produtos_ribbon_id_fkey` e reconcilia `produto_acabamentos`; idempotente — ver §17).
+**`31_custo_mp.sql`** (CUSTO v2 — **substitui o `22_` órfão, NÃO aplicar o 22_**: `tipo`+campos de custo em `materias_primas`; colunas de custo em `produtos` incl. `impressao`/`carreiras`/`repeticoes`/`tinta_branca`; `produto_etapas.maquina_custo`; `produto_acabamentos`→materias_primas; `maquinas_sub_custo` [custo_hora + insumo_m2]; `custo_parametros`; dropa a FK antiga `produtos_ribbon_id_fkey` e reconcilia `produto_acabamentos`; idempotente — ver §17) →
+**`32_margem.sql`** (MARGEM fase 1: tabelas `clientes_fiscal` [cliente_codigo PK, nome, uf], `imposto_uf` [uf PK, icms_pct], `produto_preco_cliente` [produto×cliente: preco, com_nota]; `custo_parametros.pis_cofins_pct`; CHECK de UF `^[A-Z]{2}$`; RLS gestor/editor; idempotente — ver §18) →
+**`33_margem_impostos.sql`** (impostos/taxas CONFIGURÁVEIS: tabela `imposto_taxa` [nome, aliquota, posicao 'apos'|'final', ativo, ordem]; `produto_preco_cliente.comissao_pct`; `clientes_fiscal.vendedor`; RLS gestor/editor; idempotente — ver §18) →
+**`34_clientes_fiscal_extra.sql`** (`clientes_fiscal` + `nome_reduzido`, `familia`, `cnpj`; idempotente — ver §18) →
+**`35_margem_preco_um.sql`** (`produto_preco_cliente.preco_um` [default 'MI'] — UM do preço; idempotente — ver §18) →
+**`36_acab_cliche_layout.sql`** (`produto_acabamentos` + `cliche_carreiras`/`cliche_repeticoes`/`cliche_espaco`/`cliche_esqueleto` — layout de clichê próprio do acabamento; nullable, fallback p/ a geometria do produto; idempotente — ver §18).
 
 ## 12. Matérias-primas + m² nos KPIs (2026-11-15)
 
@@ -689,8 +694,8 @@ longos. `30_` (idempotente):
   trecho (`slanc`) aninhado sob ele, como os lançamentos na produção (modal `apHistoricoHtml` e popup
   de KPI `kpiHistHtml`). Helper `apSomaSetupLanc`.
 
-**PENDENTE desta leva:** aplicar `26_`–`30_` no banco e publicar o `app.html` da branch
-`feat/acoes-prioridade`; retomar os **custos** (§17).
+**PENDENTE desta leva:** `26_`–`30_` **aplicadas no Supabase (2026-11-23)**; falta só **publicar o `app.html`**
+da branch `feat/acoes-prioridade`.
 
 ## 16. KPIs — nível-OS físico, MP+setup, setup real/est (2026-11-20 a 22)
 
@@ -714,7 +719,7 @@ O script existe na branch, inerte; não é o caminho atual.
 
 ## 17. Custo do produto vendido — v2, UNIFICADO nas matérias-primas (2026-11-21 a 22)
 
-**Status:** branch `feat/acoes-prioridade`; `31_custo_mp.sql` **aplicado em teste**, `app.html` **não publicado**.
+**Status:** branch `feat/acoes-prioridade`; `31_custo_mp.sql` **aplicado no Supabase (2026-11-23)**, `app.html` **não publicado**.
 Validado item a item pelo usuário. **SUBSTITUI a §13/`22_`** (órfão — não aplicar). **Produção/painel 100%
 INTOCADOS**: os campos novos são aditivos e lidos **só** pelo motor de custo; o painel segue lendo
 `produto_etapas`/`produtos`/`pcp` como sempre. Gates: `window._mpTipoReady` (31_ aplicado) + `_podeEditar`.
@@ -758,9 +763,14 @@ produtos (campos de custo) + `produto_acabamentos` + `produto_etapas.maquina_cus
 - **Hora-máquina** por etapa = **Acerto** (`setup_min → h × R$/h`) + **Execução** (`metros a rodar da etapa ÷
   velocidade × R$/h`). R$/h e velocidade vêm da **sub de custo** (`maquina_custo`) da etapa; sem sub → média do
   grupo. (Acerto é TEMPO de setup, não desperdício÷velocidade — bug corrigido.)
-- **Clichê** (fixo): `PISO[(larg_et×carr + espaço×(carr−1) + esqueleto)/10]+4 × ARRED[((alt+gap)×rep)/10]+4 ×
-  nº clichês × R$/cm²`; R$/cm² da **MP tipo clichê** (fallback `custo_parametros.preco_cliche_cm2`=0,17).
-  nº clichês = cores (0 se `chapado` **ou** impressão ≠ flexo) + acabamentos `gera_cliche`. carr/rep dos dados técnicos.
+- **Clichê** (fixo): área `PISO[(larg_et×carr + espaço×(carr−1) + esqueleto)/10]+4 × ARRED[((alt+gap)×rep)/10]+4`,
+  × R$/cm² da **MP tipo clichê** (fallback `custo_parametros.preco_cliche_cm2`=0,17). **Dois tipos, com linhas
+  separadas no detalhamento (2026-11-23, §18):** (1) **clichê de cor** = `cores` clichês (0 se `chapado` **ou**
+  impressão ≠ flexo) usando a geometria do **produto** (carr/rep/espaço/esqueleto dos dados técnicos); (2) **um
+  clichê por acabamento que gera clichê** (cold stamping / verniz localizado) usando a geometria do **próprio
+  acabamento** (`produto_acabamentos.cliche_carreiras/repeticoes/espaco/esqueleto`, `36_`), com **fallback** p/
+  a geometria do produto quando vazio. Assim item **digital/sem impressão** (sem clichê de cor) ainda dimensiona
+  certo o clichê do stamping, que roda na corte (Brotech/Vorei) num layout diferente da impressão. `clicheGeo()`.
 - **Tinta**: flexo = `m²×(gramatura/1000)×ocupação%×R$/kg` — **NÃO × cores**, e **só da MP tinta flexo** (sem
   fallback a parâmetro global); digital = `m²×(insumo base + branca)` das MPs tinta por sub.
 - **Acabamentos**: laminação `m²×valor/m²`; verniz `m²×(gram/1000)×ocupação×R$/kg` (ocupação 100% se verniz
@@ -776,13 +786,57 @@ produtos (campos de custo) + `produto_acabamentos` + `produto_etapas.maquina_cus
   perda m e %). Espelha o Relatório de Custos do ERP do usuário.
 
 ### Aba Custo + Máquinas
-- **Aba Custo** (sidebar `ver_custo`, gestor/editor): só o **simulador** (campo de busca por código/descrição →
-  `custoProduto` → detalhamento). `renderCusto`/`custoSimular`. Sem card de parâmetros globais.
+- **Aba Custo** (sidebar `ver_custo`, gestor/editor): simulador **unificado de custo + margem** (§18). `renderCusto`/
+  `custoCarregarProduto`/`custoSimular`. Sem card de parâmetros globais.
 - **Máquinas**: input **R$/h por sub-máquina** (`atualizarCustoHoraSub` → `maquinas_sub_custo.custo_hora`;
   `CUSTO_HORA_SUB` carregado no `recarregarDoBanco`). `maquinas_sub_custo` também tem `insumo_m2` (não usado —
   a tinta digital ficou como MP).
 - `ensureCustoData` carrega `custo_parametros` + `CUSTO_HORA_SUB` (lazy, degrada). `custoAcabsNorm` monta os
-  acabamentos (MP→{tipo_calculo, valores, icms_pct, params do produto}). Prévia: `custoFichaPreview`/`prodFromFicha`.
+  acabamentos (MP→{tipo_calculo, valores, icms_pct, params do produto, **geometria de clichê do acabamento**}).
+  Prévia: `custoFichaPreview`/`prodFromFicha`.
+- **Seletor de Substrato na ficha** (`fichaMPOptions`, usado em `f-mp` e no override de OS): lista **só MP tipo
+  `substrato`** (não ribbon/stamping/outros); mantém visível o item já selecionado p/ não perder vínculo antigo.
+  Degrada (mostra todos) se `materias_primas.tipo` não existir.
 
-**PRÓXIMO (visão do usuário):** **KPI de margem** — o Excel de pedidos que já é subido passa a trazer
-**preço/emissão**, e o sistema mostra faturamento × custo = **margem** por item e por mês.
+## 18. Margem (clientes, impostos, preço × custo) — v1 (2026-11-22 a 23)
+
+**Status:** branch `feat/acoes-prioridade`; migrations `32_`–`36_` **aplicadas no Supabase (2026-11-23)**, `app.html`
+**não publicado**. Validado item a item pelo usuário. Aditivo e **sensível** (leitura/escrita gestor/editor); NÃO toca
+produção/painel. Gates: `window._mpTipoReady` (31_), `window._acabClicheReady` (36_, probe de coluna), `_podeEditar`.
+
+### Base de clientes + impostos (abas próprias)
+- **Aba Clientes** (sidebar `ver_clientes`, gestor/editor): `clientes_fiscal` (`32_`+`34_`: cliente_codigo PK, nome
+  [razão], `nome_reduzido` [fantasia], `familia`, `cnpj`, `uf`, `vendedor`). `renderClientes`/`renderClientesLista`
+  (lista + busca por qualquer campo) + **Importar Excel** (`importarClientes`): colunas 0 Código, 1 Razão, 2 Nome
+  Reduzido, 3 Família, 4 CNPJ, 5 Vendedor, 6 Estado, 7 ICMS | 9 ESTADO(ref), 10 ICMS(ref). Mapa `UF_POR_NOME`/
+  `ufDeEstado` (nome do estado → sigla; remove acentos; EXTERIOR→EX); upsert em `clientes_fiscal` (dedup por código)
+  e `imposto_uf` (das colunas de referência; ICMS 0,18 → 18). `CLIENTES_FISCAL` global (lazy).
+- **Aba Impostos** (sidebar `ver_impostos`, gestor/editor): `imposto_taxa` (`33_`: nome, alíquota, **posição**
+  'apos'|'final', ativo, ordem) em lista editável + **ICMS por UF** (`imposto_uf`). `renderImpostos`/`ensureImpostos`/
+  `it*`/`imp*`. ICMS **não** entra em `imposto_taxa` (vem por UF do cliente, posição "no final"). Handlers de UF usam
+  `jsAttr` (XSS). `IMPOSTO_UF`/`IMPOSTO_TAXA` globais.
+
+### Preço por cliente (na ficha) — botão "Clientes/Preços"
+- Botão **separado** do Editar/Espelhar na lista de fichas (gestor/editor) → popup `abrirPrecosCliente`
+  (`modal-precos`, largo `min(980px,96vw)`): tabela produto↔cliente com **preço**, **UM do preço** (`preco_um`,
+  `35_`; opções = conversões da ficha + UN/MI), **com/sem nota**, **comissão %**; grava em `produto_preco_cliente`
+  (`32_`/`33_`/`35_`; unique produto+cliente). Cliente escolhido por **busca typeahead** (campo + lista clicável,
+  `ppcCliBusca`/`ppcCliPick`; nome fantasia), **não** datalist. `cliFantasia`/`cliFantasiaPlain`.
+
+### Simulador unificado de custo + margem (aba Custo)
+- Produto (**busca typeahead** `simPaBusca`/`simPaPick`, `SIM_PRODS`) + qtd/UM de produção + **cliente** (select dos
+  vínculos). Mostra, num só painel: **custo detalhado** (`custoResumoHtml`) e, se houver cliente, **impostos + preço
+  + margem** (`margemBlocoHtml`). Estado `MARGEM`; `custoCarregarProduto` (ao trocar produto) + `custoSimular` (recalc).
+- **Fórmula da margem (validada):**
+  - **Receita** = `preco` × (etiquetas ÷ `fatorConvFicha(conv, preco_um)`) — converte o preço (por rolo/milheiro/caixa…)
+    para a base de etiquetas da simulação.
+  - **Custo líquido** = custo bruto − Σ crédito de ICMS (dos materiais).
+  - **"Após os custos"** (ex. PIS/COFINS): **por dentro sobre o CUSTO** → `subtotal1 = custoLiq ÷ (1 − Σapos%)`; o R$
+    de cada taxa = `subtotal1 × alíq%` (base reajustada, não o custo cru — ex. 6.090,65 ÷ 0,9635 × 3,65% = 230,73).
+  - **"No final"** (ICMS da UF + IRRF + frete + comissão + …): incidem **sobre a RECEITA da venda** → cada R$ =
+    `receita × alíq%`; `finalTotal = receita × Σfinal%`.
+  - `resultado = subtotal1 + finalTotal`; **margem = receita − resultado**; margem% = margem ÷ receita.
+  - **Sem nota** zera os impostos (comissão continua). **IPI fica FORA** (repassado, não reduz margem).
+
+**PRÓXIMO (visão do usuário):** **margem real** — o Excel de pedidos passa a trazer **preço/emissão**, e o sistema
+mostra faturamento × custo = margem por item e por mês (hoje o simulador é a margem **estimada**).
