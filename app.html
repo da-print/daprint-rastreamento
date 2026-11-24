@@ -601,6 +601,7 @@ body.sb-collapsed .sb-badge{ display:none !important }
     <a class="sb-i" data-aba="custo" href="#" onclick="navAba('custo');return false" title="Custo"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M14.5 9a2.5 2 0 0 0-2.5-1.5c-1.4 0-2.5.9-2.5 2s1.1 1.7 2.5 2 2.5.9 2.5 2-1.1 2-2.5 2A2.5 2 0 0 1 9.5 15"/><line x1="12" y1="6" x2="12" y2="18"/></svg><span>Custo</span></a>
     <a class="sb-i" data-aba="impostos" href="#" onclick="navAba('impostos');return false" title="Impostos"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="7.5" cy="7.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/></svg><span>Impostos</span></a>
     <a class="sb-i" data-aba="clientes" href="#" onclick="navAba('clientes');return false" title="Clientes"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/><circle cx="17.5" cy="9" r="2"/><path d="M16 20a5 5 0 0 1 5.5-6"/></svg><span>Clientes</span></a>
+    <a class="sb-i" data-aba="margem" href="#" onclick="navAba('margem');return false" title="Margem"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="20" x2="20" y2="4"/><circle cx="6.5" cy="7" r="2.5"/><circle cx="17.5" cy="17" r="2.5"/><polyline points="13 4 20 4 20 11"/></svg><span>Margem</span></a>
     <a class="sb-i" data-aba="vendedores" href="#" onclick="navAba('vendedores');return false" title="Vendedores"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="3" y1="12" x2="21" y2="12"/></svg><span>Vendedores</span></a>
     <a class="sb-i" data-aba="usuarios" href="#" onclick="navAba('usuarios');return false" title="Usuários"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 5.5a3 3 0 0 1 0 5.8"/><path d="M21 20a6 6 0 0 0-4.5-5.8"/></svg><span>Usuários</span></a>
     <a class="sb-i" data-aba="historico" href="#" onclick="navAba('historico');return false" title="Histórico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><polyline points="3 4 3 9 8 9"/><polyline points="12 7 12 12 15 14"/></svg><span>Histórico</span></a>
@@ -978,6 +979,11 @@ function setSidebarAtivo(key){ try{ document.querySelectorAll('#side-nav [data-a
   </div>
   <input id="cli-busca" placeholder="Buscar por código, nome, UF ou vendedor…" oninput="renderClientesLista()" style="width:100%;max-width:420px;padding:7px 9px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px;margin-bottom:10px">
   <div id="clientes-conteudo"></div>
+</div>
+
+<div id="margem-view" style="display:none">
+  <div style="margin-bottom:10px"><h2 style="font-size:16px;margin:0">Margem</h2><div style="font-size:12px;color:var(--text3)">Receita faturada (R$ Un. × saldo) × custo = margem, por item, mês, cliente e vendedor.</div></div>
+  <div id="margem-conteudo"></div>
 </div>
 
 <div id="kpis-view" style="display:none">
@@ -1461,7 +1467,7 @@ function desligarRealtime(){
 // Mostra/esconde recursos conforme o papel do usuario.
 // ===================== PERMISSÕES POR PAPEL (flags; gestor edita na aba Permissões) =====================
 var _PERMS={}; // papel -> {chave:bool}
-var PERM_GESTOR_TABS=['categorias','vendedores','maquinas','materias','custo','impostos','clientes','usuarios','historico','listas','permissoes'];
+var PERM_GESTOR_TABS=['categorias','vendedores','maquinas','materias','custo','impostos','clientes','margem','usuarios','historico','listas','permissoes'];
 function permDefault(papel,chave){
   if(chave.indexOf('ver_')===0){ var aba=chave.slice(4); return PERM_GESTOR_TABS.indexOf(aba)<0; } // só gestor nas abas de cadastro; demais visíveis
   if(chave==='acao_editar')return papel==='editor';
@@ -1478,7 +1484,7 @@ async function carregarPermissoes(){
   catch(e){}
 }
 var PERM_PAPEIS=[['editor','Editor'],['visualizador','Visualizador'],['visualizador_maquina','Operador'],['representante','Representante']];
-var PERM_ABAS=[['ver_painel','Painel de produção'],['ver_entregas','Entregas por data'],['ver_pendencias','Pendências'],['ver_kpis','KPIs'],['ver_fichas','Fichas técnicas'],['ver_materias','Matérias-primas'],['ver_custo','Custo'],['ver_impostos','Impostos'],['ver_clientes','Clientes'],['ver_maquinas','Máquinas'],['ver_vendedores','Vendedores'],['ver_usuarios','Usuários'],['ver_historico','Histórico'],['ver_listas','Listas']];
+var PERM_ABAS=[['ver_painel','Painel de produção'],['ver_entregas','Entregas por data'],['ver_pendencias','Pendências'],['ver_kpis','KPIs'],['ver_fichas','Fichas técnicas'],['ver_materias','Matérias-primas'],['ver_custo','Custo'],['ver_impostos','Impostos'],['ver_clientes','Clientes'],['ver_margem','Margem'],['ver_maquinas','Máquinas'],['ver_vendedores','Vendedores'],['ver_usuarios','Usuários'],['ver_historico','Histórico'],['ver_listas','Listas']];
 var PERM_ACOES=[['acao_editar','Editar programação / finalizar'],['acao_upload','Subir planilhas (upload)'],['acao_apontar','Apontar produção']];
 async function permSet(papel,chave,val){
   try{ var r=await supabaseClient.from('papel_permissoes').upsert({papel:papel,chave:chave,permitido:!!val},{onConflict:'papel,chave'}); if(r.error)throw r.error;
@@ -1763,8 +1769,16 @@ async function enviarParaBanco(){
       // O banco guarda como as parcelas estavam ANTES, troca pelas novas e faz as
       // edicoes acompanharem as parcelas reagendadas, tudo na mesma operacao.
       msg.textContent='Enviando pedidos...';
-      var r2=await supabaseClient.rpc('upload_pedidos_abertos',{linhas:mapearPedidos(window._upload_pedidos)});
+      var _linhasPed=mapearPedidos(window._upload_pedidos);
+      var r2=await supabaseClient.rpc('upload_pedidos_abertos',{linhas:_linhasPed});
       if(r2.error) throw r2.error;
+      // Preço/comissão/emissão por pedido+item (RPC aditiva do 37_; degrada se ausente).
+      try{
+        var _extraMap={};
+        _linhasPed.forEach(function(l){ if(l.preco_un!=null||l.comissao_pct!=null||l.emissao!=null||l.uf!=null){ _extraMap[l.pedido+'|'+l.item]={pedido:l.pedido,item:l.item,preco_un:l.preco_un,comissao_pct:l.comissao_pct,emissao:l.emissao,uf:l.uf}; } });
+        var _extra=Object.keys(_extraMap).map(function(k){return _extraMap[k];});
+        if(_extra.length){ var rex=await supabaseClient.rpc('atualizar_pedidos_extra',{linhas:_extra}); if(rex&&rex.error)console.warn('atualizar_pedidos_extra:',rex.error.message); }
+      }catch(e){ console.warn('atualizar_pedidos_extra falhou (aplicar 37_?):',e); }
       // Alimenta a camada de apontamento (tabela 'ordens') a partir dos pedidos.
       // IMPORTANTE: rpc() NAO lanca em erro do Postgres — devolve {error}. Precisamos
       // checar e AVISAR, senao a sincronizacao falha em silencio e as OS nao aparecem.
@@ -1878,7 +1892,9 @@ function mapearPedidos(rows){
       produto_desc:r['Produto - Descrição']||null,saldo:_toNum(r['Saldo Pedido']),
       um:r['Un.']||null,saldo2:_toNum(r['Saldo Pedido 2a.Un.']),um2:r['2a. Un.']||null,
       entrega:entregaISO,status_producao_origem:r['Status PRODUÇÃO']||null,
-      ml:_toNum(r['M/L a produzir']),pedido_cliente:limparPedidoCliente(r['Pedido do Cliente (xPed)'])};
+      ml:_toNum(r['M/L a produzir']),pedido_cliente:limparPedidoCliente(r['Pedido do Cliente (xPed)']),
+      preco_un:_toNum(r['R$ Un.']),comissao_pct:_toNum(r['Comissão 1 (%)']),emissao:_toDateISO(r['Emissão']),
+      uf:(typeof ufDeEstado==='function'?ufDeEstado(r['Estado']||r['UF']||r['Estado do Cliente']||r['Estado Cliente']):null)||null};
   }).filter(Boolean);
   // dedup pela chave do banco + produto + saldo (linhas totalmente iguais somem,
   // mas parcelas legitimas com datas ou saldos diferentes sao preservadas)
@@ -2331,6 +2347,9 @@ function mudarAba(aba){
   var clv=document.getElementById('clientes-view');
   if(clv)clv.style.display=aba==='clientes'?'block':'none';
   if(aba==='clientes'&&typeof renderClientes==='function')renderClientes();
+  var mgv=document.getElementById('margem-view');
+  if(mgv)mgv.style.display=aba==='margem'?'block':'none';
+  if(aba==='margem'&&typeof renderMargemReal==='function')renderMargemReal();
   if(aba==='usuarios'){uAtualizarCampos();carregarListaUsuarios();}
   var ha=document.getElementById('header-acoes');
   if(ha)ha.style.display=(aba==='painel')?'flex':'none';
@@ -5307,8 +5326,8 @@ function fichaMoveEtapa(i,d){var j=i+d;if(j<0||j>=FICHA_ROTEIRO.length)return;va
 
 // --- Estimativa (mesma formula do prototipo) ---
 function fatorConvFicha(conv,um){
-  if(!um)return 1; var U=(''+um).toUpperCase();
-  var r=(conv||[]).filter(function(c){return (c.um||'').toUpperCase()===U;})[0];
+  if(!um)return 1; var U=(''+um).toUpperCase().trim();
+  var r=(conv||[]).filter(function(c){return (c.um||'').toUpperCase().trim()===U;})[0];
   if(r)return Number(r.fator)||0;
   if(U==='UN'||U==='UNID'||U==='ETIQUETA'||U==='ET'||U==='PC')return 1;
   if(U==='MI'||U==='MILHEIRO'||U==='MIL')return 1000;
@@ -5741,6 +5760,9 @@ async function custoCarregarProduto(){
     MARGEM.etapas=(await supabaseClient.from('produto_etapas').select('*').eq('produto_codigo',pa).order('ordem')).data||[];
     MARGEM.conv=(await supabaseClient.from('produto_conversoes').select('*').eq('produto_codigo',pa)).data||[];
     MARGEM.acab=custoAcabsNorm(await carregarFichaAcab(pa));
+    // UM do simulador = UN/MI + as conversões da ficha (ex.: ROLO, CX)
+    var umsel=document.getElementById('sim-um');
+    if(umsel){ var cur=umsel.value||'UN', us=['UN','MI']; (MARGEM.conv||[]).forEach(function(c){var u=(c.um||'').toUpperCase(); if(u&&us.indexOf(u)<0)us.push(u);}); if(us.indexOf(cur)<0)cur='UN'; umsel.innerHTML=us.map(function(u){return '<option'+(u===cur?' selected':'')+'>'+apEsc(u)+'</option>';}).join(''); }
     if(!(CLIENTES_FISCAL&&CLIENTES_FISCAL.length)){ var rc=await supabaseClient.from('clientes_fiscal').select('*').order('nome'); if(!rc.error)CLIENTES_FISCAL=rc.data||[]; }
     var rv=await supabaseClient.from('produto_preco_cliente').select('*').eq('produto_codigo',pa).order('id'); MARGEM.vinc=(rv&&!rv.error&&rv.data)||[];
     var inp='padding:7px 9px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px';
@@ -5763,6 +5785,45 @@ async function custoSimular(){
   box.innerHTML=html;
 }
 // Bloco de impostos + preco + margem (custo detalhado ja vem acima, via custoResumoHtml).
+// Núcleo numérico da margem (reutilizado pelo simulador e pela aba Margem).
+// "após os custos" = por dentro sobre o custo; "no final" (+ICMS UF +comissão) = sobre a receita.
+function margemCalcNum(custoLiq,receita,comNota,comissaoPct,uf){
+  var icmsUF=comNota?(Number((IMPOSTO_UF.filter(function(x){return x.uf===uf;})[0]||{}).icms_pct)||0):0;
+  var taxasApos=comNota?IMPOSTO_TAXA.filter(function(t){return t.ativo!==false&&t.posicao==='apos';}):[];
+  var taxasFinal=comNota?IMPOSTO_TAXA.filter(function(t){return t.ativo!==false&&t.posicao!=='apos';}):[];
+  var apos=taxasApos.reduce(function(a,t){return a+(Number(t.aliquota)||0);},0);
+  var finalPct=taxasFinal.reduce(function(a,t){return a+(Number(t.aliquota)||0);},0)+icmsUF+(Number(comissaoPct)||0);
+  var ok=(1-apos/100)>0;
+  var subtotal1=ok?custoLiq/(1-apos/100):custoLiq;
+  var finalTotal=receita*(finalPct/100);
+  var resultado=subtotal1+finalTotal;
+  return {icmsUF:icmsUF,taxasApos:taxasApos,taxasFinal:taxasFinal,apos:apos,finalPct:finalPct,ok:ok,
+    subtotal1:subtotal1,finalTotal:finalTotal,resultado:resultado,margem:receita-resultado,
+    margemPct:receita>0?((receita-resultado)/receita*100):0};
+}
+// Tabela "impostos + preço + margem" (reutilizada pelo simulador e pelo detalhamento da aba Margem).
+function margemTabelaHtml(custoLiq,receita,comNota,comissao,uf,receitaLabel){
+  var M=margemCalcNum(custoLiq,receita,comNota,comissao,uf);
+  var row=function(lbl,val,strong){ return '<tr'+(strong?' style="font-weight:700"':'')+'><td class="l">'+lbl+'</td><td>'+val+'</td></tr>'; };
+  var head='<style>.mgT{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}.mgT td{padding:4px 8px;border-bottom:1px solid var(--border);text-align:right}.mgT td.l{text-align:left}.mgT .h td{background:var(--bg,rgba(0,0,0,.04));font-weight:700;color:var(--text3);text-transform:uppercase;font-size:11px}</style>';
+  if(!M.ok){ return head+'<div class="ap-hint" style="margin-top:12px">As alíquotas "após os custos" somam ≥ 100% ('+apFmt(M.apos)+'%). Revise os impostos — não dá para apurar "por dentro".</div>'; }
+  var html=head+'<table class="mgT"><tbody>';
+  html+=row('Custo líquido (base)', cBRL(custoLiq), true);
+  if(!comNota)html+='<tr><td class="l" colspan="2" style="color:var(--text3);font-style:italic">Venda SEM nota — impostos zerados (comissão continua).</td></tr>';
+  if(M.taxasApos.length){ html+='<tr class="h"><td class="l" colspan="2">Após os custos (por dentro, sobre o custo)</td></tr>';
+    M.taxasApos.forEach(function(t){ html+=row(apEsc(t.nome)+' ('+apFmt(t.aliquota)+'%)', cBRL(M.subtotal1*(Number(t.aliquota)||0)/100)); }); }
+  html+='<tr class="h"><td class="l" colspan="2">No final (sobre a receita da venda)</td></tr>';
+  M.taxasFinal.forEach(function(t){ html+=row(apEsc(t.nome)+' ('+apFmt(t.aliquota)+'%)', cBRL(receita*(Number(t.aliquota)||0)/100)); });
+  if(comNota)html+=row('ICMS '+apEsc(uf||'?')+' ('+apFmt(M.icmsUF)+'%)', cBRL(receita*M.icmsUF/100));
+  html+=row('Comissão ('+apFmt(comissao)+'%)', cBRL(receita*(Number(comissao)||0)/100));
+  html+=row('Resultado (custo + impostos)', cBRL(M.resultado), true);
+  html+='<tr class="h"><td class="l" colspan="2">Preço e margem</td></tr>';
+  html+=row('Receita'+(receitaLabel?(' ('+receitaLabel+')'):''), '<b>'+cBRL(receita)+'</b>');
+  html+=row('<b>Margem</b>', '<b style="color:'+(M.margem>=0?'var(--accent)':'#c0392b')+'">'+cBRL(M.margem)+' · '+apFmt(M.margemPct)+'%</b>', false);
+  html+='</tbody></table>';
+  html+='<div class="ap-hint" style="margin-top:6px">PIS/COFINS ("após custos") incide por dentro sobre o custo; os impostos "no final" (ICMS, IRRF, frete, comissão) incidem sobre a receita da venda. IPI fica fora (repassado, não reduz margem).</div>';
+  return html;
+}
 function margemBlocoHtml(r,v,qtd,um){
   var et=r.etiquetas||0;
   var creditoICMS=(r.linhas||[]).reduce(function(a,x){return a+(x.icms||0);},0);
@@ -5770,39 +5831,147 @@ function margemBlocoHtml(r,v,qtd,um){
   var fatPreco=fatorConvFicha(MARGEM.conv,v.preco_um)||0;
   var unidPreco=fatPreco>0?(et/fatPreco):0;
   var receita=(Number(v.preco)||0)*unidPreco;
-  var comNota=!!v.com_nota, comissao=Number(v.comissao_pct)||0;
   var cli=(CLIENTES_FISCAL||[]).filter(function(x){return String(x.cliente_codigo)===String(v.cliente_codigo);})[0]||{};
-  var uf=cli.uf||'';
-  var icmsUF=comNota?(Number((IMPOSTO_UF.filter(function(x){return x.uf===uf;})[0]||{}).icms_pct)||0):0;
-  var taxasApos=comNota?IMPOSTO_TAXA.filter(function(t){return t.ativo!==false&&t.posicao==='apos';}):[];
-  var taxasFinal=comNota?IMPOSTO_TAXA.filter(function(t){return t.ativo!==false&&t.posicao!=='apos';}):[];
-  var apos=taxasApos.reduce(function(a,t){return a+(Number(t.aliquota)||0);},0);
-  var finalPct=taxasFinal.reduce(function(a,t){return a+(Number(t.aliquota)||0);},0)+icmsUF+comissao;
-  var row=function(lbl,val,strong){ return '<tr'+(strong?' style="font-weight:700"':'')+'><td class="l">'+lbl+'</td><td>'+val+'</td></tr>'; };
-  var head='<style>.mgT{width:100%;border-collapse:collapse;font-size:13px;margin-top:14px}.mgT td{padding:4px 8px;border-bottom:1px solid var(--border);text-align:right}.mgT td.l{text-align:left}.mgT .h td{background:var(--bg,rgba(0,0,0,.04));font-weight:700;color:var(--text3);text-transform:uppercase;font-size:11px}</style>';
-  if((1-apos/100)<=0){ return head+'<div class="ap-hint" style="margin-top:12px">As alíquotas "após os custos" somam ≥ 100% ('+apFmt(apos)+'%). Revise os impostos — não dá para apurar "por dentro".</div>'; }
-  // "Apos os custos" (PIS/COFINS): por dentro sobre o CUSTO (base = custo reajustado).
-  var subtotal1=custoLiq/(1-apos/100);
-  // "No final" (ICMS, IRRF, frete, comissao...): incidem sobre a RECEITA da venda.
-  var finalTotal=receita*(finalPct/100);
-  var resultado=subtotal1+finalTotal;
-  var margem=receita-resultado, margemPct=receita>0?(margem/receita*100):0;
-  var html=head+'<div class="f-sub">Impostos e margem · '+apEsc(custoCliLabel(v.cliente_codigo))+'</div><table class="mgT"><tbody>';
-  html+=row('Custo líquido (base)', cBRL(custoLiq), true);
-  if(!comNota)html+='<tr><td class="l" colspan="2" style="color:var(--text3);font-style:italic">Venda SEM nota — impostos zerados (comissão continua).</td></tr>';
-  if(taxasApos.length){ html+='<tr class="h"><td class="l" colspan="2">Após os custos (por dentro, sobre o custo)</td></tr>';
-    taxasApos.forEach(function(t){ html+=row(apEsc(t.nome)+' ('+apFmt(t.aliquota)+'%)', cBRL(subtotal1*(Number(t.aliquota)||0)/100)); }); }
-  html+='<tr class="h"><td class="l" colspan="2">No final (sobre a receita da venda)</td></tr>';
-  taxasFinal.forEach(function(t){ html+=row(apEsc(t.nome)+' ('+apFmt(t.aliquota)+'%)', cBRL(receita*(Number(t.aliquota)||0)/100)); });
-  if(comNota)html+=row('ICMS '+apEsc(uf||'?')+' ('+apFmt(icmsUF)+'%)', cBRL(receita*icmsUF/100));
-  html+=row('Comissão ('+apFmt(comissao)+'%)', cBRL(receita*comissao/100));
-  html+=row('Resultado (custo + impostos)', cBRL(resultado), true);
-  html+='<tr class="h"><td class="l" colspan="2">Preço e margem</td></tr>';
-  html+=row('Receita ('+cBRL(v.preco)+' / '+apEsc(v.preco_um)+' × '+apFmt(unidPreco)+' '+apEsc(v.preco_um)+')', '<b>'+cBRL(receita)+'</b>');
-  html+=row('<b>Margem</b>', '<b style="color:'+(margem>=0?'var(--accent)':'#c0392b')+'">'+cBRL(margem)+' · '+apFmt(margemPct)+'%</b>', false);
-  html+='</tbody></table>';
-  html+='<div class="ap-hint" style="margin-top:6px">PIS/COFINS ("após custos") incide por dentro sobre o custo; os impostos "no final" (ICMS, IRRF, frete, comissão) incidem sobre a receita da venda. IPI fica fora (repassado, não reduz margem).</div>';
-  return html;
+  var lbl=cBRL(v.preco)+' / '+apEsc(v.preco_um)+' × '+apFmt(unidPreco)+' '+apEsc(v.preco_um);
+  return '<div class="f-sub">Impostos e margem · '+apEsc(custoCliLabel(v.cliente_codigo))+'</div>'+
+    margemTabelaHtml(custoLiq,receita,!!v.com_nota,Number(v.comissao_pct)||0,cli.uf||'',lbl);
+}
+// ===================== ABA MARGEM (receita do pedido × custo = margem) =====================
+// Receita = R$ Un. × saldo do pedido; custo ESTIMADO pela ficha; impostos (ICMS da UF +
+// taxas da aba Impostos) + comissão DO PEDIDO; assume COM nota. Margem REAL (custo do
+// apontamento) vem na próxima etapa. Agrega por mês (emissão), cliente ou vendedor.
+var MR={items:[],loaded:false,skipped:0};
+function renderMargemReal(){
+  var el=document.getElementById('margem-conteudo'); if(!el)return;
+  if(!window._podeEditar){ el.innerHTML='<div class="ap-hint">Sem permissão.</div>'; return; }
+  el.innerHTML='<div class="ap-hint">Carregando…</div>';
+  mrCarregar().then(mrRenderUI).catch(function(e){ el.innerHTML='<div class="ap-hint" style="white-space:pre-wrap">Não foi possível montar a margem.\nAplique 31_→37_ e recarregue.\n'+apEsc(e&&e.message||e)+'</div>'; });
+}
+function mrMesLabel(m){ if(!m||m==='—')return 'Sem emissão'; var p=String(m).split('-'); var n=['','jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez']; return (n[parseInt(p[1])]||p[1])+'/'+p[0]; }
+function mrMeses(){ var s={}; MR.items.forEach(function(i){s[i.mesKey]=1;}); return Object.keys(s).sort().reverse(); }
+function mrUfDiag(){
+  var ufs={}; MR.items.forEach(function(i){ var k=i.uf||'(sem UF)'; ufs[k]=(ufs[k]||0)+1; });
+  var ks=Object.keys(ufs).sort();
+  if(!ks.length)return '';
+  var parts=ks.map(function(u){
+    if(u==='(sem UF)')return '<b style="color:#c0392b">'+ufs[u]+' sem UF</b>';
+    var row=(IMPOSTO_UF||[]).filter(function(x){return x.uf===u;})[0];
+    if(!row)return apEsc(u)+'=<span style="color:#c0392b">não cadastrada</span>';
+    var p=Number(row.icms_pct)||0;
+    return apEsc(u)+'='+apFmt(p)+'%'+(p>0&&p<1?' <span style="color:#c0392b">⚠ parece fração (use '+apFmt(p*100)+')</span>':'');
+  });
+  return 'ICMS por UF (itens × aba Impostos): '+parts.join(' · ')+'. '+( (IMPOSTO_UF||[]).length?'':'<b style="color:#c0392b">Nenhuma UF cadastrada na aba Impostos.</b>');
+}
+async function mrCarregar(){
+  await ensureCustoData(); await ensureImpostos();
+  if(!(CLIENTES_FISCAL&&CLIENTES_FISCAL.length)){ try{var rc=await supabaseClient.from('clientes_fiscal').select('*'); if(!rc.error)CLIENTES_FISCAL=rc.data||[];}catch(e){} }
+  var cliMap={}; (CLIENTES_FISCAL||[]).forEach(function(c){cliMap[String(c.cliente_codigo)]=c;});
+  var prods=(await lerTabelaCompleta('produtos','*',['codigo_pa'])).data||[];
+  var etps=(await lerTabelaCompleta('produto_etapas','*',['produto_codigo','ordem'])).data||[];
+  var convs=(await lerTabelaCompleta('produto_conversoes','*',['produto_codigo'])).data||[];
+  var acbs=window._mpTipoReady?((await lerTabelaCompleta('produto_acabamentos','*',['produto_codigo','ordem'])).data||[]):[];
+  var prodMap={},etpMap={},convMap={},acabMap={};
+  prods.forEach(function(p){prodMap[p.codigo_pa]=p;});
+  etps.forEach(function(e){(etpMap[e.produto_codigo]=etpMap[e.produto_codigo]||[]).push(e);});
+  convs.forEach(function(c){(convMap[c.produto_codigo]=convMap[c.produto_codigo]||[]).push(c);});
+  acbs.forEach(function(a){(acabMap[a.produto_codigo]=acabMap[a.produto_codigo]||[]).push(a);});
+  Object.keys(etpMap).forEach(function(k){etpMap[k].sort(function(a,b){return (a.ordem||0)-(b.ordem||0);});});
+  // preço/comissão/emissão em tabela própria (sensível, RLS gestor/editor) — não em pedidos_abertos
+  var precos=(await lerTabelaCompleta('pedidos_precos','*',['pedido','item'])).data||[];
+  var precoMap={}; precos.forEach(function(p){precoMap[p.pedido+'|'+p.item]=p;});
+  var agg={};
+  (RAW.pedidos||[]).forEach(function(r){
+    var pa=produtoCodeBase(r.produto), key=r.pedido+'|'+r.item, a=agg[key];
+    if(!a){ a=agg[key]={pedido:r.pedido,item:r.item,pa:pa,descricao:r.produto_desc||'',um:r.um||'UN',saldo:0,cliente_codigo:r.cliente_codigo}; }
+    a.saldo+=Number(r.saldo)||0;
+  });
+  var items=[],skipped=0;
+  Object.keys(agg).forEach(function(k){
+    var a=agg[k], prod=prodMap[a.pa], pz=precoMap[k]||{};
+    var preco_un=pz.preco_un, comissao_pct=pz.comissao_pct, emissao=pz.emissao;
+    var temPreco=(Number(preco_un)>0&&Number(a.saldo)>0);
+    if(!prod||!temPreco){ if(temPreco)skipped++; return; }
+    var etapas=etpMap[a.pa]||[], conv=convMap[a.pa]||[], acab=custoAcabsNorm(acabMap[a.pa]||[]);
+    // Quantidade em etiquetas pela CONVERSÃO DA FICHA (produto_conversoes), na UM do pedido.
+    var r=custoProduto(prod,etapas,conv,acab,a.saldo,a.um);
+    var creditoICMS=(r.linhas||[]).reduce(function(s,x){return s+(x.icms||0);},0);
+    var custoLiq=(r.totalPedido||0)-creditoICMS;
+    var receita=(Number(preco_un)||0)*(Number(a.saldo)||0);
+    var cli=cliMap[String(a.cliente_codigo)]||{}, uf=(pz.uf||cli.uf||'');
+    var M=margemCalcNum(custoLiq,receita,true,comissao_pct,uf);
+    var em=emissao?String(emissao).slice(0,10):'', mesKey=em?em.slice(0,7):'—';
+    items.push({pedido:a.pedido,item:a.item,pa:a.pa,descricao:a.descricao||(prod.descricao||''),um:a.um,saldo:a.saldo,
+      emissao:em,mesKey:mesKey,cliente_codigo:a.cliente_codigo,clienteNome:(cli.nome_reduzido||cli.nome||a.cliente_codigo||''),vendedor:cli.vendedor||'—',uf:uf,
+      preco_un:preco_un,comissao_pct:comissao_pct||0,receita:receita,resultadoEst:M.resultado,margemEst:M.margem,margemEstPct:M.margemPct});
+  });
+  MR={items:items,loaded:true,skipped:skipped,maps:{prodMap:prodMap,etpMap:etpMap,convMap:convMap,acabMap:acabMap,cliMap:cliMap}};
+}
+function fecharMrDet(){ var o=document.getElementById('modal-mrdet'); if(o)o.style.display='none'; }
+function mrDetalhe(id){
+  var it=(MR.items||[]).filter(function(x){return (x.pedido+'-'+x.item)===String(id);})[0]; if(!it)return;
+  var mp=MR.maps||{}, prod=(mp.prodMap||{})[it.pa];
+  if(!prod){ alert('Ficha do produto não encontrada.'); return; }
+  var etapas=(mp.etpMap||{})[it.pa]||[], conv=(mp.convMap||{})[it.pa]||[], acab=custoAcabsNorm((mp.acabMap||{})[it.pa]||[]);
+  var r=custoProduto(prod,etapas,conv,acab,it.saldo,it.um);
+  // diagnóstico da conversão (UM do pedido × conversões da ficha)
+  var fat=fatorConvFicha(conv,it.um), convTxt=(conv||[]).map(function(c){return apEsc(c.um)+'='+apFmt(c.fator);}).join(', ')||'nenhuma';
+  var achou=(conv||[]).some(function(c){return (c.um||'').toUpperCase().trim()===(''+it.um).toUpperCase().trim();})||['UN','MI','MILHEIRO','UNID'].indexOf((''+it.um).toUpperCase().trim())>=0;
+  var diag='<div class="ap-hint" style="margin-bottom:8px'+(achou?'':';color:#c0392b')+'">UM do pedido: <b>'+apEsc(it.um)+'</b> · saldo <b>'+apFmt(it.saldo)+'</b> → fator ficha <b>'+apFmt(fat)+'</b> ⇒ <b>'+apFmt((Number(it.saldo)||0)*fat)+'</b> etiquetas. Conversões da ficha: '+convTxt+(achou?'':' — <b>UM do pedido não encontrada na ficha</b> (cadastre a conversão com esse mesmo nome).')+'</div>';
+  var custoLiq=(r.totalPedido||0)-(r.linhas||[]).reduce(function(s,x){return s+(x.icms||0);},0);
+  var lbl=cBRL(it.preco_un)+' / '+apEsc(it.um)+' × '+apFmt(it.saldo)+' '+apEsc(it.um);
+  var o=document.getElementById('modal-mrdet');
+  if(!o){ o=document.createElement('div'); o.id='modal-mrdet'; o.className='modal-overlay'; o.style.display='none';
+    o.onclick=function(ev){ if(ev.target===o)fecharMrDet(); }; document.body.appendChild(o); }
+  var head='<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px">'+
+    '<div><h3 style="margin:0;font-size:16px">Detalhamento · margem estimada</h3>'+
+    '<div style="font-size:12px;color:var(--text3)">'+apEsc(it.pa)+(it.descricao?(' · '+apEsc(it.descricao)):'')+' · OS '+apEsc(it.pedido+'-'+it.item)+' · '+apEsc(it.clienteNome)+(it.emissao?(' · emissão '+apEsc(it.emissao)):'')+'</div></div>'+
+    '<button class="carr-x" onclick="fecharMrDet()">✕</button></div>';
+  o.innerHTML='<div class="modal-box" style="max-width:min(1000px,96vw);width:100%;max-height:92vh;overflow:auto">'+head+diag+
+    custoResumoHtml(r,'Custo · '+apEsc(it.pa)+' · '+apFmt(it.saldo)+' '+apEsc(it.um))+
+    '<div class="f-sub" style="margin-top:12px">Impostos e margem</div>'+
+    margemTabelaHtml(custoLiq,it.receita,true,it.comissao_pct,it.uf,lbl)+'</div>';
+  o.style.display='flex';
+}
+function mrRenderUI(){
+  var el=document.getElementById('margem-conteudo'); if(!el)return;
+  if(!MR.items.length){ el.innerHTML='<div class="ap-hint">Nenhum item com ficha + preço ainda. Suba a planilha de pedidos (com <b>R$ Un.</b>, <b>Comissão 1 (%)</b> e <b>Emissão</b>) e cadastre as fichas.'+(MR.skipped?(' <b>'+MR.skipped+'</b> item(ns) com preço mas sem ficha foram ignorados.'):'')+'</div>'; return; }
+  var inp='padding:7px 9px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px';
+  var meses=mrMeses();
+  el.innerHTML='<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px">'+
+    '<select id="mr-mes" style="'+inp+'" onchange="mrRender()"><option value="">Todos os meses</option>'+meses.map(function(m){return '<option value="'+apEsc(m)+'">'+apEsc(mrMesLabel(m))+'</option>';}).join('')+'</select>'+
+    '<select id="mr-group" style="'+inp+'" onchange="mrRender()"><option value="mes">Agrupar por mês</option><option value="cliente">Agrupar por cliente</option><option value="vendedor">Agrupar por vendedor</option></select>'+
+    '<input id="mr-busca" placeholder="buscar cliente/produto/vendedor/pedido" style="'+inp+';min-width:240px" oninput="mrRender()">'+
+    (MR.skipped?('<span class="ap-hint">'+MR.skipped+' com preço sem ficha (ignorados)</span>'):'')+
+  '</div>'+
+    '<div id="mr-diag" class="ap-hint" style="margin-bottom:8px">'+mrUfDiag()+'</div>'+
+    '<div id="mr-cards" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px"></div>'+
+    '<div id="mr-agg"></div>'+
+    '<div id="mr-itens" style="margin-top:14px"></div>'+
+    '<div class="ap-hint" style="margin-top:8px">Margem <b>ESTIMADA</b> (custo pela ficha). A margem <b>REAL</b> (custo pelo apontamento) vem na próxima etapa. Receita = R$ Un. × saldo; impostos = ICMS da UF + taxas (aba Impostos) + comissão do pedido; assume COM nota.</div>';
+  mrRender();
+}
+function mrRender(){
+  var mes=(document.getElementById('mr-mes')||{}).value||'', grp=(document.getElementById('mr-group')||{}).value||'mes';
+  var q=((document.getElementById('mr-busca')||{}).value||'').toLowerCase().trim();
+  var lista=MR.items.filter(function(i){
+    if(mes&&i.mesKey!==mes)return false;
+    if(q&&![i.clienteNome,i.pa,i.descricao,i.vendedor,(i.pedido+'-'+i.item)].some(function(v){return (''+(v||'')).toLowerCase().indexOf(q)>=0;}))return false;
+    return true;
+  });
+  var tR=0,tC=0,tM=0; lista.forEach(function(i){tR+=i.receita;tC+=i.resultadoEst;tM+=i.margemEst;});
+  var mPct=tR>0?(tM/tR*100):0;
+  var card=function(l,v,c){return '<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 14px;min-width:140px"><div style="font-size:11px;color:var(--text3);text-transform:uppercase">'+l+'</div><div style="font-size:18px;font-weight:700'+(c?';color:'+c:'')+'">'+v+'</div></div>';};
+  var cardsEl=document.getElementById('mr-cards'); if(cardsEl)cardsEl.innerHTML=card('Receita',cBRL(tR))+card('Custo+impostos',cBRL(tC))+card('Margem estimada',cBRL(tM),tM>=0?'var(--accent)':'#c0392b')+card('Margem %',apFmt(mPct)+'%',mPct>=0?'var(--accent)':'#c0392b')+card('Itens',String(lista.length));
+  var keyf=grp==='cliente'?function(i){return i.clienteNome;}:grp==='vendedor'?function(i){return i.vendedor;}:function(i){return i.mesKey;};
+  var labf=grp==='mes'?mrMesLabel:function(x){return x;};
+  var g={}; lista.forEach(function(i){var k=keyf(i)||'—',a=g[k]||(g[k]={r:0,c:0,m:0,n:0}); a.r+=i.receita;a.c+=i.resultadoEst;a.m+=i.margemEst;a.n++;});
+  var gkeys=Object.keys(g).sort(function(a,b){return grp==='mes'?(a<b?1:-1):(g[b].m-g[a].m);});
+  var sty='<style>.mrT{width:100%;border-collapse:collapse;font-size:13px}.mrT td,.mrT th{padding:5px 8px;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap}.mrT td.l,.mrT th.l{text-align:left}.mrT th{color:var(--text3);font-size:11px;text-transform:uppercase}</style>';
+  var aggEl=document.getElementById('mr-agg'); if(aggEl)aggEl.innerHTML=sty+'<div class="f-sub">'+(grp==='mes'?'Por mês':grp==='cliente'?'Por cliente':'Por vendedor')+'</div><div style="overflow-x:auto"><table class="mrT"><thead><tr><th class="l">'+(grp==='mes'?'Mês':grp==='cliente'?'Cliente':'Vendedor')+'</th><th>Itens</th><th>Receita</th><th>Custo+imp.</th><th>Margem</th><th>%</th></tr></thead><tbody>'+
+    gkeys.map(function(k){var a=g[k],p=a.r>0?(a.m/a.r*100):0;return '<tr><td class="l">'+apEsc(labf(k))+'</td><td>'+a.n+'</td><td>'+cBRL(a.r)+'</td><td>'+cBRL(a.c)+'</td><td style="color:'+(a.m>=0?'var(--accent)':'#c0392b')+'">'+cBRL(a.m)+'</td><td>'+apFmt(p)+'%</td></tr>';}).join('')+'</tbody></table></div>';
+  var li=lista.slice().sort(function(a,b){return a.margemEstPct-b.margemEstPct;});
+  var rows=li.slice(0,400).map(function(i){return '<tr><td class="l">'+apEsc(i.emissao||'—')+'</td><td class="l">'+apEsc(i.pedido+'-'+i.item)+'</td><td class="l">'+apEsc(i.clienteNome)+'</td><td class="l">'+apEsc(i.pa)+'</td><td class="l" style="max-width:280px;overflow:hidden;text-overflow:ellipsis" title="'+apEsc(i.descricao||'')+'">'+apEsc(i.descricao||'—')+'</td><td>'+apFmt(i.saldo)+' '+apEsc(i.um)+'</td><td>'+cBRL(i.receita)+'</td><td>'+cBRL(i.resultadoEst)+'</td><td style="color:'+(i.margemEst>=0?'var(--accent)':'#c0392b')+'">'+cBRL(i.margemEst)+'</td><td>'+apFmt(i.margemEstPct)+'%</td><td class="l"><button class="btn-sec" onclick="mrDetalhe('+jsAttr(i.pedido+'-'+i.item)+')">Detalhar</button></td></tr>';}).join('');
+  var itEl=document.getElementById('mr-itens'); if(itEl)itEl.innerHTML=sty+'<div class="f-sub">Itens (piores margens primeiro)</div><div style="overflow-x:auto"><table class="mrT"><thead><tr><th class="l">Emissão</th><th class="l">OS</th><th class="l">Cliente</th><th class="l">PA</th><th class="l">Descrição</th><th>Saldo</th><th>Receita</th><th>Custo+imp.</th><th>Margem est.</th><th>%</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>'+(li.length>400?('<div class="ap-hint">Mostrando 400 de '+li.length+'.</div>'):'');
 }
 // ===================== ABA IMPOSTOS (impostos/taxas configuraveis + ICMS por UF) =====================
 var IMPOSTO_UF=[], IMPOSTO_TAXA=[];
