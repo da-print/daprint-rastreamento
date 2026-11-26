@@ -2373,7 +2373,12 @@ var KPI_OPS=[], KPI_PARADAS=[], KPI_NOMES={}, KPI_BASE={}, KPI_MAT={};
 function kNum(x){return Number(x)||0;}
 function kFmt(n){return (Math.round(n*100)/100).toString().replace('.',',');}
 function kBRL(n){ n=Math.round((Number(n)||0)*100)/100; return 'R$ '+n.toFixed(2).replace('.',','); }
-function kHM(min){min=Math.round(kNum(min));if(min<60)return min+' min';var h=Math.floor(min/60),m=min%60;return h+'h'+(m?(' '+m+'m'):'');}
+// Minutos → "45 min" (<60) ou "1h10" (>=60). Usado em todo lugar que mostra minutos.
+function fmtMin(min){ min=Number(min)||0; var neg=min<0; var a=Math.abs(min);
+  if(a<60)return (typeof apFmt==='function'?apFmt(min):(''+min))+' min';
+  var h=Math.floor(a/60), m=Math.round(a-h*60); if(m===60){h++;m=0;}
+  return (neg?'-':'')+h+'h'+(m<10?'0':'')+m; }
+function kHM(min){return fmtMin(kNum(min));}
 function kGnome(g){return (typeof dispNome==='function'&&dispNome(g))||g||'—';}
 function kCard(t,big,sub){return '<div style="flex:1;min-width:150px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px">'+
   '<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em">'+apEsc(t)+'</div>'+
@@ -2552,7 +2557,7 @@ function renderKpiTabelas(){
     kCard('Produzido (1ª etapa)',kFmt(sQtd)+' m','a rodar '+kFmt(sRodar)+' · líq. '+kFmt(sBase)+' · '+nOs+' OS'),
     kCard('Desperdício real',(dRealFis>=0?'+':'')+kFmt(dRealFis)+' m','material (1ª etapa − líquido) · '+(sBase>0?kFmt(dRealFis/sBase*100)+'% a mais que o líquido':'—')),
     kCard('Desp. vs previsto',(dPrevFis>=0?'+':'')+kFmt(dPrevFis)+' m','vs a rodar (1ª etapa) · '+(sRodar>0?kFmt(dPrevFis/sRodar*100)+'% a mais que o previsto':'—')),
-    kCard('Desvio produção',(desvio>=0?'+':'')+kFmt(desvio)+' min','real × estim. · '+kPct(sProd,sProdEst)),
+    kCard('Desvio produção',(desvio>=0?'+':'')+fmtMin(desvio),'real × estim. · '+kPct(sProd,sProdEst)),
     kCard('Desp. setup',kFmt(sDespS)+' m','estim. '+kFmt(sDespSEst)+' m · '+kPct(sDespS,sDespSEst))
   ].join('');
   // ---- por maquina (agrupado: Tempo | Metros) ----
@@ -2570,7 +2575,7 @@ function renderKpiTabelas(){
       var dReal=a.qtd-a.base, dPrev=a.qtd-a.rodar, dvT=a.prod-a.prodEst, velReal=a.prod>0?(a.qtd/a.prod*60):0, velPrev=a.velN>0?(a.velSum/a.velN):0;
       return '<tr><td class="l">'+apEsc(kGnome(a.grupo))+' · '+apEsc(a.maquina)+'</td><td>'+a.n+'</td>'+
         '<td class="sep">'+kHM(a.setup)+'</td><td>'+kHM(a.prod)+' / '+kHM(a.prodEst)+'</td>'+
-        '<td>'+(dvT>=0?'+':'')+kFmt(dvT)+' min ('+kPctD(dvT,a.prodEst)+')</td>'+
+        '<td>'+(dvT>=0?'+':'')+fmtMin(dvT)+' ('+kPctD(dvT,a.prodEst)+')</td>'+
         '<td class="sep">'+kFmt(a.qtd)+' / '+kFmt(a.rodar)+'</td>'+
         '<td>'+(dReal>=0?'+':'')+kFmt(dReal)+' ('+kPctD(dReal,a.base)+')</td>'+
         '<td>'+(dPrev>=0?'+':'')+kFmt(dPrev)+' ('+kPct(a.qtd,a.rodar)+')</td>'+
@@ -2672,8 +2677,8 @@ async function kpiAbrirOS(pedido,item){
     return '<tr>'+
       '<td class="l">'+apEsc(o.etapa_idx)+'. '+apEsc(kGnome(o.grupo))+'</td>'+
       '<td class="l">'+apEsc(o.maquina||'—')+'</td>'+
-      '<td class="sep">'+kFmt(kNum(o.setup_real_min))+' / '+kFmt(kNum(o.setup_est_min))+'</td>'+
-      '<td>'+kFmt(prod)+' / '+kFmt(kNum(o.prod_est_min))+'</td>'+
+      '<td class="sep">'+fmtMin(kNum(o.setup_real_min))+' / '+fmtMin(kNum(o.setup_est_min))+'</td>'+
+      '<td>'+fmtMin(prod)+' / '+fmtMin(kNum(o.prod_est_min))+'</td>'+
       '<td class="sep">'+kFmt(qtd)+' / '+kFmt(rodar)+'</td>'+
       '<td>'+(dReal>=0?'+':'')+kFmt(dReal)+' ('+kPctD(dReal,base)+')</td>'+
       '<td>'+(dPrev>=0?'+':'')+kFmt(dPrev)+' ('+kPct(qtd,rodar)+')</td>'+
@@ -2690,7 +2695,7 @@ async function kpiAbrirOS(pedido,item){
   var f0=kOsMetros(ops)||{}, tQtd=kNum(f0.qtd_real), tRodar=kRodar(f0), tLiq=kNum(f0.qtd_est);
   var dRealT=tQtd-tLiq, dPrevT=tQtd-tRodar, pctRT=tLiq>0?(dRealT/tLiq*100):null; // Total (nivel-OS): desp. real e vs prev = 1a etapa (NAO somam etapas)
   var foot='<tr style="font-weight:700"><td class="l" colspan="2">Total <span style="font-weight:400">(nível-OS: produzido, desp. real e vs prev = 1ª etapa · não somam)</span></td>'+
-    '<td class="sep">'+kFmt(tSetup)+' / '+kFmt(tSetupEst)+'</td><td>'+kFmt(tProd)+' / '+kFmt(tProdEst)+'</td>'+
+    '<td class="sep">'+fmtMin(tSetup)+' / '+fmtMin(tSetupEst)+'</td><td>'+fmtMin(tProd)+' / '+fmtMin(tProdEst)+'</td>'+
     '<td class="sep">'+kFmt(tQtd)+' / '+kFmt(tRodar)+'</td>'+
     '<td>'+(dRealT>=0?'+':'')+kFmt(dRealT)+(pctRT!=null?(' ('+(pctRT>=0?'+':'')+kFmt(pctRT)+'%)'):'')+'</td>'+
     '<td>'+(dPrevT>=0?'+':'')+kFmt(dPrevT)+' ('+kPctD(dPrevT,tRodar)+')</td>'+
@@ -4012,6 +4017,13 @@ async function apAtribuirMaquina(opId,maq){
   var r=ITENS.find(function(x){return x.key===AP_KEY;});
   if(r)await apCarregar(r); // re-renderiza o modal (velocidade/tempo estimado atualizados)
 }
+// Troca de máquina no setup: gestor/editor persiste (re-renderiza); operador só alterna o
+// bloco carreiras×repetições conforme a sub escolhida (VOREY sim, BROTECH não).
+function apSetupMaqSel(opId,maq,grupo){
+  if(window._podeEditar){ apAtribuirMaquina(opId,maq); return; }
+  var pg=document.getElementById('ap-pag-'+opId); if(!pg)return;
+  pg.style.display=(grupoEhUnidade(grupo)||(maq&&subEhPagina(grupo,maq)))?'':'none';
+}
 // ===================== AJUSTE DE CARREIRAS DESTA RODADA (gestor/editor) =====================
 // Override pontual de carreiras numa OS (ex.: material mais estreito). NAO altera a ficha do
 // produto nem outras OS. So antes de iniciar a producao da etapa. Recalcula a estimativa da
@@ -4907,10 +4919,12 @@ function apManualFormHtml(op){
   function fld(lbl,inner){return '<label class="ap-ml-f" style="display:flex;flex-direction:column;font-size:11px;color:#666;gap:2px">'+lbl+inner+'</label>';}
   // VOREY/batida ainda nao iniciada: no manual tambem informa maquina + carreiras x
   // repeticoes, para recalcular a etapa (igual ao Iniciar setup) antes de gravar o bloco.
+  var mManualPag=grupoEhUnidade(op.grupo)||(!!op.maquina&&subEhPagina(op.grupo,op.maquina));
   var pagManual=(op.status==='aguardando'&&setupPorImagens(op.grupo))
-    ? fld('Máquina','<select class="ap-sel" id="ap-mmaq-'+op.id+'"><option value="">— máquina —</option>'+apSubs(op.grupo).map(function(s){return '<option value="'+apEsc(s.nome)+'"'+(op.maquina===s.nome?' selected':'')+'>'+apEsc(s.nome)+'</option>';}).join('')+'</select>')
-      +fld('Carreiras','<input class="ap-input" type="number" min="1" id="ap-mcarr-'+op.id+'" style="width:76px" value="'+apEsc(op.carreiras||1)+'">')
-      +fld('Repetições','<input class="ap-input" type="number" min="1" id="ap-mrep-'+op.id+'" style="width:76px" value="'+apEsc(op.repeticoes||1)+'">')
+    ? fld('Máquina','<select class="ap-sel" id="ap-mmaq-'+op.id+'" onchange="apManualMaqSel(\''+op.id+'\','+jsAttr(op.grupo)+')"><option value="">— máquina —</option>'+apSubs(op.grupo).map(function(s){return '<option value="'+apEsc(s.nome)+'"'+(op.maquina===s.nome?' selected':'')+'>'+apEsc(s.nome)+'</option>';}).join('')+'</select>')
+      +'<span id="ap-mpag-'+op.id+'" style="display:'+(mManualPag?'inline-flex':'none')+';gap:8px;align-items:flex-end">'+
+        fld('Carreiras','<input class="ap-input" type="number" min="1" id="ap-mcarr-'+op.id+'" style="width:76px" value="'+apEsc(op.carreiras||1)+'">')
+      +fld('Repetições','<input class="ap-input" type="number" min="1" id="ap-mrep-'+op.id+'" style="width:76px" value="'+apEsc(op.repeticoes||1)+'">')+'</span>'
     : '';
   return '<div id="ap-manual-'+op.id+'" style="display:none;margin-top:8px;padding:10px;border:1px dashed #cfd4da;border-radius:8px;background:#fafbfc">'+
     '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end">'+
@@ -4928,6 +4942,12 @@ function apManualFormHtml(op){
   '</div>';
 }
 function apManualToggle(opId){var el=document.getElementById('ap-manual-'+opId);if(!el)return;el.style.display=el.style.display==='none'?'block':'none';}
+// Lançamento manual: mostra carreiras×repetições só se a máquina escolhida for por página (VOREY) / batida.
+function apManualMaqSel(opId,grupo){
+  var mmaq=(document.getElementById('ap-mmaq-'+opId)||{}).value||'';
+  var pg=document.getElementById('ap-mpag-'+opId); if(!pg)return;
+  pg.style.display=(grupoEhUnidade(grupo)||(mmaq&&subEhPagina(grupo,mmaq)))?'inline-flex':'none';
+}
 async function apManualRegistrar(opId){
   var bloco=(document.getElementById('ap-mb-'+opId)||{}).value;
   var data=(document.getElementById('ap-md-'+opId)||{}).value;
@@ -4944,10 +4964,11 @@ async function apManualRegistrar(opId){
   // VOREY/batida ainda aguardando: recalcula a etapa (maquina + carreiras x repeticoes)
   // ANTES de gravar o bloco, igual ao Iniciar setup. So quando o form mostra esses campos.
   var opM=AP_OPS.find(function(o){return o.id===opId;});
-  if(opM&&opM.status==='aguardando'&&setupPorImagens(opM.grupo)&&document.getElementById('ap-mmaq-'+opId)){
-    var mmaq=(document.getElementById('ap-mmaq-'+opId)||{}).value||'';
+  var mmaqEl=document.getElementById('ap-mmaq-'+opId), mmaq=mmaqEl?(mmaqEl.value||''):'';
+  // Só recalcula por página (carreiras×repetições) se a sub escolhida for POR PÁGINA
+  // (VOREY) ou o grupo for unidade (batida). BROTECH (metro) não entra aqui.
+  if(opM&&opM.status==='aguardando'&&mmaqEl&&mmaq&&(subEhPagina(opM.grupo,mmaq)||grupoEhUnidade(opM.grupo))){
     var mcarr=parseInt(apNum('ap-mcarr-'+opId))||0, mrep=parseInt(apNum('ap-mrep-'+opId))||0;
-    if(!mmaq){alert('Selecione a máquina.');return;}
     if(mcarr<=0||mrep<=0){alert('Informe carreiras e repetições.');return;}
     try{
       var rr=await supabaseClient.rpc('recalcular_op_imagens',{p_operacao:opId,p_maquina:mmaq,p_carreiras:mcarr,p_repeticoes:mrep});
@@ -4993,14 +5014,17 @@ function apRenderOp(r,op,estado){
     fb=op.status==='finalizada'?'<div class="ap-est ap-hint">Validada.</div>':'<div class="ap-est ap-hint">Etapa de validação — sem tempo/metragem. Valide para avançar.</div>';
   } else if(op.status==='aguardando'){
     var subs=apSubs(op.grupo);
-    var sel = subs.length ? '<select class="ap-sel" id="ap-maq-'+op.id+'" onchange="apAtribuirMaquina(\''+op.id+'\',this.value)"><option value="">— máquina —</option>'+subs.map(function(s){return '<option value="'+apEsc(s.nome)+'"'+(op.maquina===s.nome?' selected':'')+'>'+apEsc(s.nome)+'</option>';}).join('')+'</select>' : '';
-    // VOREY (por página) ou BATIDA (modo unidade): operador informa carreiras x
-    // repetições no setup (pré-preenchidas da ficha, editáveis). Recalcula na hora.
+    var sel = subs.length ? '<select class="ap-sel" id="ap-maq-'+op.id+'" onchange="apSetupMaqSel(\''+op.id+'\',this.value,'+jsAttr(op.grupo)+')"><option value="">— máquina —</option>'+subs.map(function(s){return '<option value="'+apEsc(s.nome)+'"'+(op.maquina===s.nome?' selected':'')+'>'+apEsc(s.nome)+'</option>';}).join('')+'</select>' : '';
+    // Carreiras × repetições: só p/ a máquina POR PÁGINA (ex.: VOREY) ou grupo em modo
+    // unidade (batida). No CORTE, BROTECH roda em metro e NÃO mostra estes campos.
+    // O bloco só aparece quando a sub selecionada é por página (alterna em apSetupMaqSel).
+    var mostraPag=grupoEhUnidade(op.grupo)||(!!op.maquina&&subEhPagina(op.grupo,op.maquina));
     var pagIn = setupPorImagens(op.grupo)
-      ? '<span class="ap-hint" style="margin-left:4px">Carreiras × repetições:</span>'+
+      ? '<span id="ap-pag-'+op.id+'" style="'+(mostraPag?'':'display:none')+'">'+
+        '<span class="ap-hint" style="margin-left:4px">Carreiras × repetições:</span>'+
         '<input class="ap-input" id="ap-carr-'+op.id+'" type="number" min="1" style="width:84px" title="Carreiras" value="'+apEsc(op.carreiras||1)+'" placeholder="carreiras" oninput="apPreviaSetup(\''+op.id+'\')">'+
         '<input class="ap-input" id="ap-rep-'+op.id+'" type="number" min="1" style="width:84px" title="Repetições" value="'+apEsc(op.repeticoes||1)+'" placeholder="repetições" oninput="apPreviaSetup(\''+op.id+'\')">'+
-        '<span id="ap-prev-'+op.id+'" class="ap-hint" style="margin-left:4px">'+apPreviaCalc(op,op.carreiras,op.repeticoes)+'</span>'
+        '<span id="ap-prev-'+op.id+'" class="ap-hint" style="margin-left:4px">'+apPreviaCalc(op,op.carreiras,op.repeticoes)+'</span></span>'
       : '';
     acoes = sel+pagIn+'<button class="ap-btn" onclick="apIniciarSetup(\''+op.id+'\')"><i class="ti ti-player-play"></i> Iniciar setup</button>';
   } else if(op.status==='em_setup'){
@@ -5014,7 +5038,7 @@ function apRenderOp(r,op,estado){
       motS+'<button class="ap-btn-sec" onclick="apSetupParada(\''+op.id+'\')"><i class="ti ti-player-pause"></i> Parada</button>'+
       '<input class="ap-input" id="ap-qs-'+op.id+'" type="number" min="0" placeholder="'+apEsc(unit)+' final (opc.)"><button class="ap-btn" onclick="apFinalizarSetup(\''+op.id+'\')"><i class="ti ti-player-stop"></i> Finalizar setup</button>';
   } else if(op.status==='setup_ok'){
-    fb='<div class="ap-est">Setup concluído: <b>'+apFmt(apMsMin(setupMs))+' min</b> · desperdício <b>'+apFmt(setupMet)+' '+apEsc(unit||'m')+'</b></div>';
+    fb='<div class="ap-est">Setup concluído: <b>'+fmtMin(apMsMin(setupMs))+'</b> · desperdício <b>'+apFmt(setupMet)+' '+apEsc(unit||'m')+'</b></div>';
     acoes = '<button class="ap-btn" onclick="apAcao(\''+op.id+'\',\'prod_inicio\')"><i class="ti ti-player-play"></i> Iniciar produção</button>';
   } else if(op.status==='em_producao'){
     fb=(lancChips?'<div class="ap-est">'+lancChips+'</div>':'')+
@@ -5030,11 +5054,11 @@ function apRenderOp(r,op,estado){
     acoes = '<button class="ap-btn" onclick="apAcao(\''+op.id+'\',\'parada_fim\')"><i class="ti ti-player-play"></i> Retomar '+(emSetupPar?'setup':'produção')+'</button>';
   } else if(op.status==='finalizada'){
     var prodMs=apSomaPares(ev,'prod_inicio','prod_fim')-apSomaPares(ev,'parada_inicio','parada_fim');
-    fb='<div class="ap-est"><span>setup: <b>'+apFmt(apMsMin(setupMs))+' min</b></span><span>produção: <b>'+apFmt(apMsMin(Math.max(0,prodMs)))+' min</b></span><span>produzido: <b>'+apFmt(somaL)+' '+apEsc(unit)+'</b></span><span>desp. setup: <b>'+apFmt(setupMet)+'</b></span></div>';
+    fb='<div class="ap-est"><span>setup: <b>'+fmtMin(apMsMin(setupMs))+'</b></span><span>produção: <b>'+fmtMin(apMsMin(Math.max(0,prodMs)))+'</b></span><span>produzido: <b>'+apFmt(somaL)+' '+apEsc(unit)+'</b></span><span>desp. setup: <b>'+apFmt(setupMet)+'</b></span></div>';
     acoes = '<button class="ap-btn-sec" onclick="apAcao(\''+op.id+'\',\'reabertura\')"><i class="ti ti-lock-open"></i> Reabrir</button>';
   }
   var est = (op.setup_est_min!=null||op.prod_est_min!=null)
-    ? '<div class="ap-est ap-hint"><span>estim.: setup '+apFmt(op.setup_est_min)+' min'+(op.desp_setup_est!=null?(' · '+apFmt(op.desp_setup_est)+' '+apEsc(unit)):'')+'</span><span>produção '+apFmt(op.prod_est_min)+' min</span>'+
+    ? '<div class="ap-est ap-hint"><span>estim.: setup '+fmtMin(op.setup_est_min)+(op.desp_setup_est!=null?(' · '+apFmt(op.desp_setup_est)+' '+apEsc(unit)):'')+'</span><span>produção '+fmtMin(op.prod_est_min)+'</span>'+
       (op.qtd_rodar_est!=null
         ? '<span>rodar <b>'+apFmt(op.qtd_rodar_est)+' '+apEsc(unit)+'</b> <span style="opacity:.7">(líq. '+apFmt(op.qtd_est)+')</span></span>'
         : '<span>qtd '+apFmt(op.qtd_est)+' '+apEsc(unit)+'</span>')+
@@ -5299,7 +5323,7 @@ function renderFichaRoteiro(){
       var velE=g.velocidade||0, velunit=modo==='unidade'?'batidas/h':'m/h';
       var imgLine='';
       if(modo==='unidade'){ var carrN=Math.max(1,parseInt(e.carreiras)||1), repN=Math.max(1,parseInt(e.repeticoes)||1); imgLine='<span>imagens: <b>'+(carrN*repN)+'</b> ('+carrN+' carreira(s) × '+repN+' repetição(ões))</span>'; }
-      estLine='<div class="ap-est"><span>setup est.: <b>'+apFmt(setupE)+' min</b></span>'+
+      estLine='<div class="ap-est"><span>setup est.: <b>'+fmtMin(setupE)+'</b></span>'+
         '<span>desperdício setup: <b>'+apFmt(despE)+' '+dunit+'</b></span>'+
         '<span>velocidade: <b>'+apFmt(velE)+' '+velunit+'</b></span>'+imgLine+
         (modo==='unidade'?'':'<span>passo: <b>'+apFmt(passo)+' mm</b></span>')+'</div>';
@@ -5611,10 +5635,10 @@ function custoProduto(prod,etapas,conv,acabs,qtd,um){
     var gLabel=(gObj&&gObj.display)||it.e.grupo, maqNome=sub?sub.nome:('média '+gLabel), uL=(it.est.unit==='un'?'un':'m');
     var rh=sub?(Number(CUSTO_HORA_SUB[String(sub.id)])||0):custoHoraGrupo(it.e.grupo); if(rh<=0)return;
     var hAc=(Number(it.est.setup)||0)/60, cAc=hAc*rh;   // ACERTO = tempo de setup (min -> h) x R$/h
-    if(cAc>0){ vHora+=cAc; linhas.push({g:'fab',label:'Acerto · '+gLabel+' ('+maqNome+') · '+apFmt(Number(it.est.desp)||0)+' '+uL,tipo:'F',unid:'h',qtd:hAc,custo:rh,total:cAc}); }
+    if(cAc>0){ vHora+=cAc; linhas.push({g:'fab',label:'Acerto · '+gLabel+' ('+maqNome+') · '+apFmt(Number(it.est.desp)||0)+' '+uL+' · '+fmtMin(Number(it.est.setup)||0),tipo:'F',unid:'h',qtd:hAc,custo:rh,total:cAc}); }
     var vel=sub?(Number(sub.velocidade)||Number(sub.velocidade_pagina)||0):(Number(it.est.vel)||0);
     if(vel>0){ var hPr=(Number(it.qtdRodar)||0)/vel, cPr=hPr*rh;   // EXECUCAO = metros rodar / velocidade
-      vHora+=cPr; linhas.push({g:'fab',label:'Execução · '+gLabel+' ('+maqNome+') · '+apFmt(Number(it.qtdRodar)||0)+' '+uL+' · '+apFmt(vel)+' '+uL+'/h',tipo:'V',unid:'h',qtd:hPr,custo:rh,total:cPr}); }
+      vHora+=cPr; linhas.push({g:'fab',label:'Execução · '+gLabel+' ('+maqNome+') · '+apFmt(Number(it.qtdRodar)||0)+' '+uL+' · '+fmtMin(hPr*60)+' · '+apFmt(vel)+' '+uL+'/h',tipo:'V',unid:'h',qtd:hPr,custo:rh,total:cPr}); }
   });
   var digEt=null; for(var di=0;di<ests.length;di++){ if(/digital/i.test(ests[di].e.grupo||'')){ digEt=ests[di]; break; } }
   var digSubPref=null; if(digEt){ var dsub=custoSubDaEtapa(digEt.e); if(dsub)digSubPref=dsub.id; }
@@ -5801,8 +5825,56 @@ function margemCalcNum(custoLiq,receita,comNota,comissaoPct,uf){
     subtotal1:subtotal1,finalTotal:finalTotal,resultado:resultado,margem:receita-resultado,
     margemPct:receita>0?((receita-resultado)/receita*100):0};
 }
+// R$/h da máquina que REALMENTE rodou (sub de custo), senão média do grupo.
+function custoRhDaMaquina(maqNome,grupo){
+  if(maqNome){ var sub=(MAQUINAS_SUB_DB||[]).filter(function(s){return String(s.nome)===String(maqNome);})[0];
+    if(sub){ var rh=Number((CUSTO_HORA_SUB||{})[String(sub.id)])||0; if(rh>0)return rh; } }
+  return (typeof custoHoraGrupo==='function'?custoHoraGrupo(grupo):0)||0;
+}
+// CUSTO REAL por OS a partir do apontamento (linhas de v_operacao_kpi da OS). Retorna um
+// objeto no MESMO formato de custoProduto (linhas/detalhes/totalPedido) p/ renderizar com o
+// mesmo custoResumoHtml — mesmo nível de detalhe do estimado. Fabricação = tempo real × R$/h
+// da sub que rodou (acerto/execução por máquina); materiais = linhas da ficha escaladas pelos
+// metros reais; fixos (clichê/faca/zinco) = da ficha.
+function custoRealOS(prod,etapas,conv,acabs,opsKpi,saldo,um){
+  var rEst=custoProduto(prod,etapas,conv,acabs,saldo,um);
+  var fixoLinhas=(rEst.linhas||[]).filter(function(x){return x.g==='fix';});
+  var matLinhasEst=(rEst.linhas||[]).filter(function(x){return x.g==='mat';});
+  var metrosEst=Number(rEst.metrosRodar)||0;
+  var gmap={}; (MAQUINAS_GRUPOS_DB||[]).forEach(function(g){gmap[g.nome]=g;});
+  var temReal=false, horaReal=0, fabLinhas=[];
+  (opsKpi||[]).forEach(function(o){
+    var rh=custoRhDaMaquina(o.maquina,o.grupo); if(rh<=0)return;
+    var gLabel=(gmap[o.grupo]&&gmap[o.grupo].display)||o.grupo||'', maqNome=o.maquina||('média '+gLabel);
+    var uL=(o.unidade_est==='un'?'un':'m');
+    var setMin=kNum(o.setup_real_min), prodMin=kNum(o.prod_real_min), qr=kNum(o.qtd_real), despS=kNum(o.desp_setup_real);
+    if(setMin>0){ var h=setMin/60, c=h*rh; horaReal+=c; temReal=true;
+      fabLinhas.push({g:'fab',label:'Acerto · '+gLabel+' ('+maqNome+') · '+apFmt(despS)+' '+uL+' · '+fmtMin(setMin),tipo:'F',unid:'h',qtd:h,custo:rh,total:c}); }
+    if(prodMin>0){ var h2=prodMin/60, c2=h2*rh, vel=h2>0?(qr/h2):0; horaReal+=c2; temReal=true;
+      fabLinhas.push({g:'fab',label:'Execução · '+gLabel+' ('+maqNome+') · '+apFmt(qr)+' '+uL+' · '+fmtMin(prodMin)+' · '+apFmt(vel)+' '+uL+'/h',tipo:'V',unid:'h',qtd:h2,custo:rh,total:c2}); }
+  });
+  var ref=(typeof kOsMetros==='function')?(kOsMetros(opsKpi||[])||null):null;
+  var metrosReal=(ref&&ref.unidade_est==='m')?kNum(ref.qtd_real):0;
+  if(metrosReal>0)temReal=true;
+  var ratio=(metrosEst>0&&metrosReal>0)?(metrosReal/metrosEst):1;  // materiais escalam pelos metros reais
+  var matLinhas=matLinhasEst.map(function(x){return {g:'mat',label:x.label,tipo:x.tipo,unid:x.unid,qtd:(x.qtd||0)*ratio,custo:x.custo,total:(x.total||0)*ratio,icms:(x.icms||0)*ratio};});
+  var linhas=fabLinhas.concat(matLinhas).concat(fixoLinhas);
+  var totalPedido=linhas.reduce(function(s,x){return s+(x.total||0);},0);
+  var creditoICMS=linhas.reduce(function(s,x){return s+(x.icms||0);},0);
+  var fixoTot=fixoLinhas.reduce(function(s,x){return s+(x.total||0);},0);
+  var matReal=matLinhas.reduce(function(s,x){return s+(x.total||0);},0);
+  var larS=Number(prod.larg_substrato)||0, dEst=rEst.detalhes||{};
+  var liqMetros=Number(dEst.liqMetros)||0;
+  var detalhes={liqMetros:liqMetros,metrosRodar:metrosReal,m2Liq:Number(dEst.m2Liq)||0,m2:metrosReal*(larS/1000),
+    perdaM:Math.max(0,metrosReal-liqMetros),perdaPct:metrosReal>0?((metrosReal-liqMetros)/metrosReal*100):0};
+  var et=rEst.etiquetas||0;
+  return {disponivel:temReal,etiquetas:et,linhas:linhas,detalhes:detalhes,totalPedido:totalPedido,
+    fixo:{total:fixoTot},variavel:{total:totalPedido-fixoTot},varUnit:et>0?((totalPedido-fixoTot)/et):0,
+    unitComFixo:et>0?(totalPedido/et):0,creditoICMS:creditoICMS,liq:totalPedido-creditoICMS,
+    horaReal:horaReal,matReal:matReal,metrosReal:metrosReal,metrosEst:metrosEst,ratio:ratio,rEst:rEst};
+}
 // Tabela "impostos + preço + margem" (reutilizada pelo simulador e pelo detalhamento da aba Margem).
-function margemTabelaHtml(custoLiq,receita,comNota,comissao,uf,receitaLabel){
+function margemTabelaHtml(custoLiq,receita,comNota,comissao,uf,receitaLabel,fixo){
   var M=margemCalcNum(custoLiq,receita,comNota,comissao,uf);
   var row=function(lbl,val,strong){ return '<tr'+(strong?' style="font-weight:700"':'')+'><td class="l">'+lbl+'</td><td>'+val+'</td></tr>'; };
   var head='<style>.mgT{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}.mgT td{padding:4px 8px;border-bottom:1px solid var(--border);text-align:right}.mgT td.l{text-align:left}.mgT .h td{background:var(--bg,rgba(0,0,0,.04));font-weight:700;color:var(--text3);text-transform:uppercase;font-size:11px}</style>';
@@ -5820,8 +5892,10 @@ function margemTabelaHtml(custoLiq,receita,comNota,comissao,uf,receitaLabel){
   html+='<tr class="h"><td class="l" colspan="2">Preço e margem</td></tr>';
   html+=row('Receita'+(receitaLabel?(' ('+receitaLabel+')'):''), '<b>'+cBRL(receita)+'</b>');
   html+=row('<b>Margem</b>', '<b style="color:'+(M.margem>=0?'var(--accent)':'#c0392b')+'">'+cBRL(M.margem)+' · '+apFmt(M.margemPct)+'%</b>', false);
+  if(Number(fixo)>0){ var Msf=margemCalcNum(custoLiq-Number(fixo),receita,comNota,comissao,uf);
+    html+=row('<b>Margem sem fixos</b> (desconta clichê/faca/zinco = '+cBRL(fixo)+')', '<b style="color:'+(Msf.margem>=0?'var(--accent)':'#c0392b')+'">'+cBRL(Msf.margem)+' · '+apFmt(Msf.margemPct)+'%</b>', false); }
   html+='</tbody></table>';
-  html+='<div class="ap-hint" style="margin-top:6px">PIS/COFINS ("após custos") incide por dentro sobre o custo; os impostos "no final" (ICMS, IRRF, frete, comissão) incidem sobre a receita da venda. IPI fica fora (repassado, não reduz margem).</div>';
+  html+='<div class="ap-hint" style="margin-top:6px">PIS/COFINS ("após custos") incide por dentro sobre o custo; os impostos "no final" (ICMS, IRRF, frete, comissão) incidem sobre a receita da venda. IPI fica fora (repassado, não reduz margem). "Margem sem fixos" ignora clichê/faca/zinco — útil p/ item de repetição cujo ferramental já foi cobrado.</div>';
   return html;
 }
 function margemBlocoHtml(r,v,qtd,um){
@@ -5834,7 +5908,7 @@ function margemBlocoHtml(r,v,qtd,um){
   var cli=(CLIENTES_FISCAL||[]).filter(function(x){return String(x.cliente_codigo)===String(v.cliente_codigo);})[0]||{};
   var lbl=cBRL(v.preco)+' / '+apEsc(v.preco_um)+' × '+apFmt(unidPreco)+' '+apEsc(v.preco_um);
   return '<div class="f-sub">Impostos e margem · '+apEsc(custoCliLabel(v.cliente_codigo))+'</div>'+
-    margemTabelaHtml(custoLiq,receita,!!v.com_nota,Number(v.comissao_pct)||0,cli.uf||'',lbl);
+    margemTabelaHtml(custoLiq,receita,!!v.com_nota,Number(v.comissao_pct)||0,cli.uf||'',lbl,(r.fixo&&r.fixo.total)||0);
 }
 // ===================== ABA MARGEM (receita do pedido × custo = margem) =====================
 // Receita = R$ Un. × saldo do pedido; custo ESTIMADO pela ficha; impostos (ICMS da UF +
@@ -5879,12 +5953,15 @@ async function mrCarregar(){
   // preço/comissão/emissão em tabela própria (sensível, RLS gestor/editor) — não em pedidos_abertos
   var precos=(await lerTabelaCompleta('pedidos_precos','*',['pedido','item'])).data||[];
   var precoMap={}; precos.forEach(function(p){precoMap[p.pedido+'|'+p.item]=p;});
+  // apontamento (custo REAL): linhas de v_operacao_kpi agrupadas por pedido+item
+  var kpiByOs={}; try{ var kr=(await lerTabelaCompleta('v_operacao_kpi','*',['pedido','item'])).data||[]; kr.forEach(function(o){ var k=o.pedido+'|'+o.item; (kpiByOs[k]=kpiByOs[k]||[]).push(o); }); }catch(e){}
   var agg={};
   (RAW.pedidos||[]).forEach(function(r){
     var pa=produtoCodeBase(r.produto), key=r.pedido+'|'+r.item, a=agg[key];
-    if(!a){ a=agg[key]={pedido:r.pedido,item:r.item,pa:pa,descricao:r.produto_desc||'',um:r.um||'UN',saldo:0,cliente_codigo:r.cliente_codigo}; }
+    if(!a){ a=agg[key]={pedido:r.pedido,item:r.item,pa:pa,descricao:r.produto_desc||'',um:r.um||'UN',saldo:0,cliente_codigo:r.cliente_codigo,cliente_nome_origem:r.cliente_nome_origem||''}; }
     a.saldo+=Number(r.saldo)||0;
   });
+  function mrCliNomeLimpo(s){ return (''+(s||'')).replace(/^\s*\d+\s*-\s*/,'').trim(); }
   var items=[],skipped=0;
   Object.keys(agg).forEach(function(k){
     var a=agg[k], prod=prodMap[a.pa], pz=precoMap[k]||{};
@@ -5899,12 +5976,22 @@ async function mrCarregar(){
     var receita=(Number(preco_un)||0)*(Number(a.saldo)||0);
     var cli=cliMap[String(a.cliente_codigo)]||{}, uf=(pz.uf||cli.uf||'');
     var M=margemCalcNum(custoLiq,receita,true,comissao_pct,uf);
+    var fixo=(r.fixo&&r.fixo.total)||0;
+    var Msf=margemCalcNum(custoLiq-fixo,receita,true,comissao_pct,uf);
+    var nome=(cli.nome_reduzido||cli.nome||mrCliNomeLimpo(a.cliente_nome_origem)||a.cliente_codigo||'');
     var em=emissao?String(emissao).slice(0,10):'', mesKey=em?em.slice(0,7):'—';
+    // custo/margem REAL (apontamento), quando houver
+    var real=custoRealOS(prod,etapas,conv,acab,kpiByOs[k]||[],a.saldo,a.um);
+    var mReal=null,mRealPct=null,resultadoReal=null,custoRealLiq=null;
+    if(real.disponivel){ var MR2=margemCalcNum(real.liq,receita,true,comissao_pct,uf); mReal=MR2.margem; mRealPct=MR2.margemPct; resultadoReal=MR2.resultado; custoRealLiq=real.liq; }
     items.push({pedido:a.pedido,item:a.item,pa:a.pa,descricao:a.descricao||(prod.descricao||''),um:a.um,saldo:a.saldo,
-      emissao:em,mesKey:mesKey,cliente_codigo:a.cliente_codigo,clienteNome:(cli.nome_reduzido||cli.nome||a.cliente_codigo||''),vendedor:cli.vendedor||'—',uf:uf,
-      preco_un:preco_un,comissao_pct:comissao_pct||0,receita:receita,resultadoEst:M.resultado,margemEst:M.margem,margemEstPct:M.margemPct});
+      emissao:em,mesKey:mesKey,cliente_codigo:a.cliente_codigo,clienteNome:nome,vendedor:cli.vendedor||'—',uf:uf,
+      preco_un:preco_un,comissao_pct:comissao_pct||0,receita:receita,resultadoEst:M.resultado,margemEst:M.margem,margemEstPct:M.margemPct,
+      fixo:fixo,margemSemFixo:Msf.margem,margemSemFixoPct:Msf.margemPct,
+      realDisp:real.disponivel,custoRealLiq:custoRealLiq,resultadoReal:resultadoReal,margemReal:mReal,margemRealPct:mRealPct,
+      realHora:real.horaReal,realMat:real.matReal,realMetros:real.metrosReal});
   });
-  MR={items:items,loaded:true,skipped:skipped,maps:{prodMap:prodMap,etpMap:etpMap,convMap:convMap,acabMap:acabMap,cliMap:cliMap}};
+  MR={items:items,loaded:true,skipped:skipped,maps:{prodMap:prodMap,etpMap:etpMap,convMap:convMap,acabMap:acabMap,cliMap:cliMap},kpiByOs:kpiByOs};
 }
 function fecharMrDet(){ var o=document.getElementById('modal-mrdet'); if(o)o.style.display='none'; }
 function mrDetalhe(id){
@@ -5919,18 +6006,41 @@ function mrDetalhe(id){
   var diag='<div class="ap-hint" style="margin-bottom:8px'+(achou?'':';color:#c0392b')+'">UM do pedido: <b>'+apEsc(it.um)+'</b> · saldo <b>'+apFmt(it.saldo)+'</b> → fator ficha <b>'+apFmt(fat)+'</b> ⇒ <b>'+apFmt((Number(it.saldo)||0)*fat)+'</b> etiquetas. Conversões da ficha: '+convTxt+(achou?'':' — <b>UM do pedido não encontrada na ficha</b> (cadastre a conversão com esse mesmo nome).')+'</div>';
   var custoLiq=(r.totalPedido||0)-(r.linhas||[]).reduce(function(s,x){return s+(x.icms||0);},0);
   var lbl=cBRL(it.preco_un)+' / '+apEsc(it.um)+' × '+apFmt(it.saldo)+' '+apEsc(it.um);
+  // custo/margem REAL (apontamento) desta OS
+  var rk=(MR.kpiByOs||{})[it.pedido+'|'+it.item]||[], real=custoRealOS(prod,etapas,conv,acab,rk,it.saldo,it.um);
+  var realHtml=real.disponivel?(
+    '<div class="ap-hint" style="margin-bottom:6px">Fabricação pelo tempo real × R$/h da sub que rodou; materiais escalados pelos metros reais ('+apFmt(real.metrosReal)+' m vs '+apFmt(real.metrosEst)+' m estimado); fixos iguais à ficha.</div>'+
+    custoResumoHtml(real,'Custo real (apontamento) · '+apEsc(it.pa))+
+    '<div class="f-sub" style="margin-top:12px">Impostos e margem (real)</div>'+
+    margemTabelaHtml(real.liq,it.receita,true,it.comissao_pct,it.uf,lbl,(real.fixo&&real.fixo.total)||0)
+  ):'<div class="ap-hint" style="margin-top:14px">Sem apontamento suficiente para o custo real desta OS.</div>';
   var o=document.getElementById('modal-mrdet');
   if(!o){ o=document.createElement('div'); o.id='modal-mrdet'; o.className='modal-overlay'; o.style.display='none';
     o.onclick=function(ev){ if(ev.target===o)fecharMrDet(); }; document.body.appendChild(o); }
   var head='<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px">'+
-    '<div><h3 style="margin:0;font-size:16px">Detalhamento · margem estimada</h3>'+
+    '<div><h3 style="margin:0;font-size:16px">Detalhamento · margem</h3>'+
     '<div style="font-size:12px;color:var(--text3)">'+apEsc(it.pa)+(it.descricao?(' · '+apEsc(it.descricao)):'')+' · OS '+apEsc(it.pedido+'-'+it.item)+' · '+apEsc(it.clienteNome)+(it.emissao?(' · emissão '+apEsc(it.emissao)):'')+'</div></div>'+
     '<button class="carr-x" onclick="fecharMrDet()">✕</button></div>';
-  o.innerHTML='<div class="modal-box" style="max-width:min(1000px,96vw);width:100%;max-height:92vh;overflow:auto">'+head+diag+
-    custoResumoHtml(r,'Custo · '+apEsc(it.pa)+' · '+apFmt(it.saldo)+' '+apEsc(it.um))+
-    '<div class="f-sub" style="margin-top:12px">Impostos e margem</div>'+
-    margemTabelaHtml(custoLiq,it.receita,true,it.comissao_pct,it.uf,lbl)+'</div>';
+  var toggle='<div style="display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:10px">'+
+    '<button id="mrdet-bt-est" onclick="mrDetModo(\'est\')" style="padding:6px 16px;border:0;background:var(--accent);color:#fff;cursor:pointer;font-size:13px;font-weight:600">Estimado</button>'+
+    '<button id="mrdet-bt-real" onclick="mrDetModo(\'real\')" style="padding:6px 16px;border:0;background:var(--card);color:var(--text);cursor:pointer;font-size:13px;font-weight:600">Real</button>'+
+  '</div>';
+  var estHtml=diag+custoResumoHtml(r,'Custo · '+apEsc(it.pa)+' · '+apFmt(it.saldo)+' '+apEsc(it.um))+
+    '<div class="f-sub" style="margin-top:12px">Impostos e margem (estimado pela ficha)</div>'+
+    margemTabelaHtml(custoLiq,it.receita,true,it.comissao_pct,it.uf,lbl,(r.fixo&&r.fixo.total)||0);
+  o.innerHTML='<div class="modal-box" style="max-width:min(1000px,96vw);width:100%;max-height:92vh;overflow:auto">'+head+toggle+
+    '<div id="mrdet-est">'+estHtml+'</div>'+
+    '<div id="mrdet-real" style="display:none">'+realHtml+'</div>'+
+  '</div>';
   o.style.display='flex';
+}
+function mrDetModo(m){
+  var e=document.getElementById('mrdet-est'), r=document.getElementById('mrdet-real');
+  var be=document.getElementById('mrdet-bt-est'), br=document.getElementById('mrdet-bt-real'); if(!e||!r)return;
+  var real=(m==='real');
+  e.style.display=real?'none':'block'; r.style.display=real?'block':'none';
+  if(be){ be.style.background=real?'var(--card)':'var(--accent)'; be.style.color=real?'var(--text)':'#fff'; }
+  if(br){ br.style.background=real?'var(--accent)':'var(--card)'; br.style.color=real?'#fff':'var(--text)'; }
 }
 function mrRenderUI(){
   var el=document.getElementById('margem-conteudo'); if(!el)return;
@@ -5947,7 +6057,7 @@ function mrRenderUI(){
     '<div id="mr-cards" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px"></div>'+
     '<div id="mr-agg"></div>'+
     '<div id="mr-itens" style="margin-top:14px"></div>'+
-    '<div class="ap-hint" style="margin-top:8px">Margem <b>ESTIMADA</b> (custo pela ficha). A margem <b>REAL</b> (custo pelo apontamento) vem na próxima etapa. Receita = R$ Un. × saldo; impostos = ICMS da UF + taxas (aba Impostos) + comissão do pedido; assume COM nota.</div>';
+    '<div class="ap-hint" style="margin-top:8px">Margem <b>ESTIMADA</b> = custo pela ficha. Margem <b>REAL</b> = custo pelo apontamento (tempo real × R$/h da sub que rodou + materiais pelos metros reais; fixos da ficha) — só aparece nas OS com apontamento. Receita = R$ Un. × saldo; impostos = ICMS da UF + taxas (aba Impostos) + comissão do pedido; assume COM nota. Abra <b>Detalhar</b> para ver estimado × real lado a lado.</div>';
   mrRender();
 }
 function mrRender(){
@@ -5958,20 +6068,20 @@ function mrRender(){
     if(q&&![i.clienteNome,i.pa,i.descricao,i.vendedor,(i.pedido+'-'+i.item)].some(function(v){return (''+(v||'')).toLowerCase().indexOf(q)>=0;}))return false;
     return true;
   });
-  var tR=0,tC=0,tM=0; lista.forEach(function(i){tR+=i.receita;tC+=i.resultadoEst;tM+=i.margemEst;});
-  var mPct=tR>0?(tM/tR*100):0;
+  var tR=0,tC=0,tM=0,tMsf=0,tMr=0,nReal=0; lista.forEach(function(i){tR+=i.receita;tC+=i.resultadoEst;tM+=i.margemEst;tMsf+=i.margemSemFixo; if(i.realDisp){tMr+=i.margemReal;nReal++;}});
+  var mPct=tR>0?(tM/tR*100):0, mSfPct=tR>0?(tMsf/tR*100):0;
   var card=function(l,v,c){return '<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 14px;min-width:140px"><div style="font-size:11px;color:var(--text3);text-transform:uppercase">'+l+'</div><div style="font-size:18px;font-weight:700'+(c?';color:'+c:'')+'">'+v+'</div></div>';};
-  var cardsEl=document.getElementById('mr-cards'); if(cardsEl)cardsEl.innerHTML=card('Receita',cBRL(tR))+card('Custo+impostos',cBRL(tC))+card('Margem estimada',cBRL(tM),tM>=0?'var(--accent)':'#c0392b')+card('Margem %',apFmt(mPct)+'%',mPct>=0?'var(--accent)':'#c0392b')+card('Itens',String(lista.length));
+  var cardsEl=document.getElementById('mr-cards'); if(cardsEl)cardsEl.innerHTML=card('Receita',cBRL(tR))+card('Margem estimada',cBRL(tM)+' · '+apFmt(mPct)+'%',tM>=0?'var(--accent)':'#c0392b')+card('Margem s/ fixos',cBRL(tMsf)+' · '+apFmt(mSfPct)+'%',tMsf>=0?'var(--accent)':'#c0392b')+card('Margem real ('+nReal+')',nReal?cBRL(tMr):'—',tMr>=0?'var(--accent)':'#c0392b')+card('Itens',String(lista.length));
   var keyf=grp==='cliente'?function(i){return i.clienteNome;}:grp==='vendedor'?function(i){return i.vendedor;}:function(i){return i.mesKey;};
   var labf=grp==='mes'?mrMesLabel:function(x){return x;};
-  var g={}; lista.forEach(function(i){var k=keyf(i)||'—',a=g[k]||(g[k]={r:0,c:0,m:0,n:0}); a.r+=i.receita;a.c+=i.resultadoEst;a.m+=i.margemEst;a.n++;});
+  var g={}; lista.forEach(function(i){var k=keyf(i)||'—',a=g[k]||(g[k]={r:0,c:0,m:0,msf:0,mr:0,rr:0,n:0}); a.r+=i.receita;a.c+=i.resultadoEst;a.m+=i.margemEst;a.msf+=i.margemSemFixo;a.n++; if(i.realDisp){a.mr+=i.margemReal;a.rr+=i.receita;}});
   var gkeys=Object.keys(g).sort(function(a,b){return grp==='mes'?(a<b?1:-1):(g[b].m-g[a].m);});
   var sty='<style>.mrT{width:100%;border-collapse:collapse;font-size:13px}.mrT td,.mrT th{padding:5px 8px;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap}.mrT td.l,.mrT th.l{text-align:left}.mrT th{color:var(--text3);font-size:11px;text-transform:uppercase}</style>';
-  var aggEl=document.getElementById('mr-agg'); if(aggEl)aggEl.innerHTML=sty+'<div class="f-sub">'+(grp==='mes'?'Por mês':grp==='cliente'?'Por cliente':'Por vendedor')+'</div><div style="overflow-x:auto"><table class="mrT"><thead><tr><th class="l">'+(grp==='mes'?'Mês':grp==='cliente'?'Cliente':'Vendedor')+'</th><th>Itens</th><th>Receita</th><th>Custo+imp.</th><th>Margem</th><th>%</th></tr></thead><tbody>'+
-    gkeys.map(function(k){var a=g[k],p=a.r>0?(a.m/a.r*100):0;return '<tr><td class="l">'+apEsc(labf(k))+'</td><td>'+a.n+'</td><td>'+cBRL(a.r)+'</td><td>'+cBRL(a.c)+'</td><td style="color:'+(a.m>=0?'var(--accent)':'#c0392b')+'">'+cBRL(a.m)+'</td><td>'+apFmt(p)+'%</td></tr>';}).join('')+'</tbody></table></div>';
+  var aggEl=document.getElementById('mr-agg'); if(aggEl)aggEl.innerHTML=sty+'<div class="f-sub">'+(grp==='mes'?'Por mês':grp==='cliente'?'Por cliente':'Por vendedor')+'</div><div style="overflow-x:auto"><table class="mrT"><thead><tr><th class="l">'+(grp==='mes'?'Mês':grp==='cliente'?'Cliente':'Vendedor')+'</th><th>Itens</th><th>Receita</th><th>Margem est.</th><th>%</th><th>Margem s/ fixos</th><th>%</th><th>Margem real</th><th>%</th></tr></thead><tbody>'+
+    gkeys.map(function(k){var a=g[k],p=a.r>0?(a.m/a.r*100):0,psf=a.r>0?(a.msf/a.r*100):0,pr=a.rr>0?(a.mr/a.rr*100):0;return '<tr><td class="l">'+apEsc(labf(k))+'</td><td>'+a.n+'</td><td>'+cBRL(a.r)+'</td><td style="color:'+(a.m>=0?'var(--accent)':'#c0392b')+'">'+cBRL(a.m)+'</td><td>'+apFmt(p)+'%</td><td style="color:'+(a.msf>=0?'var(--accent)':'#c0392b')+'">'+cBRL(a.msf)+'</td><td>'+apFmt(psf)+'%</td><td style="color:'+(a.mr>=0?'var(--accent)':'#c0392b')+'">'+(a.rr>0?cBRL(a.mr):'—')+'</td><td>'+(a.rr>0?apFmt(pr)+'%':'—')+'</td></tr>';}).join('')+'</tbody></table></div>';
   var li=lista.slice().sort(function(a,b){return a.margemEstPct-b.margemEstPct;});
-  var rows=li.slice(0,400).map(function(i){return '<tr><td class="l">'+apEsc(i.emissao||'—')+'</td><td class="l">'+apEsc(i.pedido+'-'+i.item)+'</td><td class="l">'+apEsc(i.clienteNome)+'</td><td class="l">'+apEsc(i.pa)+'</td><td class="l" style="max-width:280px;overflow:hidden;text-overflow:ellipsis" title="'+apEsc(i.descricao||'')+'">'+apEsc(i.descricao||'—')+'</td><td>'+apFmt(i.saldo)+' '+apEsc(i.um)+'</td><td>'+cBRL(i.receita)+'</td><td>'+cBRL(i.resultadoEst)+'</td><td style="color:'+(i.margemEst>=0?'var(--accent)':'#c0392b')+'">'+cBRL(i.margemEst)+'</td><td>'+apFmt(i.margemEstPct)+'%</td><td class="l"><button class="btn-sec" onclick="mrDetalhe('+jsAttr(i.pedido+'-'+i.item)+')">Detalhar</button></td></tr>';}).join('');
-  var itEl=document.getElementById('mr-itens'); if(itEl)itEl.innerHTML=sty+'<div class="f-sub">Itens (piores margens primeiro)</div><div style="overflow-x:auto"><table class="mrT"><thead><tr><th class="l">Emissão</th><th class="l">OS</th><th class="l">Cliente</th><th class="l">PA</th><th class="l">Descrição</th><th>Saldo</th><th>Receita</th><th>Custo+imp.</th><th>Margem est.</th><th>%</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>'+(li.length>400?('<div class="ap-hint">Mostrando 400 de '+li.length+'.</div>'):'');
+  var rows=li.slice(0,400).map(function(i){return '<tr><td class="l">'+apEsc(i.emissao||'—')+'</td><td class="l">'+apEsc(i.pedido+'-'+i.item)+'</td><td class="l">'+apEsc(i.clienteNome)+'</td><td class="l">'+apEsc(i.pa)+'</td><td class="l" style="max-width:240px;overflow:hidden;text-overflow:ellipsis" title="'+apEsc(i.descricao||'')+'">'+apEsc(i.descricao||'—')+'</td><td>'+apFmt(i.saldo)+' '+apEsc(i.um)+'</td><td>'+cBRL(i.receita)+'</td><td style="color:'+(i.margemEst>=0?'var(--accent)':'#c0392b')+'">'+cBRL(i.margemEst)+'</td><td>'+apFmt(i.margemEstPct)+'%</td><td style="color:'+(i.margemSemFixo>=0?'var(--accent)':'#c0392b')+'">'+cBRL(i.margemSemFixo)+'</td><td>'+apFmt(i.margemSemFixoPct)+'%</td><td style="color:'+(i.realDisp&&i.margemReal>=0?'var(--accent)':(i.realDisp?'#c0392b':'var(--text3)'))+'">'+(i.realDisp?cBRL(i.margemReal):'—')+'</td><td>'+(i.realDisp?apFmt(i.margemRealPct)+'%':'—')+'</td><td class="l"><button class="btn-sec" onclick="mrDetalhe('+jsAttr(i.pedido+'-'+i.item)+')">Detalhar</button></td></tr>';}).join('');
+  var itEl=document.getElementById('mr-itens'); if(itEl)itEl.innerHTML=sty+'<div class="f-sub">Itens (piores margens primeiro)</div><div style="overflow-x:auto"><table class="mrT"><thead><tr><th class="l">Emissão</th><th class="l">OS</th><th class="l">Cliente</th><th class="l">PA</th><th class="l">Descrição</th><th>Saldo</th><th>Receita</th><th>Margem est.</th><th>%</th><th>Margem s/ fixos</th><th>%</th><th>Margem real</th><th>%</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>'+(li.length>400?('<div class="ap-hint">Mostrando 400 de '+li.length+'.</div>'):'');
 }
 // ===================== ABA IMPOSTOS (impostos/taxas configuraveis + ICMS por UF) =====================
 var IMPOSTO_UF=[], IMPOSTO_TAXA=[];

@@ -323,7 +323,8 @@ apontamento (ver `aplicar_apontamento`).
 **`33_margem_impostos.sql`** (impostos/taxas CONFIGURÁVEIS: tabela `imposto_taxa` [nome, aliquota, posicao 'apos'|'final', ativo, ordem]; `produto_preco_cliente.comissao_pct`; `clientes_fiscal.vendedor`; RLS gestor/editor; idempotente — ver §18) →
 **`34_clientes_fiscal_extra.sql`** (`clientes_fiscal` + `nome_reduzido`, `familia`, `cnpj`; idempotente — ver §18) →
 **`35_margem_preco_um.sql`** (`produto_preco_cliente.preco_um` [default 'MI'] — UM do preço; idempotente — ver §18) →
-**`36_acab_cliche_layout.sql`** (`produto_acabamentos` + `cliche_carreiras`/`cliche_repeticoes`/`cliche_espaco`/`cliche_esqueleto` — layout de clichê próprio do acabamento; nullable, fallback p/ a geometria do produto; idempotente — ver §18).
+**`36_acab_cliche_layout.sql`** (`produto_acabamentos` + `cliche_carreiras`/`cliche_repeticoes`/`cliche_espaco`/`cliche_esqueleto` — layout de clichê próprio do acabamento; nullable, fallback p/ a geometria do produto; idempotente — ver §18) →
+**`37_pedidos_preco_margem.sql`** (MARGEM REAL: tabela **`pedidos_precos`** [pedido+item PK: `preco_un`, `comissao_pct`, `emissao`, `uf`] com RLS `posso_editar()` + RPC aditiva `atualizar_pedidos_extra` que a preenche no upload; **NÃO** mexe na RPC crítica `upload_pedidos_abertos`; idempotente — ver §19).
 
 ## 12. Matérias-primas + m² nos KPIs (2026-11-15)
 
@@ -838,5 +839,44 @@ produção/painel. Gates: `window._mpTipoReady` (31_), `window._acabClicheReady`
   - `resultado = subtotal1 + finalTotal`; **margem = receita − resultado**; margem% = margem ÷ receita.
   - **Sem nota** zera os impostos (comissão continua). **IPI fica FORA** (repassado, não reduz margem).
 
-**PRÓXIMO (visão do usuário):** **margem real** — o Excel de pedidos passa a trazer **preço/emissão**, e o sistema
-mostra faturamento × custo = margem por item e por mês (hoje o simulador é a margem **estimada**).
+**FEITO (ver §19):** a **aba Margem** (receita do pedido × custo, estimado **e real**) implementa a margem por item/
+mês/cliente/vendedor. O **simulador** da aba Custo (acima) segue para análises pontuais produto×cliente.
+
+## 19. Aba Margem — preço do pedido × custo (estimado e REAL) (2026-11-24 a 25)
+
+**Status:** branch `feat/acoes-prioridade`; migration **`37_`** + `app.html` **não publicados**. Validado item a item.
+Sensível (gestor/editor). Reusa o motor de custo (§17), os impostos (§18) e a camada de apontamento/KPI (§4).
+
+### Dados (migration `37_`)
+- A planilha de **pedidos** passou a trazer `R$ Un.` (preço unitário), `Comissão 1 (%)` e `Emissão` (coluna A) + a
+  **UF do cliente** (coluna `Estado`). `mapearPedidos` lê esses campos (`ufDeEstado` normaliza nome→sigla).
+- **Não** vão para `pedidos_abertos` (lida por todos os papéis) — ficam em **`pedidos_precos`** (pedido+item PK:
+  `preco_un`, `comissao_pct`, `emissao`, `uf`) com RLS `posso_editar()`. No upload, após `upload_pedidos_abertos`,
+  o app chama a RPC aditiva **`atualizar_pedidos_extra`** (degrada se o `37_` ausente). A RPC crítica de upload fica intacta.
+
+### Aba Margem (`renderMargemReal`/`mrCarregar`/`mrRender`; estado `MR`)
+- Sidebar `ver_margem` (gestor/editor). Agrega `RAW.pedidos` por pedido+item (soma **saldo**); cruza com `pedidos_precos`
+  (preço/comissão/emissão/UF), com a ficha (produto/etapas/conversões/acabamentos, carregados 1× em mapas) e com
+  `clientes_fiscal` (nome/UF/vendedor). Só itens **com ficha + preço**.
+- **Receita** = `preco_un × saldo` (na UM do pedido). **Quantidade de etiquetas = conversão da FICHA** (`fatorConvFicha`
+  na UM do pedido — NÃO usa a 2ª unidade da planilha, decisão do usuário). **UF** = do pedido, fallback cadastro.
+- **Margem estimada** (custo pela ficha, §17), **Margem sem fixos** (desconta clichê/faca/zinco — item de repetição
+  cujo ferramental já foi cobrado) e **Margem real** (§abaixo). Cards + agregados por **mês/cliente/vendedor** + filtros
+  (mês/busca) + linha de diagnóstico de ICMS por UF. Coluna Cliente mostra o **nome** (reduzido/razão/pedido).
+- **Detalhar** (`mrDetalhe`, popup): **chave Estimado/Real** no topo (`mrDetModo`); abre em Estimado. Cada lado usa o
+  **mesmo `custoResumoHtml`** (fabricação/materiais/deduções/fixos) + a tabela `margemTabelaHtml` (impostos+preço+
+  margem, com linha "sem fixos"). Núcleo numérico `margemCalcNum` (compartilhado com o simulador da §18).
+
+### Custo REAL por OS (`custoRealOS`) — a partir do apontamento
+- Lê `v_operacao_kpi` por pedido+item. **Fabricação** = por op, Acerto (`setup_real_min`) + Execução (`prod_real_min`)
+  ÷60 × **R$/h da sub que rodou** (`custoRhDaMaquina`: `maquinas_sub_custo` da sub, fallback média do grupo); linhas com
+  tempo, metros (`qtd_real`/`desp_setup_real`) e velocidade reais. **Materiais** = as linhas de material da ficha
+  **escaladas pela razão metros reais ÷ estimados** (1ª etapa em metro, via `kOsMetros`); ICMS acompanha. **Fixos** =
+  da ficha. Retorna no formato de `custoProduto` (linhas/detalhes/totalPedido) p/ render idêntico ao estimado. Só nas OS
+  **com apontamento** (senão "—"). Limitação: materiais são proporcionais aos metros reais, não consumo medido de insumo.
+
+### Formatação de tempo (`fmtMin`)
+- Minutos <60 → "min"; ≥60 → **"1h10"**. Usado em custo/margem, apontamento, ficha e KPIs (`kHM` passou a usar `fmtMin`).
+
+**PENDENTE:** aplicar o `37_` e publicar; margem real por **faturamento parcial** (hoje a receita usa o saldo do pedido,
+e o apontamento reflete o que já rodou — pode haver descasamento de base quando a OS produziu ≠ do saldo).
